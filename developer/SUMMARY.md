@@ -2,7 +2,7 @@
 
 * [Introduction](README.md)
 * [Overview](overview.md)
-* Getting Started
+* [Getting Started](getting-started/README.md)
   * [Create Project](getting-started/create-project.md)
   * [Create Trigger](getting-started/create-trigger.md)
   * [Test Trigger](getting-started/test-trigger.md)
