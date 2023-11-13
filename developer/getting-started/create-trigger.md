@@ -46,6 +46,7 @@ Let's look at a simple example. Suppose we want to create a trigger that will ou
 
 * **scheduler**, which will be responsible for initiating the pipeline once every 10 minutes; ([link](../blocks.md#schedule))
 * **transform**, with the help of which we will be able to get a random value. ([link](../blocks.md#transform))
+Learn more about how to use javascript when describing output transformation logic [here](../pipelines.md/#yaml-and-javascript). 
 
 ```yaml
 pipeline:

@@ -32,6 +32,6 @@ Web3alert is under active development. The concept of the pipeline runtime and h
 
 At the moment, the pipeline execution environment is ready and we are preparing it for open access. In addition, we are preparing documentation and tools for developers to test and publish triggers. The features of the public hub of products, integrations, triggers and actions are currently partially implemented on top of the old version of the product and are in the process of being reworked and migrated to the new version.
 
-At the moment, to publish a project or make changes, you need to contact the support (see the [Integration guide](general/step-by-step-integration-guide.md)). You can describe the task or the necessary triggers, our engineers will prepare, test and publish them. We will transfer your project data to you so that in the future you can edit and publish it yourself.
+<!-- At the moment, to publish a project or make changes, you need to contact the support (see the [Integration guide](general/step-by-step-integration-guide.md)). You can describe the task or the necessary triggers, our engineers will prepare, test and publish them. We will transfer your project data to you so that in the future you can edit and publish it yourself. -->
 
 Our immediate priority goal is to completely transfer control of the published project into the hands of its developer through the web interface and CLI of Web3alert. Project data, including trigger pipelines, is stored in a set of YAML files.

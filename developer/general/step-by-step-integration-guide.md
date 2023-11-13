@@ -6,7 +6,7 @@ Email - info@web3alert.io
 
 **Step 2**. Fill out [this form](https://forms.gle/VoieigP1L2Xy4XBJ6), providing us with:
 
-* endpoint 
+* endpoint
 * images (icons, alert image, etc)
 * description of your project
 * your contact details (preferably Telegram)
