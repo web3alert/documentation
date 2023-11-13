@@ -1,4 +1,4 @@
-# Step 4. Create resource
+# Create resource
 
 Some blocks require more complex initialization, and in order not to go through the process of filling in the necessary parameters each time, this process has been allocated to a separate entity - the `resource`. You can read more about the resource [on this page](../../web3alert.md#resource). Here we will give just a couple of examples of when the resources are used. 
 
@@ -30,9 +30,9 @@ pipeline:
   output: format
   nodes:
     - name: event-run
-    block: web3alert.ethereum.evm.stream.contract
-    resource: web3alert.my-first-project.erc20-usdt
-    params:
+      block: web3alert.ethereum.evm.stream.contract
+      resource: web3alert.my-first-project.erc20-usdt
+      params:
         type: event
         name: AddedBlackList
     - name: format

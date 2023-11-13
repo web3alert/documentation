@@ -1,6 +1,6 @@
 # Getting Started
 
-## Initial setup
+## Initial Setup
 
 To create the project, you will need the Web3alert CLI. To install it, call the following command:
 
@@ -8,7 +8,7 @@ To create the project, you will need the Web3alert CLI. To install it, call the 
 npm i -g @web3alert/cli
 ```
 
-## Create project
+## Create Project
 Create an empty directory for your project.
 
 ```

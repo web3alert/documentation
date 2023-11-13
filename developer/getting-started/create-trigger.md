@@ -1,4 +1,4 @@
-# Step 2. Create the first trigger
+# Create the first trigger
 
 In the previous step, we created an empty project and described it in the `project.yml` file.
 
@@ -38,14 +38,14 @@ After describing the trigger, it is necessary to describe the initial parameters
 values: {}
 ```
 
-More information about the types of values can be found [here](../../trigger-values-types.md).
+More information about the types of values can be found [here](../types.md).
 
-The last but the most important part is to describe the core of our trieger - `pipeline`. Pipeline consists of a list of nodes and a pointer to which node is the output node. All nodes are described in blocks. There are many different blocks for different tasks. You can find the list of basic blocks [here](../../blocks/basic-blocks.md).
+The last but the most important part is to describe the core of our trieger - `pipeline`. Pipeline consists of a list of nodes and a pointer to the final output node. All nodes are described in blocks. There are many different blocks for different tasks. You can find the list of basic blocks [here](../blocks.md).
 
 Let's look at a simple example. Suppose we want to create a trigger that will output some random number from 0 to 100 every 10 minutes. We'll need two blocks for this:
 
-* **scheduler**, which will be responsible for initiating the pipeline once every 10 minutes; ([link](../../blocks/basic-blocks.md#schedule))
-* **transform**, with the help of which we will be able to get a random value. ([link](../../blocks/basic-blocks.md#transform))
+* **scheduler**, which will be responsible for initiating the pipeline once every 10 minutes; ([link](../blocks.md#schedule))
+* **transform**, with the help of which we will be able to get a random value. ([link](../blocks.md#transform))
 
 ```yaml
 pipeline:

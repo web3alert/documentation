@@ -1,6 +1,15 @@
 # Table of contents
 
 * [Introduction](README.md)
+* [Overview](overview.md)
+* Getting Started
+  * [Create Project](getting-started/create-project.md)
+  * [Create Trigger](getting-started/create-trigger.md)
+  * [Test Trigger](getting-started/test-trigger.md)
+  * [Create Resource](getting-started/create-resource.md)
+* [Pipelines](pipelines.md)
+* [Types](types.md)
+* [Blocks](blocks.md)
 
 ## General
 
@@ -11,8 +20,3 @@
 * [Contacts and socials](general/contacts-and-socials.md)
 * [Miscellaneous](general/miscellaneous/README.md)
   * [Event-based and state-based alerts](general/miscellaneous/event-based-and-state-based-alerts.md)
-
-## Technical
-
-* [Triex](technical/triex.md)
-* [Web3alert](technical/web3alert.md)

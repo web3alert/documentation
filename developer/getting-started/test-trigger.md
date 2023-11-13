@@ -1,6 +1,6 @@
-# Step 3. Test trigger
+# Test trigger
 
-In the previous step, we created the first trigger for our project. 
+In the previous step, we created the first trigger for our project.
 
 Now, we need to test the trigger and make sure that everything works as intended.
 
@@ -24,4 +24,3 @@ web3alert trigger test ./my-first-trigger.yml my-first-trigger --trace trace.yml
 ```
 
 The result can be checked in the created `trace.yml` file.
-
