@@ -1,0 +1,1 @@
+This guide will help to understand the process of creating and editing a project and all its entities.
