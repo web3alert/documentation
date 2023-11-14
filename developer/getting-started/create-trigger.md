@@ -47,6 +47,7 @@ Let's look at a simple example. Suppose we want to create a trigger that will ou
 * **scheduler**, which will be responsible for initiating the pipeline once every 10 minutes; ([link](../blocks.md#schedule))
 * **transform**, with the help of which we will be able to get a random value. ([link](../blocks.md#transform))
 Learn more about how to use javascript when describing output transformation logic [here](../pipelines.md/#yaml-and-javascript). 
+It is important to note that the output data of the node must be an object or an array of objects. 
 
 ```yaml
 pipeline:
@@ -60,7 +61,8 @@ pipeline:
       block: transform
       input: start
       params:
-        output: "{{ Math.floor(Math.random() * 100) }}"
+        output: 
+          value: "{{ Math.floor(Math.random() * 100) }}"
 ```
 
 That's it. As a result, the full contents of the trigger config file will look like this:
@@ -84,7 +86,8 @@ pipeline:
       block: transform
       input: start
       params:
-        output: "{{ Math.floor(Math.random() * 100) }}"
+        output: 
+          value: "{{ Math.floor(Math.random() * 100) }}"
 ```
 
 If we want to allow the user to customize the range of random numbers, we can set a two parameters of type number in values and use it in the Pipeline. It will look like this:
@@ -113,7 +116,12 @@ pipeline:
         lower: "{{ values.lower }}"
         upper: "{{ values.upper }}"
       params:
-        output: "{{ Math.floor( (Math.random() + 1) * (values.upper - values.lower) ) }}"
+        output: 
+          value: "{{ Math.floor( Math.random() * (values.upper - values.lower) + values.lower ) }}"
 ```
+
+To save the created trigger, you need to repeat the command `push` for the project from the root folder of the project. 
+
+After that, the trigger will appear in the service and you can subscribe to it and receive data for example in Telegram or Discord.
 
 Next we will study how to test our trigger before push it to the Web3alert.

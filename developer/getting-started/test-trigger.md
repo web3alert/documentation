@@ -9,8 +9,8 @@ First, you need to set the conditions for testing the trigger. Open the trigger 
 ```yaml
 test:
   values:
-    lower: 0
-    upper: 100
+    lower: 150
+    upper: 300
   samples:
     - node: start
       objects:
@@ -20,7 +20,35 @@ test:
 Now, to make a test run of the trigger and check the result, we need to call the following command:
 
 ```
-web3alert trigger test ./my-first-trigger.yml my-first-trigger --trace trace.yml
+web3alert trigger test ./my-first-trigger.yml
 ```
+The result will look like this:
 
-The result can be checked in the created `trace.yml` file.
+```yaml
+nodes:
+  - name: start
+    history:
+      - method: process
+        start: "2023-11-14T08:40:09.750Z"
+        end: "2023-11-14T08:40:09.751Z"
+        context:
+          input:
+            now: "2023-11-10T00:00:00.000Z"
+        result:
+          output:
+            - now: "2023-11-10T00:00:00.000Z"
+  - name: rnd
+    history:
+      - method: process
+        start: "2023-11-14T08:40:09.752Z"
+        end: "2023-11-14T08:40:09.756Z"
+        context:
+          input:
+            now: "2023-11-10T00:00:00.000Z"
+          params:
+            output:
+              value: 296
+        result:
+          output:
+            - value: 296
+```

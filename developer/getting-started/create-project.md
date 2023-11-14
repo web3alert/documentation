@@ -8,6 +8,8 @@ To create the project, you will need the Web3alert CLI. To install it, call the 
 npm i -g @web3alert/cli
 ```
 
+The app needs your personal token to work. You can get it in Settings - Account - Personal access token.
+
 ## Create Project
 Create an empty directory for your project.
 
