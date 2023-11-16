@@ -1,6 +1,6 @@
 # Create resource
 
-Some blocks require more complex initialization, and in order not to go through the process of filling in the necessary parameters each time, this process has been allocated to a separate entity - the `resource`. You can read more about the resource [on this page](../../web3alert.md#resource). Here we will give just a couple of examples of when the resources are used. 
+Some blocks require more complex initialization, and in order not to go through the process of filling in the necessary parameters each time, this process has been allocated to a separate entity - the `resource`. You can read more about the resource [on this page](../pipelines.md). Here we will give just a couple of examples of when the resources are used. 
 
 For example, if a node sends data to a third-party application. Of course, it is possible to add the process of user authorization to the trigger itself, but it is much more convenient if the user is authorized in advance and the block will pass only a reference to the resource containing authorization data.
 
@@ -16,7 +16,11 @@ data:
   abi: "[{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"Issue\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"Redeem\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"newAddress\",\"type\":\"address\"}],\"name\":\"Deprecate\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"feeBasisPoints\",\"type\":\"uint256\"},{\"indexed\":false,\"name\":\"maxFee\",\"type\":\"uint256\"}],\"name\":\"Params\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"_blackListedUser\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"_balance\",\"type\":\"uint256\"}],\"name\":\"DestroyedBlackFunds\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"_user\",\"type\":\"address\"}],\"name\":\"AddedBlackList\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"_user\",\"type\":\"address\"}],\"name\":\"RemovedBlackList\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"name\":\"owner\",\"type\":\"address\"},{\"indexed\":true,\"name\":\"spender\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"Approval\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"name\":\"from\",\"type\":\"address\"},{\"indexed\":true,\"name\":\"to\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"Transfer\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[],\"name\":\"Pause\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[],\"name\":\"Unpause\",\"type\":\"event\"}]"
 ```
 
-Now we can use this resource to create a new trigger that fires every time an AddedBlackList event occurs on the network. 
+Now we can use this resource to create a new trigger that fires every time an AddedBlackList event occurs on the network. The resource id to be specified in the trigger consists of `user_id`, `project_name` and `resource_name`:
+```
+<YOUR-USER-ID>.my-first-project.erc20-usdt
+``` 
+The user id can be found on the web3alert in `Settings-Account-User ID`.
 
 ```yaml
 name: added-blacklist
@@ -31,7 +35,7 @@ pipeline:
   nodes:
     - name: event-run
       block: web3alert.ethereum.evm.stream.contract
-      resource: web3alert.my-first-project.erc20-usdt
+      resource: <YOUR-USER-ID>.my-first-project.erc20-usdt
       params:
         type: event
         name: AddedBlackList
