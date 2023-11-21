@@ -1,6 +1,7 @@
 # Changelog
 
-17 Nov, 2023 - added an SDK toolkit to create your integrations on your own on our dev stand: dev.web3alert.io. All the necessary documentation is ready for you: [https://docs.web3alert.io/developer](https://docs.web3alert.io/developer)
+17 Nov, 2023 - added an SDK toolkit to create your integrations on your own on our dev stand: [dev.web3alert.io](https://dev.web3alert.io/)\
+All the necessary documentation is ready for you: [https://docs.web3alert.io/developer](https://docs.web3alert.io/developer)
 
 31 Oct, 2023 - added Celestia (Mainnet Beta) to projects
 
