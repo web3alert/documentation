@@ -7,11 +7,29 @@ export default defineConfig({
   cleanUrls: true,
   lastUpdated: true,
   ignoreDeadLinks: true,
-  vue: {
-    template: {
-      compilerOptions: {
-        delimiters: ['[[', ']]'],
-      },
+  markdown: {
+    config(md) {
+      const escapeVueInterpolation = (html: string) => html
+        .replace(/\{\{/g, '&#123;&#123;')
+        .replace(/\}\}/g, '&#125;&#125;');
+
+      const wrapRenderer = (
+        rule: string,
+        fallback: (tokens: any[], idx: number, options: any, env: any, self: any) => string,
+      ) => {
+        const previous = md.renderer.rules[rule];
+        md.renderer.rules[rule] = (tokens, idx, options, env, self) => {
+          const html = previous
+            ? previous(tokens, idx, options, env, self)
+            : fallback(tokens, idx, options, env, self);
+          return escapeVueInterpolation(html);
+        };
+      };
+
+      wrapRenderer('text', (tokens, idx) => md.utils.escapeHtml(tokens[idx].content));
+      wrapRenderer('code_inline', (tokens, idx) => `<code>${md.utils.escapeHtml(tokens[idx].content)}</code>`);
+      wrapRenderer('code_block', (tokens, idx) => `<pre><code>${md.utils.escapeHtml(tokens[idx].content)}</code></pre>\n`);
+      wrapRenderer('fence', (tokens, idx) => `<pre><code>${md.utils.escapeHtml(tokens[idx].content)}</code></pre>\n`);
     },
   },
   themeConfig: {
