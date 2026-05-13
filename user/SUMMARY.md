@@ -1,9 +1,5 @@
 # Table of contents
 
-## Web3alert Next
-
-* [Welcome](welcome.md)
-
 ## Core sections
 
 * [Account](account.md)

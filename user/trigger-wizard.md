@@ -55,7 +55,7 @@
 
 Обязательный выбор data source, из которого trigger будет читать blockchain/runtime данные.
 
-В списке показываются доступные sources проекта. Если подходящего source нет, можно перейти к [Add new source]().
+В списке показываются доступные sources проекта. Если подходящего source нет, можно перейти к [Add new source](data-sources.md#add-data-source).
 
 Выбранный source определяет дальнейшую ветку настройки: EVM или Substrate.
 

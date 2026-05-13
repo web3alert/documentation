@@ -1,5 +1,0 @@
-root: ./user/
-
-structure:
-  readme: README.md
-  summary: SUMMARY.md
