@@ -1,0 +1,126 @@
+# Trigger Import API
+
+Trigger import endpoints ayudan a generar trigger drafts desde descripciones externas: EVM ABI, Substrate metadata/pallets y source metadata.
+
+## POST /api/v2/triggers/import/evm
+
+Carga y normaliza EVM ABI entries.
+
+Arguments: ninguno.
+
+Payload: EVM ABI import input. Normalmente contiene ABI JSON o ABI entries.
+
+| Field | Required | Description |
+| --- | --- | --- |
+| `project` | Sí | Project fullname. |
+| `source` | Sí | EVM source name/fullname. |
+| `contract` | Required if `abi` is missing | Contract address. |
+| `abi` | Required if `contract` is missing | ABI JSON string. |
+
+Respuesta: [EvmAbiImportResult](types.md#evmabiimportresult).
+
+## POST /api/v2/triggers/import/evm/abi
+
+Intenta cargar ABI por contract address.
+
+Arguments: ninguno.
+
+Payload:
+
+| Field | Required | Description |
+| --- | --- | --- |
+| `source` | Sí | EVM source name/fullname. |
+| `contract` | Sí | EVM contract address. |
+
+Respuesta: [EvmAbiResult](types.md#evmabiresult).
+
+## POST /api/v2/triggers/import/evm/drafts
+
+Genera EVM trigger drafts desde ABI.
+
+Arguments: ninguno.
+
+Payload: EVM import config from import wizard.
+
+Common fields:
+
+| Field | Required | Description |
+| --- | --- | --- |
+| `project` | Sí | Project fullname. |
+| `source` | Sí | EVM source name/fullname. |
+| `category` | No | Category for generated triggers. |
+| `contract` | No | Contract address. |
+| `abi` | No | ABI JSON string. |
+| `abiSourceOverride` | No | `provided` o `auto`. |
+| `includeEvents` | No | Whether to generate event triggers. |
+| `includeCalls` | No | Whether to generate call/transaction triggers. |
+
+Respuesta: [TriggerImportDraftsResult](types.md#triggerimportdraftsresult).
+
+## POST /api/v2/triggers/import/substrate/drafts
+
+Genera Substrate trigger drafts desde metadata/pallet selection.
+
+Arguments: ninguno.
+
+Payload: Substrate import config from import wizard.
+
+Common fields:
+
+| Field | Required | Description |
+| --- | --- | --- |
+| `project` | Sí | Project fullname. |
+| `source` | Sí | Substrate source name/fullname. |
+| `pallets` | One of | Selected pallets/modules. |
+| `entries` | One of | Selected entries: `{ pallet, kind, name }`, where `kind` is `event` or `call`. |
+| `includeEvents` | No | Whether pallet import includes events. |
+| `includeCalls` | No | Whether pallet import includes calls. |
+| `defaultsTemplate` | No | Defaults template override object. |
+| `metaTemplate` | No | Metadata template override object. |
+| `labelsTemplate` | No | Labels template override object. |
+| `executionPolicy` | No | Execution policy override for generated drafts. |
+
+Respuesta: [TriggerImportDraftsResult](types.md#triggerimportdraftsresult).
+
+## GET /api/v2/triggers/substrate/source
+
+Devuelve Substrate source info usada por import wizard.
+
+Arguments:
+
+| Argument | Location | Description |
+| --- | --- | --- |
+| `source` | Query | Substrate data source fullname/name. |
+
+Payload: ninguno.
+
+Respuesta: [SubstrateSourceInfo](types.md#substratesourceinfo).
+
+## GET /api/v2/triggers/substrate/pallets
+
+Devuelve lista de Substrate pallets para el source elegido.
+
+Arguments:
+
+| Argument | Location | Description |
+| --- | --- | --- |
+| `source` | Query | Substrate data source fullname/name. |
+
+Payload: ninguno.
+
+Respuesta: [SubstratePalletSummary[]](types.md#substratepalletsummary).
+
+## GET /api/v2/triggers/substrate/pallet
+
+Devuelve metadata de un Substrate pallet concreto.
+
+Arguments:
+
+| Argument | Location | Description |
+| --- | --- | --- |
+| `source` | Query | Substrate data source fullname/name. |
+| `pallet` | Query | Pallet/module name. |
+
+Payload: ninguno.
+
+Respuesta: [SubstratePalletMetadata](types.md#substratepalletmetadata).
