@@ -297,6 +297,7 @@
 | `evm_log` | `type`, `dataSource`, 可选 `contract`, `event`, `abiFragment`, `topicsCount`, `dataBytes`, `testInput`. |
 | `evm_transaction` | `type`, `dataSource`, 可选 `testInput`. |
 | `substrate_event` | `type`, `dataSource`, 可选 `pallet`, `event`, `testInput`. |
+| `solana_event` | `type`, `dataSource`, 可选 `programId`, `event`, `idl`, `testInput`. 对于 calls，`event` 字段保存带 `call:` 前缀的值。 |
 | `timer` | `type`, `interval`, 可选 `testInput`. |
 
 ### TriggerTransform
@@ -408,7 +409,7 @@
 | --- | --- | --- |
 | `app` | `string` | Runtime app name. |
 | `network` | `string` | Network/source name。 |
-| `plugin` | `"evm" \| "substrate"` | Runtime plugin 类型。 |
+| `plugin` | `"evm" \| "substrate" \| "solana"` | Runtime plugin 类型。 |
 | `instance` | `string` | Runtime instance. |
 | `status` | `"running" \| "degraded" \| "error"` | Runtime status。 |
 | `updatedAt` | `string` | ISO 格式的更新日期。 |
@@ -652,7 +653,7 @@
 | `name` | `string` | Source name. |
 | `fullname` | `string` | Source fullname。 |
 | `public` | `boolean` | Public 标记。 |
-| `kind` | `"evm" \| "substrate"` | Source type。 |
+| `kind` | `"evm" \| "substrate" \| "solana"` | Source type。 |
 | `meta` | `CustomSourceMeta` | Metadata。 |
 | `createdAt` | `string` | ISO 格式的创建日期。 |
 | `updatedAt` | `string` | ISO 格式的更新日期。 |
@@ -691,6 +692,10 @@
 | `substrate.ss58Prefix` | `number?` | SS58 prefix. |
 | `substrate.latestBlock` | `number?` | Latest Substrate block. |
 | `substrate.fetchedAt` | `string` | Metadata fetch date. |
+| `solana.genesisHash` | `string?` | Solana network genesis hash. |
+| `solana.latestBlock` | `number?` | Latest Solana slot/block. |
+| `solana.blockHash` | `string?` | Block hash. |
+| `solana.fetchedAt` | `string` | Metadata fetch date. |
 
 ### CustomSourceCreateCapability
 
@@ -754,7 +759,7 @@
 | `sourceName` | `string` | Source name. |
 | `sourceTitle` | `string` | 可见标题。 |
 | `workspace` | `string` | Workspace fullname。 |
-| `kind` | `"evm" \| "substrate"` | Source type。 |
+| `kind` | `"evm" \| "substrate" \| "solana"` | Source type。 |
 | `status` | `"running" \| "error" \| "degraded"` | 新 status。 |
 | `previousStatus` | `"running" \| "error" \| "degraded"?` | 上一 status。 |
 | `severity` | `"info" \| "warning" \| "error"` | Severity。 |

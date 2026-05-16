@@ -1,6 +1,6 @@
 # Trigger Import API
 
-Endpoints Trigger Import помогают сгенерировать trigger drafts из внешних описаний: EVM ABI, Substrate metadata/pallets и source metadata.
+Endpoints Trigger Import помогают сгенерировать trigger drafts из внешних описаний: EVM ABI, Substrate metadata/pallets, Solana IDL и source metadata.
 
 ## POST /api/v2/triggers/import/evm
 
@@ -54,6 +54,41 @@ Endpoints Trigger Import помогают сгенерировать trigger dra
 | `abiSourceOverride` | Нет | `provided` или `auto`. |
 | `includeEvents` | Нет | Генерировать ли event triggers. |
 | `includeCalls` | Нет | Генерировать ли call/transaction triggers. |
+
+Ответ: [TriggerImportDraftsResult](types.md#triggerimportdraftsresult).
+
+## POST /api/v2/triggers/import/solana/idl
+
+Пытается загрузить Solana IDL по Program ID.
+
+Аргументы: нет.
+
+Тело запроса:
+
+| Поле | Обязательное | Описание |
+| --- | --- | --- |
+| `source` | Да | Solana source name/fullname. |
+| `programId` | Да | Public key Solana program. |
+
+Ответ: Solana IDL metadata object с `source`, `programId`, адресом IDL/metadata account и `idl`.
+
+## POST /api/v2/triggers/import/solana/drafts
+
+Генерирует Solana trigger drafts из IDL.
+
+Аргументы: нет.
+
+Тело запроса:
+
+| Поле | Обязательное | Описание |
+| --- | --- | --- |
+| `project` | Да | Project fullname. |
+| `source` | Да | Solana source name/fullname. |
+| `programId` | Да | Public key Solana program. |
+| `idl` | Да | Solana IDL JSON object или string. |
+| `category` | Нет | Category для сгенерированных triggers. |
+| `includeEvents` | Нет | Включать ли program events. |
+| `includeCalls` | Нет | Включать ли instructions/calls. |
 
 Ответ: [TriggerImportDraftsResult](types.md#triggerimportdraftsresult).
 

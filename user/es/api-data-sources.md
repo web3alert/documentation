@@ -1,6 +1,6 @@
 # Data Sources API
 
-Los endpoints Data source gestionan custom EVM/Substrate sources, runtime status y logs.
+Los endpoints Data source gestionan custom EVM/Substrate/Solana sources, runtime status y logs.
 
 ## GET /api/v2/custom-sources
 
@@ -39,7 +39,7 @@ Payload:
 | `workspace` | Sí | Workspace fullname. |
 | `name` | Sí | Source name. |
 | `public` | No | Indica si el source se propone/publica como public. |
-| `kind` | Sí | `evm` o `substrate`. |
+| `kind` | Sí | `evm`, `substrate` o `solana`. |
 | `endpoints` | Sí | Array de RPC/indexer endpoint URLs. |
 | `substrate.extensions` | No | Configuración de Substrate metadata/extensions. |
 
@@ -78,7 +78,7 @@ Payload:
 | `fullname` | Sí | Source fullname. |
 | `workspace` | Sí | Workspace fullname. |
 | `public` | No | Indica si el source es public. |
-| `kind` | Sí | `evm` o `substrate`. |
+| `kind` | Sí | `evm`, `substrate` o `solana`. |
 | `endpoints` | Sí | Array de endpoint URLs. |
 | `batchMaxCount` | No | Runtime batch max count. |
 | `blockProcessingConcurrency` | No | Runtime block processing concurrency. |

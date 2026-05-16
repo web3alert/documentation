@@ -1,6 +1,6 @@
 # Data Sources
 
-`Data sources` son fuentes de datos blockchain/runtime de las que Web3alert recibe blocks, transactions, events, extrinsics, calls y metadata.
+`Data sources` son fuentes de datos blockchain/runtime de las que Web3alert recibe blocks, transactions, events, extrinsics, Solana instructions/calls y metadata.
 
 Dicho de forma simple, data source responde a “de dónde leer datos”, y [trigger](triggers.md) responde a “qué evento de esos datos considerar adecuado y cómo convertirlo en output para una subscription”.
 
@@ -35,7 +35,7 @@ La creación de custom sources no está disponible en todos los planes. Free acc
 
 ## Tipos de custom sources
 
-Actualmente el wizard soporta dos tipos de custom data sources.
+Actualmente el wizard soporta tres tipos de custom data sources.
 
 ### EVM
 
@@ -53,11 +53,21 @@ Sirve para runtime events, extrinsics, calls, blocks, storage reads e importaci�
 
 Para Substrate source normalmente se usa WebSocket endpoint. Si la red requiere signed extensions, runtime types o RPC definitions no estándar, se pueden añadir en el paso `Extensions`.
 
+### Solana
+
+Solana source se usa para redes y RPC endpoints compatibles con Solana.
+
+Sirve para Solana blocks, instructions/calls correctos y program events decodificados mediante IDL. El wizard puede intentar cargar IDL automáticamente desde Anchor IDL account o Program Metadata; si no lo consigue, hay que pegar el IDL JSON manualmente.
+
+Sin IDL, Web3alert no crea Solana event/call triggers, porque no puede construir de forma fiable la estructura de arguments, accounts y output schema.
+
+Para Solana source normalmente se usa HTTP RPC URL.
+
 ## Lista de data sources
 
 La sección `Data Sources` muestra una tabla de sources.
 
-Los sources se agrupan por tipo o runtime category, por ejemplo `EVM`, `Substrate` u otro plugin/runtime type.
+Los sources se agrupan por tipo o runtime category, por ejemplo `EVM`, `Substrate`, `Solana` u otro plugin/runtime type.
 
 ### Name
 
@@ -183,7 +193,7 @@ Define disponibilidad de custom source.
 
 Tipo de blockchain/runtime source.
 
-Actualmente están disponibles `EVM` y `Substrate`.
+Actualmente están disponibles `EVM`, `Substrate` y `Solana`.
 
 ### Endpoints
 
@@ -191,7 +201,7 @@ Lista de RPC endpoints a los que se conectará runtime.
 
 Se puede indicar uno o varios endpoints. Varios endpoints son útiles para redundancia: si uno es inestable, runtime puede usar otro.
 
-Para EVM normalmente se usa HTTP RPC URL. Para Substrate normalmente se usa WebSocket URL.
+Para EVM y Solana normalmente se usa HTTP RPC URL. Para Substrate normalmente se usa WebSocket URL.
 
 ### Batch max count
 
@@ -217,7 +227,7 @@ Limita la cantidad de bloques que source puede mantener en cola de procesamiento
 
 En este paso se configuran runtime extensions adicionales.
 
-Para EVM sources, este paso normalmente no requiere nada: EVM data sources no usan signed extensions, custom runtime types ni RPC extension definitions en este flow.
+Para EVM y Solana sources, este paso normalmente no requiere nada: no usan signed extensions, custom runtime types ni RPC extension definitions en este flow.
 
 Para Substrate sources, extensions solo hacen falta en redes donde standard metadata no es suficiente.
 

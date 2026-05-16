@@ -57,7 +57,7 @@ Required data source selection from which trigger will read blockchain/runtime d
 
 The list shows project sources that are available. If there is no suitable source, you can go to [Add new source](data-sources.md#add-data-source).
 
-The selected source determines the next configuration branch: EVM or Substrate.
+The selected source determines the next configuration branch: EVM, Substrate, or Solana.
 
 ### Blockchain - EVM
 
@@ -98,6 +98,34 @@ The list is loaded from metadata source. It is available only for `event` and `c
 Required entry inside the selected pallet.
 
 For `event`, a pallet event is selected. For `call`/`extrinsic`, an extrinsic is selected. The wizard shows runtime version so it is clear which metadata provided the available options.
+
+### Blockchain - Solana
+
+#### Source Item
+
+Required selection of Solana item type: `event` or `call`.
+
+`event` corresponds to a program event decoded from logs. `call` corresponds to a Solana instruction of the selected program. The UI uses the common `call` term to keep one language across source types.
+
+#### Program ID
+
+Required public key of the Solana program.
+
+Program ID is used as the runtime filter: the source looks only for events/instructions of this program.
+
+#### IDL
+
+JSON IDL of the selected program.
+
+The wizard can try to load IDL automatically by Program ID from an Anchor IDL account or Program Metadata. If IDL cannot be loaded automatically, it must be pasted manually. Without IDL, a Solana event/call trigger cannot be created because the source cannot reliably decode payload, arguments, and accounts.
+
+When saving a trigger, the wizard keeps only the IDL fragment needed for the selected event/call and dependent custom types, so the trigger does not have to store the full IDL of the whole program.
+
+#### Event / Call
+
+Required entry from IDL.
+
+For `event`, an event from `events` is selected. For `call`, an instruction from `instructions` is selected. If `call` is selected, accounts from IDL become available as named fields under `source.accounts.*`.
 
 ### Source Payload
 
@@ -218,6 +246,42 @@ The selected source item defines the `source.*` structure that will be available
 | `source.stateRoot` | `string` | Block state root. |
 | `source.extrinsicsRoot` | `string` | Block extrinsics root. |
 
+#### Solana Event
+
+| Path | Type | Description |
+| --- | --- | --- |
+| `source.block.slot` | `number` | Slot where the event was found. |
+| `source.block.hash` | `string \| null` | Block hash for the slot, if available. |
+| `source.block.timestamp` | `number \| null` | Block timestamp, if available. |
+| `source.transaction.index` | `number` | Transaction index inside the block. |
+| `source.transaction.signature` | `string` | Solana transaction signature. |
+| `source.transaction.success` | `boolean` | Whether the transaction was successful. Failed transactions are skipped by the source. |
+| `source.transaction.error` | `unknown` | Transaction error or `null` for a successful transaction. |
+| `source.index` | `number` | Matched event index inside source output. |
+| `source.programId` | `address` | Program ID selected in the trigger. |
+| `source.event` | `string` | Event name from IDL. |
+| `source.data` | `object` | Decoded event data, keyed by field names from IDL. |
+
+#### Solana Call
+
+| Path | Type | Description |
+| --- | --- | --- |
+| `source.block.slot` | `number` | Slot where the instruction was found. |
+| `source.block.hash` | `string \| null` | Block hash for the slot, if available. |
+| `source.block.timestamp` | `number \| null` | Block timestamp, if available. |
+| `source.transaction.index` | `number` | Transaction index inside the block. |
+| `source.transaction.signature` | `string` | Solana transaction signature. |
+| `source.transaction.success` | `boolean` | Whether the transaction was successful. Failed transactions are skipped by the source. |
+| `source.transaction.error` | `unknown` | Transaction error or `null` for a successful transaction. |
+| `source.index` | `number` | Matched call index inside source output. |
+| `source.path` | `string` | Instruction path, including nested inner instructions. |
+| `source.inner` | `boolean` | `true` if the matched instruction was an inner instruction. |
+| `source.programId` | `address` | Program ID selected in the trigger. |
+| `source.call` | `string` | Instruction name from IDL. |
+| `source.args` | `object` | Decoded instruction arguments, keyed by arg names from IDL. |
+| `source.accounts` | `object` | Account addresses, keyed by account names from IDL. |
+| `source.accountsRaw` | `array<string>` | Account addresses in transaction instruction order. |
+
 ## Step 3. Inputs Schema
 
 `Inputs schema` describes parameters that the user provides when creating a subscription.
@@ -267,7 +331,7 @@ In `UI mode`, schema consists of properties. Each property can be expanded, coll
 
 `enum` - set of variants, where each variant has a name and its own type. This type is available in output schema, but disabled for trigger inputs and filters. Inputs and filters need to define a concrete value by which subscription can compare or filter source item; enum variants are too ambiguous for this scenario.
 
-`lookup` - reference to a type from Substrate metadata. It requires selecting `Lookup ref`. This type is useful when you need to preserve a relation to runtime type rather than describe the structure manually.
+`lookup` - reference to a type from metadata/IDL, for example a Substrate runtime type or a Solana custom defined type. It requires selecting `Lookup ref`. This type is useful when you need to preserve a relation to runtime/source type rather than describe the structure manually.
 
 ## Step 4. Data Providers
 
@@ -351,7 +415,7 @@ Weight: `1`.
 
 #### State Type
 
-Read type: `EVM contract` or `Substrate storage`.
+Read type: `EVM contract`, `Substrate storage`, or `Solana account`.
 
 #### EVM Contract
 
@@ -400,6 +464,34 @@ Argument fields of the selected storage entry.
 ##### Block
 
 Optional block number/hash/template.
+
+#### Solana Account
+
+##### Source
+
+Solana source. By default, trigger source is used.
+
+##### Account
+
+Account public key whose state should be read. The field supports template substitutions, for example `{{ source.accounts.base_mint }}`.
+
+Solana state is stored in accounts. Therefore the provider reads an account through source runtime and tries to decode its contents.
+
+##### IDL
+
+Optional JSON IDL with account definitions.
+
+If IDL is enabled and filled, the provider decodes the account strictly with it. If decoding with manual IDL fails, the provider returns an error and does not switch to automatic recognition.
+
+If IDL is disabled, the provider automatically resolves the schema from account data:
+
+- first it uses `jsonParsed` if Solana RPC returns parsed account data;
+- then it tries built-in layouts for common on-chain accounts, for example SPL Token mint/account and Metaplex Metadata;
+- if the account owner is a program for which IDL is available, it tries to load IDL automatically through Anchor or Program Metadata and decode the account with it.
+
+Provider result is available as `providers.<id>`. It returns base account fields (`account`, `exists`, `owner`, `lamports`, `executable`, `rentEpoch`, `slot`) and decoded `data` if schema was found.
+
+Solana account provider caches successful results for a short time so several triggers/events reading the same account do not send redundant RPC requests.
 
 ### Value History
 

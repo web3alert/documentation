@@ -297,6 +297,7 @@
 | `evm_log` | `type`, `dataSource`, opcionalmente `contract`, `event`, `abiFragment`, `topicsCount`, `dataBytes`, `testInput`. |
 | `evm_transaction` | `type`, `dataSource`, opcionalmente `testInput`. |
 | `substrate_event` | `type`, `dataSource`, opcionalmente `pallet`, `event`, `testInput`. |
+| `solana_event` | `type`, `dataSource`, opcionalmente `programId`, `event`, `idl`, `testInput`. Para calls, `event` guarda um valor com prefixo `call:`. |
 | `timer` | `type`, `interval`, opcionalmente `testInput`. |
 
 ### TriggerTransform
@@ -408,7 +409,7 @@
 | --- | --- | --- |
 | `app` | `string` | Runtime app name. |
 | `network` | `string` | Nome de network/source. |
-| `plugin` | `"evm" \| "substrate"` | Tipo de runtime plugin. |
+| `plugin` | `"evm" \| "substrate" \| "solana"` | Tipo de runtime plugin. |
 | `instance` | `string` | Runtime instance. |
 | `status` | `"running" \| "degraded" \| "error"` | Status do runtime. |
 | `updatedAt` | `string` | Data de atualização em formato ISO. |
@@ -652,7 +653,7 @@
 | `name` | `string` | Source name. |
 | `fullname` | `string` | Fullname do source. |
 | `public` | `boolean` | Flag public. |
-| `kind` | `"evm" \| "substrate"` | Tipo do source. |
+| `kind` | `"evm" \| "substrate" \| "solana"` | Tipo do source. |
 | `meta` | `CustomSourceMeta` | Metadados. |
 | `createdAt` | `string` | Data de criação em formato ISO. |
 | `updatedAt` | `string` | Data de atualização em formato ISO. |
@@ -691,6 +692,10 @@
 | `substrate.ss58Prefix` | `number?` | SS58 prefix. |
 | `substrate.latestBlock` | `number?` | Latest Substrate block. |
 | `substrate.fetchedAt` | `string` | Metadata fetch date. |
+| `solana.genesisHash` | `string?` | Genesis hash da Solana network. |
+| `solana.latestBlock` | `number?` | Último Solana slot/block. |
+| `solana.blockHash` | `string?` | Hash do block. |
+| `solana.fetchedAt` | `string` | Metadata fetch date. |
 
 ### CustomSourceCreateCapability
 
@@ -754,7 +759,7 @@
 | `sourceName` | `string` | Source name. |
 | `sourceTitle` | `string` | Título visível. |
 | `workspace` | `string` | Fullname do workspace. |
-| `kind` | `"evm" \| "substrate"` | Tipo do source. |
+| `kind` | `"evm" \| "substrate" \| "solana"` | Tipo do source. |
 | `status` | `"running" \| "error" \| "degraded"` | Novo status. |
 | `previousStatus` | `"running" \| "error" \| "degraded"?` | Status anterior. |
 | `severity` | `"info" \| "warning" \| "error"` | Severity. |

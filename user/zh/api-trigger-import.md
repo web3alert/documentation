@@ -1,6 +1,6 @@
 # Trigger Import API
 
-Trigger import endpoints 帮助根据外部描述生成 trigger drafts：EVM ABI、Substrate metadata/pallets 和 source metadata。
+Trigger import endpoints 帮助根据外部描述生成 trigger drafts：EVM ABI、Substrate metadata/pallets、Solana IDL 和 source metadata。
 
 ## POST /api/v2/triggers/import/evm
 
@@ -54,6 +54,37 @@ Common fields:
 | `abiSourceOverride` | 否 | `provided` 或 `auto`。 |
 | `includeEvents` | 否 | Whether to generate event triggers. |
 | `includeCalls` | 否 | Whether to generate call/transaction triggers. |
+
+响应：[TriggerImportDraftsResult](types.md#triggerimportdraftsresult)。
+
+## POST /api/v2/triggers/import/solana/idl
+
+尝试按 Program ID 加载 Solana IDL。
+
+Payload:
+
+| Field | Required | Description |
+| --- | --- | --- |
+| `source` | 是 | Solana source name/fullname. |
+| `programId` | 是 | Solana program public key. |
+
+响应：Solana IDL metadata object，包含 `source`、`programId`、IDL/metadata account address 和 `idl`。
+
+## POST /api/v2/triggers/import/solana/drafts
+
+根据 IDL 生成 Solana trigger drafts。
+
+Payload:
+
+| Field | Required | Description |
+| --- | --- | --- |
+| `project` | 是 | Project fullname. |
+| `source` | 是 | Solana source name/fullname. |
+| `programId` | 是 | Solana program public key. |
+| `idl` | 是 | Solana IDL JSON object 或 string. |
+| `category` | 否 | Generated triggers 的 category. |
+| `includeEvents` | 否 | 是否包含 program events. |
+| `includeCalls` | 否 | 是否包含 instructions/calls. |
 
 响应：[TriggerImportDraftsResult](types.md#triggerimportdraftsresult)。
 

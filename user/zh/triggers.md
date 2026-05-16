@@ -16,7 +16,7 @@ Trigger 连接服务中的几个部分：
 有两种主要路径：
 
 - [Add trigger / Edit trigger](trigger-wizard.md) - 主要的详细 wizard。它用于从 source 到 notification defaults 的手动 trigger 创建和编辑；
-- [Import triggers](import-triggers.md) - 简化的批量 wizard。它会根据指定 configs 或 metadata 生成一组 triggers，例如根据 EVM contract ABI 或 Substrate pallet metadata，然后允许选择要保存哪些。
+- [Import triggers](import-triggers.md) - 简化的批量 wizard。它会根据指定 configs 或 metadata 生成一组 triggers，例如根据 EVM contract ABI、Substrate pallet metadata 或 Solana program IDL，然后允许选择要保存哪些。
 
 如果需要配置一个精确场景或编辑已有 trigger，通常使用 [Add trigger / Edit trigger](trigger-wizard.md)。如果需要从外部 contract 或 pallet 描述快速获得大量同类 triggers，更适合从 [Import triggers](import-triggers.md) 开始。
 

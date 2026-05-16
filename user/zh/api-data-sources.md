@@ -1,6 +1,6 @@
 # Data Sources API
 
-Data source endpoints 用于管理 custom EVM/Substrate sources、runtime status 和 logs。
+Data source endpoints 用于管理 custom EVM/Substrate/Solana sources、runtime status 和 logs。
 
 ## GET /api/v2/custom-sources
 
@@ -39,7 +39,7 @@ Payload:
 | `workspace` | 是 | Workspace fullname。 |
 | `name` | 是 | Source name。 |
 | `public` | 否 | Source 是否作为 public 提议/发布。 |
-| `kind` | 是 | `evm` 或 `substrate`。 |
+| `kind` | 是 | `evm`、`substrate` 或 `solana`。 |
 | `endpoints` | 是 | RPC/indexer endpoint URLs 数组。 |
 | `substrate.extensions` | 否 | Substrate metadata/extensions config。 |
 
@@ -78,7 +78,7 @@ Payload:
 | `fullname` | 是 | Source fullname。 |
 | `workspace` | 是 | Workspace fullname。 |
 | `public` | 否 | Source 是否为 public。 |
-| `kind` | 是 | `evm` 或 `substrate`。 |
+| `kind` | 是 | `evm`、`substrate` 或 `solana`。 |
 | `endpoints` | 是 | Endpoint URLs 数组。 |
 | `batchMaxCount` | 否 | Runtime batch max count。 |
 | `blockProcessingConcurrency` | 否 | Runtime block processing concurrency。 |

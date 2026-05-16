@@ -57,7 +57,7 @@
 
 В списке показываются доступные sources проекта. Если подходящего source нет, можно перейти к [Add new source](data-sources.md#add-data-source).
 
-Выбранный source определяет дальнейшую ветку настройки: EVM или Substrate.
+Выбранный source определяет дальнейшую ветку настройки: EVM, Substrate или Solana.
 
 ### Blockchain - EVM
 
@@ -98,6 +98,34 @@
 Обязательная entry внутри выбранного pallet.
 
 Для `event` выбирается событие pallet. Для `call`/`extrinsic` выбирается extrinsic. Wizard показывает runtime version, чтобы было понятно, из какой metadata загружены доступные варианты.
+
+### Blockchain - Solana
+
+#### Source item
+
+Обязательный выбор типа Solana item: `event` или `call`.
+
+`event` соответствует program event, который source декодирует из logs. `call` соответствует Solana instruction выбранной программы. В UI используется общий термин `call`, чтобы сохранить единый язык с другими source types.
+
+#### Program ID
+
+Обязательный public key Solana program.
+
+Program ID используется как runtime filter: source ищет только events/instructions этой программы.
+
+#### IDL
+
+JSON IDL выбранной программы.
+
+Wizard может попытаться загрузить IDL автоматически по Program ID через Anchor IDL account или Program Metadata. Если IDL не загружается автоматически, его нужно вставить вручную. Без IDL trigger для Solana event/call создать нельзя, потому что source не сможет надежно декодировать payload, аргументы и accounts.
+
+При сохранении trigger wizard оставляет только нужный фрагмент IDL для выбранного event/call и зависимых custom types, чтобы trigger не требовал хранить полный IDL всей программы.
+
+#### Event / Call
+
+Обязательная entry из IDL.
+
+Для `event` выбирается event из `events`. Для `call` выбирается instruction из `instructions`. Если выбран `call`, accounts из IDL становятся доступными как именованные поля `source.accounts.*`.
 
 ### Source payload
 
@@ -218,6 +246,42 @@
 | `source.stateRoot` | `string` | State root блока. |
 | `source.extrinsicsRoot` | `string` | Extrinsics root блока. |
 
+#### Solana event
+
+| Path | Type | Description |
+| --- | --- | --- |
+| `source.block.slot` | `number` | Slot, где event был найден. |
+| `source.block.hash` | `string \| null` | Block hash для slot, если доступен. |
+| `source.block.timestamp` | `number \| null` | Block timestamp, если доступен. |
+| `source.transaction.index` | `number` | Индекс transaction внутри блока. |
+| `source.transaction.signature` | `string` | Signature Solana transaction. |
+| `source.transaction.success` | `boolean` | Признак успешной transaction. Failed transactions source пропускает. |
+| `source.transaction.error` | `unknown` | Ошибка transaction или `null` для успешной transaction. |
+| `source.index` | `number` | Индекс matched event внутри source output. |
+| `source.programId` | `address` | Program ID, выбранный в trigger. |
+| `source.event` | `string` | Имя event из IDL. |
+| `source.data` | `object` | Decoded event data, где ключи соответствуют именам fields из IDL. |
+
+#### Solana call
+
+| Path | Type | Description |
+| --- | --- | --- |
+| `source.block.slot` | `number` | Slot, где instruction был найден. |
+| `source.block.hash` | `string \| null` | Block hash для slot, если доступен. |
+| `source.block.timestamp` | `number \| null` | Block timestamp, если доступен. |
+| `source.transaction.index` | `number` | Индекс transaction внутри блока. |
+| `source.transaction.signature` | `string` | Signature Solana transaction. |
+| `source.transaction.success` | `boolean` | Признак успешной transaction. Failed transactions source пропускает. |
+| `source.transaction.error` | `unknown` | Ошибка transaction или `null` для успешной transaction. |
+| `source.index` | `number` | Индекс matched call внутри source output. |
+| `source.path` | `string` | Путь instruction, включая вложенность inner instructions. |
+| `source.inner` | `boolean` | `true`, если matched instruction был inner instruction. |
+| `source.programId` | `address` | Program ID, выбранный в trigger. |
+| `source.call` | `string` | Имя instruction из IDL. |
+| `source.args` | `object` | Decoded instruction arguments, где ключи соответствуют именам args из IDL. |
+| `source.accounts` | `object` | Account addresses, где ключи соответствуют именам accounts из IDL. |
+| `source.accountsRaw` | `array<string>` | Account addresses в порядке transaction instruction. |
+
 ## Step 3. Inputs schema
 
 `Inputs schema` описывает параметры, которые пользователь задает при создании подписки.
@@ -267,7 +331,7 @@ Schema editor используется в нескольких шагах wizard
 
 `enum` - набор variants, где каждый variant имеет имя и собственный тип. Этот тип доступен в output schema, но отключен для trigger inputs и filters. Для inputs и filters нужно задавать конкретное значение, по которому subscription сможет сравнивать или фильтровать source item; enum variants для этого сценария слишком неоднозначны.
 
-`lookup` - ссылка на тип из Substrate metadata. Для него выбирается `Lookup ref`. Этот тип удобен, когда нужно сохранить связь с runtime type, а не описывать структуру вручную.
+`lookup` - ссылка на тип из metadata/IDL, например Substrate runtime type или Solana custom defined type. Для него выбирается `Lookup ref`. Этот тип удобен, когда нужно сохранить связь с runtime/source type, а не описывать структуру вручную.
 
 ## Step 4. Data providers
 
@@ -351,7 +415,7 @@ GraphQL query document.
 
 #### State type
 
-Тип чтения: `EVM contract` или `Substrate storage`.
+Тип чтения: `EVM contract`, `Substrate storage` или `Solana account`.
 
 #### EVM contract
 
@@ -400,6 +464,34 @@ Argument-поля выбранного storage entry.
 ##### Block
 
 Опциональный block number/hash/template.
+
+#### Solana account
+
+##### Source
+
+Solana source. По умолчанию используется source триггера.
+
+##### Account
+
+Account public key, состояние которого нужно прочитать. Поле поддерживает template-подстановки, например `{{ source.accounts.base_mint }}`.
+
+Solana state хранится в accounts. Поэтому provider читает account через source runtime и пытается декодировать его содержимое.
+
+##### IDL
+
+Опциональный JSON IDL с account definitions.
+
+Если IDL включен и заполнен, provider декодирует account строго по нему. Если декодирование по ручному IDL не удалось, provider возвращает ошибку и не переключается на автоматическое распознавание.
+
+Если IDL выключен, provider автоматически определяет схему по данным account:
+
+- сначала использует `jsonParsed`, если Solana RPC возвращает parsed account data;
+- затем пробует built-in layouts для распространенных on-chain accounts, например SPL Token mint/account и Metaplex Metadata;
+- если owner account связан с программой, для которой доступен IDL, пробует загрузить IDL автоматически через Anchor или Program Metadata и декодировать account по нему.
+
+Результат provider доступен как `providers.<id>`. В нем возвращаются базовые поля account (`account`, `exists`, `owner`, `lamports`, `executable`, `rentEpoch`, `slot`) и decoded `data`, если schema была найдена.
+
+Solana account provider кеширует успешные результаты на короткое время, чтобы несколько triggers/events, читающих один и тот же account, не отправляли лишние RPC-запросы.
 
 ### Value history
 
