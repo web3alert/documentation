@@ -23,6 +23,7 @@ Para projects e custom data sources, os limites normalmente são contados pelo o
 
 | Capacidade | Free | Advanced | Pro |
 | --- | ---: | ---: | ---: |
+| Preço | Free | €15.00 / mês; 5% de desconto ao pagar 6 meses; 10% de desconto ao pagar 12 meses | €50.00 / mês; 5% de desconto ao pagar 6 meses; 10% de desconto ao pagar 12 meses |
 | Criar projects | Não | Sim | Sim |
 | Criar workspaces | Unlimited | Unlimited | Unlimited |
 | Editar projects | Não | Sim | Sim |

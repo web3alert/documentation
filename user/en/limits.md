@@ -23,6 +23,7 @@ For projects and custom data sources, limits are usually counted by owner or bil
 
 | Capability | Free | Advanced | Pro |
 | --- | ---: | ---: | ---: |
+| Price | Free | €15.00 / month; 5% discount for 6-month billing; 10% discount for 12-month billing | €50.00 / month; 5% discount for 6-month billing; 10% discount for 12-month billing |
 | Create projects | No | Yes | Yes |
 | Create workspaces | Unlimited | Unlimited | Unlimited |
 | Edit projects | No | Yes | Yes |

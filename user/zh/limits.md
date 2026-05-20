@@ -23,6 +23,7 @@ Tier limit 本身并不授予操作权限。大多数操作需要同时满足两
 
 | 能力 | Free | Advanced | Pro |
 | --- | ---: | ---: | ---: |
+| 价格 | Free | €15.00 / 月；一次支付 6 个月享 5% 折扣；一次支付 12 个月享 10% 折扣 | €50.00 / 月；一次支付 6 个月享 5% 折扣；一次支付 12 个月享 10% 折扣 |
 | 创建 projects | 否 | 是 | 是 |
 | 创建 workspaces | Unlimited | Unlimited | Unlimited |
 | 编辑 projects | 否 | 是 | 是 |
