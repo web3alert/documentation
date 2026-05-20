@@ -104,7 +104,7 @@ Token 属于 account，而不是 workspace。
 
 ## Billing
 
-`Billing` 标签页管理 account 的 balance、tier、billing profile、支付和 coupons。
+`Billing` 标签页管理 account 的 balance、tier、支付和 coupons。
 
 Billing 操作应用于 account，但某些购买可能会影响该 account 管理的 projects。
 
@@ -122,7 +122,7 @@ Balance 可以用于：
 
 打开 balance 充值。
 
-在 dialog 中需要填写 EUR 金额。Checkout 前，服务会检查 billing email 和 country。如果支付提供商不支持该国家，checkout 不会开始。
+在 dialog 中填写 EUR 金额，然后继续前往支付提供商的 checkout。
 
 支付提供商确认付款后，资金会出现在 internal balance 中。
 
@@ -141,22 +141,6 @@ Balance 可以用于：
 控制当前 tier 的自动续费。
 
 如果开关开启，下一周期可以通过所选 payment strategy 自动支付。如果关闭，tier 会持续到已付款周期结束，但不会自动续费。
-
-### Billing Profile
-
-Account 的支付资料。
-
-### Billing Email
-
-用于 billing checkout 和支付操作的 email。
-
-在充值 balance 或付款前，服务可能要求填写 billing email。
-
-### Country
-
-Billing profile 的国家。
-
-Country 从受支持国家列表中选择。如果 profile 中已经保存了国家，它会显示在字段中。如果还没有选择国家，字段显示 `Select country`。
 
 ### Account Plans
 

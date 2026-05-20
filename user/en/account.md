@@ -104,7 +104,7 @@ The token belongs to the account, not to a workspace.
 
 ## Billing
 
-The `Billing` tab manages account balance, tier, billing profile, payments, and coupons.
+The `Billing` tab manages account balance, tier, payments, and coupons.
 
 Billing actions apply to the account, but some purchases can affect projects managed by the account.
 
@@ -122,7 +122,7 @@ The balance can be used to:
 
 Opens balance top-up.
 
-In the dialog, enter the amount in EUR. Before checkout, the service checks billing email and country. If the country is not supported by the payment provider, checkout will not start.
+In the dialog, enter the amount in EUR and continue to the payment provider checkout.
 
 After the provider confirms the payment, the funds appear on the internal balance.
 
@@ -141,22 +141,6 @@ The card shows:
 Controls automatic renewal of the active tier.
 
 When enabled, the next period can be paid automatically by the selected payment strategy. When disabled, the tier stays active until the end of the paid period, but it is not renewed automatically.
-
-### Billing Profile
-
-Account payment details.
-
-### Billing Email
-
-Email for billing checkout and payment operations.
-
-Before topping up the balance or paying, the service may require the billing email to be filled in.
-
-### Country
-
-Billing profile country.
-
-Country is selected from the list of supported countries. If a country is already saved in the profile, it is shown in the field. If no country is selected yet, the field shows `Select country`.
 
 ### Account Plans
 

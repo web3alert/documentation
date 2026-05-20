@@ -104,7 +104,7 @@ El token pertenece al account, no al workspace.
 
 ## Billing
 
-La pestaña `Billing` gestiona el balance, el tier, el billing profile, los pagos y los coupons del account.
+La pestaña `Billing` gestiona el balance, el tier, los pagos y los coupons del account.
 
 Las acciones de billing se aplican al account, pero algunas compras pueden afectar a proyectos gestionados por el account.
 
@@ -122,7 +122,7 @@ El balance se puede usar para:
 
 Abre la recarga de balance.
 
-En el dialog hay que indicar el amount en EUR. Antes del checkout, el servicio comprueba billing email y country. Si el país no está soportado por el proveedor de pagos, el checkout no se iniciará.
+En el dialog hay que indicar el amount en EUR y continuar al checkout del proveedor de pagos.
 
 Después de que el proveedor confirme el pago, los fondos aparecen en el internal balance.
 
@@ -141,22 +141,6 @@ La tarjeta muestra:
 Controla la renovación automática del tier activo.
 
 Si el interruptor está activado, el siguiente periodo puede pagarse automáticamente con la payment strategy seleccionada. Si está desactivado, el tier sigue activo hasta el final del periodo pagado, pero no se renueva automáticamente.
-
-### Billing Profile
-
-Datos de pago del account.
-
-### Billing Email
-
-Email para billing checkout y operaciones de pago.
-
-Antes de recargar el balance o pagar, el servicio puede pedir que se rellene el billing email.
-
-### Country
-
-País del billing profile.
-
-Country se selecciona de la lista de países soportados. Si ya hay un país guardado en el profile, se muestra en el campo. Si todavía no se ha elegido ninguno, el campo muestra `Select country`.
 
 ### Account Plans
 

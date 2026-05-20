@@ -104,7 +104,7 @@ O token pertence ao account, não ao workspace.
 
 ## Billing
 
-O separador `Billing` gere o balance, tier, billing profile, pagamentos e coupons do account.
+O separador `Billing` gere o balance, tier, pagamentos e coupons do account.
 
 As ações de billing aplicam-se ao account, mas algumas compras podem afetar projetos geridos pelo account.
 
@@ -122,7 +122,7 @@ O balance pode ser usado para:
 
 Abre o carregamento do balance.
 
-No dialog, indique o amount em EUR. Antes do checkout, o serviço verifica billing email e country. Se o país não for suportado pelo fornecedor de pagamentos, o checkout não será iniciado.
+No dialog, indique o amount em EUR e continue para o checkout do fornecedor de pagamentos.
 
 Depois de o fornecedor confirmar o pagamento, os fundos aparecem no internal balance.
 
@@ -141,22 +141,6 @@ O cartão mostra:
 Controla a renovação automática do tier ativo.
 
 Se o interruptor estiver ligado, o próximo período pode ser pago automaticamente pela payment strategy selecionada. Se estiver desligado, o tier continua ativo até ao fim do período pago, mas não é renovado automaticamente.
-
-### Billing Profile
-
-Dados de pagamento do account.
-
-### Billing Email
-
-Email para billing checkout e operações de pagamento.
-
-Antes de carregar o balance ou pagar, o serviço pode exigir que o billing email seja preenchido.
-
-### Country
-
-País do billing profile.
-
-Country é selecionado na lista de países suportados. Se um país já estiver guardado no profile, ele aparece no campo. Se ainda não tiver sido escolhido nenhum país, o campo mostra `Select country`.
 
 ### Account Plans
 
