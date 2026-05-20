@@ -16,7 +16,7 @@ Trigger conecta varias partes del servicio:
 Hay dos caminos principales:
 
 - [Add trigger / Edit trigger](trigger-wizard.md) - el wizard detallado principal. Se usa para crear y editar trigger manualmente, desde source hasta notification defaults;
-- [Import triggers](import-triggers.md) - wizard masivo simplificado. Genera un conjunto de triggers a partir de configs o metadata indicados, por ejemplo a partir de ABI de un contrato EVM o metadata de un pallet Substrate, y luego permite elegir cuáles guardar.
+- [Import triggers](import-triggers.md) - wizard masivo simplificado. Genera un conjunto de triggers a partir de configs o metadata indicados, por ejemplo a partir de ABI de un contrato EVM, metadata de un pallet Substrate o IDL de un program Solana, y luego permite elegir cuáles guardar.
 
 Si necesitas configurar un escenario exacto o editar un trigger existente, normalmente se usa [Add trigger / Edit trigger](trigger-wizard.md). Si necesitas obtener rápidamente muchos triggers similares a partir de una descripción externa de contrato o pallet, es más cómodo empezar con [Import triggers](import-triggers.md).
 

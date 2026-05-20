@@ -297,6 +297,7 @@
 | `evm_log` | `type`, `dataSource`, optionally `contract`, `event`, `abiFragment`, `topicsCount`, `dataBytes`, `testInput`. |
 | `evm_transaction` | `type`, `dataSource`, optionally `testInput`. |
 | `substrate_event` | `type`, `dataSource`, optionally `pallet`, `event`, `testInput`. |
+| `solana_event` | `type`, `dataSource`, optionally `programId`, `event`, `idl`, `testInput`. For calls, the `event` field stores a value prefixed with `call:`. |
 | `timer` | `type`, `interval`, optionally `testInput`. |
 
 ### TriggerTransform
@@ -408,7 +409,7 @@
 | --- | --- | --- |
 | `app` | `string` | Runtime app name. |
 | `network` | `string` | Network/source name. |
-| `plugin` | `"evm" \| "substrate"` | Runtime plugin type. |
+| `plugin` | `"evm" \| "substrate" \| "solana"` | Runtime plugin type. |
 | `instance` | `string` | Runtime instance. |
 | `status` | `"running" \| "degraded" \| "error"` | Runtime status. |
 | `updatedAt` | `string` | Update date in ISO format. |
@@ -652,7 +653,7 @@
 | `name` | `string` | Source name. |
 | `fullname` | `string` | Source fullname. |
 | `public` | `boolean` | Public flag. |
-| `kind` | `"evm" \| "substrate"` | Source type. |
+| `kind` | `"evm" \| "substrate" \| "solana"` | Source type. |
 | `meta` | `CustomSourceMeta` | Metadata. |
 | `createdAt` | `string` | Creation date in ISO format. |
 | `updatedAt` | `string` | Update date in ISO format. |
@@ -691,6 +692,10 @@
 | `substrate.ss58Prefix` | `number?` | SS58 prefix. |
 | `substrate.latestBlock` | `number?` | Latest Substrate block. |
 | `substrate.fetchedAt` | `string` | Metadata fetch date. |
+| `solana.genesisHash` | `string?` | Solana network genesis hash. |
+| `solana.latestBlock` | `number?` | Latest Solana slot/block. |
+| `solana.blockHash` | `string?` | Block hash. |
+| `solana.fetchedAt` | `string` | Metadata fetch date. |
 
 ### CustomSourceCreateCapability
 
@@ -754,7 +759,7 @@
 | `sourceName` | `string` | Source name. |
 | `sourceTitle` | `string` | Visible title. |
 | `workspace` | `string` | Workspace fullname. |
-| `kind` | `"evm" \| "substrate"` | Source type. |
+| `kind` | `"evm" \| "substrate" \| "solana"` | Source type. |
 | `status` | `"running" \| "error" \| "degraded"` | New status. |
 | `previousStatus` | `"running" \| "error" \| "degraded"?` | Previous status. |
 | `severity` | `"info" \| "warning" \| "error"` | Severity. |

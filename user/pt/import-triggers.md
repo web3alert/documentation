@@ -1,6 +1,6 @@
 # Import Triggers
 
-`Import triggers` é um wizard para gerar rapidamente um conjunto de triggers a partir de configs ou metadata indicadas, por exemplo a partir do ABI de um contrato EVM ou da metadata de um pallet Substrate.
+`Import triggers` é um wizard para gerar rapidamente um conjunto de triggers a partir de configs ou metadata indicadas, por exemplo a partir do ABI de um contrato EVM, da metadata de um pallet Substrate ou do IDL de um program Solana.
 
 É um caso simplificado e específico da criação de triggers. É útil quando é preciso criar muitos triggers do mesmo tipo: por exemplo, todos os eventos de um contrato ERC20 ou todos os events de um pallet específico. Se precisares de um cenário exato com configuração manual completa, usa [Add trigger / Edit trigger](trigger-wizard.md).
 
@@ -14,6 +14,7 @@ A lista contém [data sources](data-sources.md) que podem ser usados para geraç
 
 - EVM sources;
 - Substrate sources;
+- Solana sources;
 - custom sources, se forem adequados ao projeto.
 
 A opção [Add new source](data-sources.md#add-data-source) abre a criação de [data source](data-sources.md) e volta para o import wizard.
@@ -60,6 +61,14 @@ A interface mostra:
 - botão `Generate triggers from pallet`.
 
 Depois da geração, o wizard constrói draft triggers a partir do pallet selecionado e leva o utilizador para review.
+
+## Step 2.c. Generate for Solana
+
+Para um source Solana, indica `Category`, `Program ID`, `IDL` e `Source item`.
+
+O IDL pode ser carregado automaticamente a partir de Anchor IDL account ou Program Metadata. Se não puder ser carregado, é preciso colar o IDL JSON manualmente. Sem IDL não são gerados triggers Solana, porque não é possível decodificar de forma fiável events, instructions, arguments e accounts.
+
+Solana import suporta `Event` e `Call`. `Call` corresponde a uma Solana instruction, embora a UI mantenha o termo comum `Call`.
 
 ## Step 3. Review & import
 

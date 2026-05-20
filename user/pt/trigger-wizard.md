@@ -57,7 +57,7 @@ Escolha obrigatória de data source de onde trigger vai ler dados blockchain/run
 
 A lista mostra sources disponíveis do projeto. Se não houver uma source adequada, é possível ir para [Add new source](data-sources.md#add-data-source).
 
-A source escolhida determina o ramo seguinte de configuração: EVM ou Substrate.
+A source escolhida determina o ramo seguinte de configuração: EVM, Substrate ou Solana.
 
 ### Blockchain - EVM
 
@@ -98,6 +98,26 @@ A lista é carregada a partir de metadata source. Está disponível apenas para 
 Entry obrigatória dentro do pallet selecionado.
 
 Para `event`, escolhe-se um evento do pallet. Para `call`/`extrinsic`, escolhe-se extrinsic. O wizard mostra runtime version para ficar claro de que metadata foram carregadas as opções disponíveis.
+
+### Blockchain - Solana
+
+#### Source Item
+
+Escolha obrigatória do tipo de Solana item: `event` ou `call`.
+
+`event` corresponde a um program event decodificado a partir de logs. `call` corresponde a uma Solana instruction do program escolhido.
+
+#### Program ID
+
+Public key obrigatório do Solana program.
+
+#### IDL
+
+JSON IDL do program escolhido. O wizard pode tentar carregá-lo automaticamente a partir de Anchor IDL account ou Program Metadata. Se não puder ser carregado, deve ser colado manualmente. Sem IDL não é possível criar um trigger Solana event/call fiável.
+
+#### Event / Call
+
+Entry obrigatória a partir do IDL. Para `event` escolhe-se uma entrada de `events`; para `call` escolhe-se uma instruction de `instructions`. As accounts de uma instruction ficam disponíveis como `source.accounts.*`.
 
 ### Source Payload
 
@@ -218,6 +238,12 @@ O source item escolhido define a estrutura `source.*` que ficará disponível ma
 | `source.stateRoot` | `string` | State root do bloco. |
 | `source.extrinsicsRoot` | `string` | Extrinsics root do bloco. |
 
+#### Solana Event / Call
+
+Solana source items incluem `source.block.slot`, `source.block.hash`, `source.block.timestamp`, `source.transaction.index`, `source.transaction.signature`, `source.transaction.success`, `source.transaction.error`, `source.index` e `source.programId`.
+
+Para events, o payload decoded fica em `source.data` e o nome em `source.event`. Para calls/instructions, o payload decoded fica em `source.args`, o nome em `source.call`, e as accounts ficam disponíveis como `source.accounts` e `source.accountsRaw`.
+
 ## Step 3. Inputs Schema
 
 `Inputs schema` descreve parâmetros que o utilizador define ao criar uma subscription.
@@ -267,7 +293,7 @@ Em `UI mode`, schema consiste em properties. Cada property pode ser expandida, c
 
 `enum` - conjunto de variants, onde cada variant tem nome e tipo próprio. Este tipo está disponível em output schema, mas está desativado para trigger inputs e filters. Para inputs e filters é necessário definir um valor concreto pelo qual subscription poderá comparar ou filtrar source item; enum variants são demasiado ambíguos para este cenário.
 
-`lookup` - referência a um tipo de Substrate metadata. Para ele escolhe-se `Lookup ref`. Este tipo é útil quando é preciso preservar a relação com runtime type em vez de descrever a estrutura manualmente.
+`lookup` - referência a um tipo de metadata/IDL, por exemplo um Substrate runtime type ou um Solana custom defined type. Para ele escolhe-se `Lookup ref`. Este tipo é útil quando é preciso preservar a relação com runtime/source type em vez de descrever a estrutura manualmente.
 
 ## Step 4. Data Providers
 
@@ -351,7 +377,7 @@ Weight: `1`.
 
 #### State Type
 
-Tipo de leitura: `EVM contract` ou `Substrate storage`.
+Tipo de leitura: `EVM contract`, `Substrate storage` ou `Solana account`.
 
 #### EVM Contract
 
@@ -400,6 +426,22 @@ Campos de arguments do storage entry selecionado.
 ##### Block
 
 Block number/hash/template opcional.
+
+#### Solana Account
+
+##### Source
+
+Solana source. Por defeito é usado source do trigger.
+
+##### Account
+
+Public key da account cujo estado deve ser lido. Suporta templates, por exemplo `{{ source.accounts.base_mint }}`.
+
+##### IDL
+
+IDL JSON opcional com account definitions. Se estiver ativo, o provider decodifica estritamente com esse IDL. Se estiver desativado, tenta resolver a schema automaticamente por `jsonParsed`, built-in layouts como SPL Token/Metaplex Metadata, ou IDL automático por Anchor/Program Metadata.
+
+O resultado fica disponível como `providers.<id>` e inclui campos base de account e `data` decodificado quando uma schema é encontrada. Resultados corretos ficam em cache por pouco tempo para evitar RPC requests repetidos ao mesmo account.
 
 ### Value History
 

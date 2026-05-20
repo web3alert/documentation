@@ -297,6 +297,7 @@
 | `evm_log` | `type`, `dataSource`, опционально `contract`, `event`, `abiFragment`, `topicsCount`, `dataBytes`, `testInput`. |
 | `evm_transaction` | `type`, `dataSource`, опционально `testInput`. |
 | `substrate_event` | `type`, `dataSource`, опционально `pallet`, `event`, `testInput`. |
+| `solana_event` | `type`, `dataSource`, опционально `programId`, `event`, `idl`, `testInput`. Для calls поле `event` хранит значение с префиксом `call:`. |
 | `timer` | `type`, `interval`, опционально `testInput`. |
 
 ### TriggerTransform
@@ -408,7 +409,7 @@
 | --- | --- | --- |
 | `app` | `string` | Имя runtime app. |
 | `network` | `string` | Имя network/source. |
-| `plugin` | `"evm" \| "substrate"` | Тип runtime plugin. |
+| `plugin` | `"evm" \| "substrate" \| "solana"` | Тип runtime plugin. |
 | `instance` | `string` | Экземпляр runtime. |
 | `status` | `"running" \| "degraded" \| "error"` | Статус runtime. |
 | `updatedAt` | `string` | Дата обновления в формате ISO. |
@@ -652,7 +653,7 @@
 | `name` | `string` | Имя source. |
 | `fullname` | `string` | Полное имя source. |
 | `public` | `boolean` | Флаг public. |
-| `kind` | `"evm" \| "substrate"` | Тип source. |
+| `kind` | `"evm" \| "substrate" \| "solana"` | Тип source. |
 | `meta` | `CustomSourceMeta` | Метаданные. |
 | `createdAt` | `string` | Дата создания в формате ISO. |
 | `updatedAt` | `string` | Дата обновления в формате ISO. |
@@ -691,6 +692,10 @@
 | `substrate.ss58Prefix` | `number?` | SS58 prefix. |
 | `substrate.latestBlock` | `number?` | Последний Substrate block. |
 | `substrate.fetchedAt` | `string` | Дата получения метаданных. |
+| `solana.genesisHash` | `string?` | Genesis hash Solana network. |
+| `solana.latestBlock` | `number?` | Последний Solana slot/block. |
+| `solana.blockHash` | `string?` | Hash block. |
+| `solana.fetchedAt` | `string` | Дата получения метаданных. |
 
 ### CustomSourceCreateCapability
 
@@ -754,7 +759,7 @@
 | `sourceName` | `string` | Имя source. |
 | `sourceTitle` | `string` | Видимое название. |
 | `workspace` | `string` | Полное имя workspace. |
-| `kind` | `"evm" \| "substrate"` | Тип source. |
+| `kind` | `"evm" \| "substrate" \| "solana"` | Тип source. |
 | `status` | `"running" \| "error" \| "degraded"` | Новый status. |
 | `previousStatus` | `"running" \| "error" \| "degraded"?` | Предыдущий status. |
 | `severity` | `"info" \| "warning" \| "error"` | Severity. |

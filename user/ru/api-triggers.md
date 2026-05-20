@@ -284,6 +284,7 @@ Endpoints Triggers управляют trigger definitions, drafts, bulk operatio
 | `evm_log` | `type`, `dataSource` | `contract`, `event`, `abiFragment`, `topicsCount`, `dataBytes`, `testInput` |
 | `evm_transaction` | `type`, `dataSource` | `testInput` |
 | `substrate_event` | `type`, `dataSource` | `pallet`, `event`, `testInput` |
+| `solana_event` | `type`, `dataSource` | `programId`, `event`, `idl`, `testInput` |
 | `timer` | `type`, `interval` | `testInput` |
 
 ## Provider Definition
@@ -300,5 +301,6 @@ Endpoints Triggers управляют trigger definitions, drafts, bulk operatio
 | `rpc` with `transport: "source"` | `id`, `type`, `transport`, `method` | `params` |
 | `substrate_storage` | `id`, `type`, `module`, `entry` | `source`, `args`, `block` |
 | `evm_read` | `id`, `type`, `contract`, `method`, `abiFragment` | `source`, `abiContract`, `args` |
+| `solana_account` | `id`, `type`, `account` | `source`, `idl`, `programId`, `accountName`, `pda` |
 | `state_window` | `id`, `type`, `dedupeBy`, `value`, `keepLast` | `partitionBy`, `valueType`, `aggregate` |
 | `javascript` | `id`, `type`, `source` | `variables` |

@@ -1,6 +1,6 @@
 # Import Triggers
 
-`Import triggers` is a wizard for quickly generating a set of triggers from selected configs or metadata, for example from an EVM contract ABI or Substrate pallet metadata.
+`Import triggers` is a wizard for quickly generating a set of triggers from selected configs or metadata, for example from an EVM contract ABI, Substrate pallet metadata, or Solana program IDL.
 
 It is a simplified special case of creating triggers. It is useful when you need to create many similar triggers: for example, all events of an ERC20 contract or all events of a specific pallet. If you need one precise scenario with full manual configuration, use [Add trigger / Edit trigger](trigger-wizard.md).
 
@@ -14,6 +14,7 @@ The list contains [data sources](data-sources.md) that can be used for generatio
 
 - EVM sources;
 - Substrate sources;
+- Solana sources;
 - custom sources, if they fit the project.
 
 The [Add new source](data-sources.md#add-data-source) option opens [data source](data-sources.md) creation and returns back to the import wizard.
@@ -60,6 +61,32 @@ The interface shows:
 - `Generate triggers from pallet` button.
 
 After generation, the wizard builds draft triggers from the selected pallet and moves the user to review.
+
+## Step 2.c. Generate for Solana
+
+For a Solana source, fill the following panels.
+
+### Category
+
+Category for future triggers.
+
+### Program ID
+
+Public key of the Solana program whose IDL should be loaded and for which triggers will be created.
+
+### IDL
+
+Program IDL JSON. The wizard can try to load IDL automatically from an Anchor IDL account or Program Metadata. If automatic loading is unavailable, IDL must be pasted manually.
+
+IDL is required: without it, import does not create raw triggers because the source cannot reliably decode instructions, events, arguments, and accounts.
+
+### Source Item
+
+Solana import supports `Event` and `Call`.
+
+`Event` creates triggers for program events decoded from logs. `Call` creates triggers for Solana instructions of the selected program. The UI uses the common `Call` term, but in Solana this corresponds to an instruction.
+
+After generation, the wizard builds draft triggers from events/instructions found in IDL and moves the user to review.
 
 ## Step 3. Review & import
 

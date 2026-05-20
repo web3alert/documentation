@@ -1,6 +1,6 @@
 # Data Sources API
 
-Endpoints Data Sources управляют custom EVM/Substrate sources, runtime-статусом и logs.
+Endpoints Data Sources управляют custom EVM/Substrate/Solana sources, runtime-статусом и logs.
 
 ## GET /api/v2/custom-sources
 
@@ -39,7 +39,7 @@ Endpoints Data Sources управляют custom EVM/Substrate sources, runtime-
 | `workspace` | Да | Workspace fullname. |
 | `name` | Да | Имя source. |
 | `public` | Нет | Признак того, что source предлагается или публикуется как public. |
-| `kind` | Да | `evm` или `substrate`. |
+| `kind` | Да | `evm`, `substrate` или `solana`. |
 | `endpoints` | Да | Массив URL RPC/indexer endpoints. |
 | `substrate.extensions` | Нет | Конфигурация Substrate metadata/extensions. |
 
@@ -78,7 +78,7 @@ Endpoints Data Sources управляют custom EVM/Substrate sources, runtime-
 | `fullname` | Да | Source fullname. |
 | `workspace` | Да | Workspace fullname. |
 | `public` | Нет | Признак public source. |
-| `kind` | Да | `evm` или `substrate`. |
+| `kind` | Да | `evm`, `substrate` или `solana`. |
 | `endpoints` | Да | Массив endpoint URLs. |
 | `batchMaxCount` | Нет | Максимальный размер runtime batch. |
 | `blockProcessingConcurrency` | Нет | Параллельность обработки блоков в runtime. |
