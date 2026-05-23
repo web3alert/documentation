@@ -4,6 +4,12 @@ on:
   push:
     branches:
       - marketplace
+    # Draft guides live under draft/** and are intentionally not published.
+    paths:
+      - package.json
+      - package-lock.json
+      - user/**
+      - .github/workflows/deploy-github-pages.yml
   workflow_dispatch:
 
 permissions:
