@@ -3,7 +3,7 @@ name: Deploy GitHub Pages
 on:
   push:
     branches:
-      - marketplace
+      - master
     # Draft guides live under draft/** and are intentionally not published.
     paths:
       - package.json
