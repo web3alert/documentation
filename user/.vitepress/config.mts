@@ -1,4 +1,4 @@
-import { defineConfig } from 'vitepress';
+import { defineConfig, type DefaultTheme } from 'vitepress';
 
 type LocaleKey = 'root' | 'ru' | 'en' | 'es' | 'pt' | 'zh';
 
@@ -11,7 +11,6 @@ type LocaleMeta = {
     home: string;
     guide: string;
     api: string;
-    language: string;
   };
   sections: {
     core: string;
@@ -31,6 +30,8 @@ type LocaleMeta = {
     resources: string;
     dataSources: string;
     addresses: string;
+    guides: string;
+    createSolanaProject: string;
     api: string;
     apiOverview: string;
     types: string;
@@ -59,7 +60,6 @@ const locales: Record<LocaleKey, LocaleMeta> = {
       home: 'Home',
       guide: 'Guide',
       api: 'API',
-      language: 'Language',
     },
     sections: {
       core: 'Core sections',
@@ -79,6 +79,8 @@ const locales: Record<LocaleKey, LocaleMeta> = {
       resources: 'Resources',
       dataSources: 'Data sources',
       addresses: 'Addresses',
+      guides: 'Guides',
+      createSolanaProject: 'Create a Solana project',
       api: 'API',
       apiOverview: 'API Overview',
       types: 'Types',
@@ -105,7 +107,6 @@ const locales: Record<LocaleKey, LocaleMeta> = {
       home: 'Главная',
       guide: 'Руководство',
       api: 'API',
-      language: 'Язык',
     },
     sections: {
       core: 'Основные разделы',
@@ -125,6 +126,8 @@ const locales: Record<LocaleKey, LocaleMeta> = {
       resources: 'Ресурсы',
       dataSources: 'Источники данных',
       addresses: 'Адреса',
+      guides: 'Гайды',
+      createSolanaProject: 'Создание проекта Solana',
       api: 'API',
       apiOverview: 'Обзор API',
       types: 'Типы',
@@ -151,7 +154,6 @@ const locales: Record<LocaleKey, LocaleMeta> = {
       home: 'Home',
       guide: 'Guide',
       api: 'API',
-      language: 'Language',
     },
     sections: {
       core: 'Core sections',
@@ -171,6 +173,8 @@ const locales: Record<LocaleKey, LocaleMeta> = {
       resources: 'Resources',
       dataSources: 'Data sources',
       addresses: 'Addresses',
+      guides: 'Guides',
+      createSolanaProject: 'Create a Solana project',
       api: 'API',
       apiOverview: 'API Overview',
       types: 'Types',
@@ -197,7 +201,6 @@ const locales: Record<LocaleKey, LocaleMeta> = {
       home: 'Inicio',
       guide: 'Guía',
       api: 'API',
-      language: 'Idioma',
     },
     sections: {
       core: 'Secciones principales',
@@ -217,6 +220,8 @@ const locales: Record<LocaleKey, LocaleMeta> = {
       resources: 'Recursos',
       dataSources: 'Fuentes de datos',
       addresses: 'Direcciones',
+      guides: 'Guías',
+      createSolanaProject: 'Crear un proyecto de Solana',
       api: 'API',
       apiOverview: 'Resumen de API',
       types: 'Tipos',
@@ -243,7 +248,6 @@ const locales: Record<LocaleKey, LocaleMeta> = {
       home: 'Início',
       guide: 'Guia',
       api: 'API',
-      language: 'Idioma',
     },
     sections: {
       core: 'Secções principais',
@@ -263,6 +267,8 @@ const locales: Record<LocaleKey, LocaleMeta> = {
       resources: 'Recursos',
       dataSources: 'Fontes de dados',
       addresses: 'Endereços',
+      guides: 'Guias',
+      createSolanaProject: 'Criar um projeto Solana',
       api: 'API',
       apiOverview: 'Visão geral da API',
       types: 'Tipos',
@@ -289,7 +295,6 @@ const locales: Record<LocaleKey, LocaleMeta> = {
       home: '首页',
       guide: '指南',
       api: 'API',
-      language: '语言',
     },
     sections: {
       core: '核心章节',
@@ -309,6 +314,8 @@ const locales: Record<LocaleKey, LocaleMeta> = {
       resources: '资源',
       dataSources: '数据源',
       addresses: '地址',
+      guides: '指南',
+      createSolanaProject: '创建 Solana 项目',
       api: 'API',
       apiOverview: 'API 概览',
       types: '类型',
@@ -332,27 +339,8 @@ const linkFor = (locale: LocaleMeta, path: string) => (
   path === '/' ? `${locale.prefix}/` || '/' : `${locale.prefix}${path}`
 );
 
-const languageItems = ['ru', 'en', 'es', 'pt', 'zh']
-  .map((key) => locales[key as Exclude<LocaleKey, 'root'>])
-  .map(({ label, link }) => ({ text: label, link }));
-
-const createThemeConfig = (locale: LocaleMeta) => ({
-  logo: '/logo.svg',
-  siteTitle: false,
-  search: {
-    provider: 'local' as const,
-  },
-  nav: [
-    { text: locale.nav.home, link: linkFor(locale, '/') },
-    { text: locale.nav.guide, link: linkFor(locale, '/account') },
-    { text: locale.nav.api, link: linkFor(locale, '/api') },
-    {
-      text: locale.nav.language,
-      items: languageItems,
-    },
-    { text: 'Web3alert', link: 'https://web3alert.io' },
-  ],
-  sidebar: [
+const createThemeConfig = (locale: LocaleMeta) => {
+  const sidebar: DefaultTheme.SidebarItem[] = [
     {
       text: locale.sections.core,
       items: [
@@ -392,35 +380,61 @@ const createThemeConfig = (locale: LocaleMeta) => ({
         { text: locale.sections.addresses, link: linkFor(locale, '/addresses') },
       ],
     },
-    {
-      text: locale.sections.api,
-      collapsed: true,
-      items: [
-        { text: locale.sections.apiOverview, link: linkFor(locale, '/api') },
-        { text: locale.sections.types, link: linkFor(locale, '/types') },
-        { text: locale.sections.accountApi, link: linkFor(locale, '/api-account') },
-        { text: locale.sections.workspacesApi, link: linkFor(locale, '/api-workspaces') },
-        { text: locale.sections.projectsApi, link: linkFor(locale, '/api-projects') },
-        { text: locale.sections.projectTransfersApi, link: linkFor(locale, '/api-project-transfers') },
-        { text: locale.sections.triggersApi, link: linkFor(locale, '/api-triggers') },
-        { text: locale.sections.triggerImportApi, link: linkFor(locale, '/api-trigger-import') },
-        { text: locale.sections.templatesApi, link: linkFor(locale, '/api-templates') },
-        { text: locale.sections.subscriptionsApi, link: linkFor(locale, '/api-subscriptions') },
-        { text: locale.sections.resourcesApi, link: linkFor(locale, '/api-resources') },
-        { text: locale.sections.dataSourcesApi, link: linkFor(locale, '/api-data-sources') },
-        { text: locale.sections.addressesApi, link: linkFor(locale, '/api-addresses') },
-        { text: locale.sections.builderRegistryApi, link: linkFor(locale, '/api-builder-registry') },
-      ],
+
+  ];
+
+  sidebar.push({
+    text: locale.sections.guides,
+    collapsed: false,
+    items: [
+      { text: locale.sections.createSolanaProject, link: linkFor(locale, '/guides/create-solana-project') },
+    ],
+  });
+
+  sidebar.push({
+    text: locale.sections.api,
+    collapsed: true,
+    items: [
+      { text: locale.sections.apiOverview, link: linkFor(locale, '/api') },
+      { text: locale.sections.types, link: linkFor(locale, '/types') },
+      { text: locale.sections.accountApi, link: linkFor(locale, '/api-account') },
+      { text: locale.sections.workspacesApi, link: linkFor(locale, '/api-workspaces') },
+      { text: locale.sections.projectsApi, link: linkFor(locale, '/api-projects') },
+      { text: locale.sections.projectTransfersApi, link: linkFor(locale, '/api-project-transfers') },
+      { text: locale.sections.triggersApi, link: linkFor(locale, '/api-triggers') },
+      { text: locale.sections.triggerImportApi, link: linkFor(locale, '/api-trigger-import') },
+      { text: locale.sections.templatesApi, link: linkFor(locale, '/api-templates') },
+      { text: locale.sections.subscriptionsApi, link: linkFor(locale, '/api-subscriptions') },
+      { text: locale.sections.resourcesApi, link: linkFor(locale, '/api-resources') },
+      { text: locale.sections.dataSourcesApi, link: linkFor(locale, '/api-data-sources') },
+      { text: locale.sections.addressesApi, link: linkFor(locale, '/api-addresses') },
+      { text: locale.sections.builderRegistryApi, link: linkFor(locale, '/api-builder-registry') },
+    ],
+  });
+
+  return {
+    logo: '/logo.svg',
+    siteTitle: false,
+    search: {
+      provider: 'local' as const,
     },
-  ],
-  socialLinks: [
-    { icon: 'github' as const, link: 'https://github.com/web3alert' },
-  ],
-});
+    nav: [
+      { text: locale.nav.home, link: linkFor(locale, '/') },
+      { text: locale.nav.guide, link: linkFor(locale, '/account') },
+      { text: locale.nav.api, link: linkFor(locale, '/api') },
+      { text: 'Web3alert', link: 'https://web3alert.io' },
+    ],
+    sidebar,
+    socialLinks: [
+      { icon: 'github' as const, link: 'https://github.com/web3alert' },
+    ],
+  };
+};
 
 export default defineConfig({
   title: 'Web3alert Docs',
   description: 'Web3alert user and API documentation',
+  themeConfig: createThemeConfig(locales.root),
   head: [
     ['link', { rel: 'icon', type: 'image/png', sizes: '32x32', href: '/icons/favicon-32x32.png' }],
     ['link', { rel: 'icon', type: 'image/png', sizes: '16x16', href: '/icons/favicon-16x16.png' }],
@@ -460,10 +474,13 @@ export default defineConfig({
   },
   locales: {
     root: {
+      label: locales.root.label,
       lang: locales.root.lang,
+      link: locales.root.link,
       themeConfig: createThemeConfig(locales.root),
     },
     ru: {
+      label: locales.ru.label,
       lang: locales.ru.lang,
       link: locales.ru.link,
       title: 'Web3alert Docs',
@@ -471,6 +488,7 @@ export default defineConfig({
       themeConfig: createThemeConfig(locales.ru),
     },
     en: {
+      label: locales.en.label,
       lang: locales.en.lang,
       link: locales.en.link,
       title: 'Web3alert Docs',
@@ -478,6 +496,7 @@ export default defineConfig({
       themeConfig: createThemeConfig(locales.en),
     },
     es: {
+      label: locales.es.label,
       lang: locales.es.lang,
       link: locales.es.link,
       title: 'Documentación de Web3alert',
@@ -485,6 +504,7 @@ export default defineConfig({
       themeConfig: createThemeConfig(locales.es),
     },
     pt: {
+      label: locales.pt.label,
       lang: locales.pt.lang,
       link: locales.pt.link,
       title: 'Documentação Web3alert',
@@ -492,6 +512,7 @@ export default defineConfig({
       themeConfig: createThemeConfig(locales.pt),
     },
     zh: {
+      label: locales.zh.label,
       lang: locales.zh.lang,
       link: locales.zh.link,
       title: 'Web3alert 文档',

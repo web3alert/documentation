@@ -19,6 +19,10 @@
 * [数据源](data-sources.md)
 * [地址](addresses.md)
 
+## 指南
+
+* [创建 Solana 项目](guides/create-solana-project.md)
+
 ## API
 
 * [API 概览](api.md)

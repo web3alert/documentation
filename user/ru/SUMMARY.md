@@ -19,6 +19,10 @@
 * [Источники данных](data-sources.md)
 * [Адреса](addresses.md)
 
+## Гайды
+
+* [Создание проекта Solana](guides/create-solana-project.md)
+
 ## API
 
 * [Обзор API](api.md)

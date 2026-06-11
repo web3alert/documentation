@@ -274,13 +274,15 @@ Wizard может попытаться загрузить IDL автоматич
 | `source.transaction.success` | `boolean` | Признак успешной transaction. Failed transactions source пропускает. |
 | `source.transaction.error` | `unknown` | Ошибка transaction или `null` для успешной transaction. |
 | `source.index` | `number` | Индекс matched call внутри source output. |
-| `source.path` | `string` | Путь instruction, включая вложенность inner instructions. |
-| `source.inner` | `boolean` | `true`, если matched instruction был inner instruction. |
 | `source.programId` | `address` | Program ID, выбранный в trigger. |
 | `source.call` | `string` | Имя instruction из IDL. |
+| `source.signers` | `array<string>` | Адреса signers transaction для matched instruction. |
 | `source.args` | `object` | Decoded instruction arguments, где ключи соответствуют именам args из IDL. |
-| `source.accounts` | `object` | Account addresses, где ключи соответствуют именам accounts из IDL. |
+| `source.accounts` | `object` | Account addresses, где ключи соответствуют именам accounts из IDL; owner aliases для token accounts добавляются, когда доступны. |
+| `source.accountsMeta` | `object` | Metadata token accounts, где ключи соответствуют именам accounts из IDL, когда metadata доступна. Поля metadata могут включать `address`, `owner`, `mint`, `programId`, `decimals`, `rawAmount`, `uiAmount` и `uiAmountString`. |
 | `source.accountsRaw` | `array<string>` | Account addresses в порядке transaction instruction. |
+| `source.path` | `string` | Путь instruction, включая вложенность inner instructions. |
+| `source.inner` | `boolean` | `true`, если matched instruction был inner instruction. |
 
 ## Step 3. Inputs schema
 

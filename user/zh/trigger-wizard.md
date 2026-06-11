@@ -238,11 +238,43 @@ IDL 中的必填 entry。`event` 选择 `events` 中的项；`call` 选择 `inst
 | `source.stateRoot` | `string` | 区块 state root。 |
 | `source.extrinsicsRoot` | `string` | 区块 extrinsics root。 |
 
-#### Solana Event / Call
+#### Solana Event
 
-Solana source items 包含 `source.block.slot`、`source.block.hash`、`source.block.timestamp`、`source.transaction.index`、`source.transaction.signature`、`source.transaction.success`、`source.transaction.error`、`source.index` 和 `source.programId`。
+| Path | Type | Description |
+| --- | --- | --- |
+| `source.block.slot` | `number` | 找到 event 的 slot。 |
+| `source.block.hash` | `string \| null` | 该 slot 的 block hash（如果可用）。 |
+| `source.block.timestamp` | `number \| null` | Block timestamp（如果可用）。 |
+| `source.transaction.index` | `number` | Transaction 在 block 内的索引。 |
+| `source.transaction.signature` | `string` | Solana transaction signature。 |
+| `source.transaction.success` | `boolean` | Transaction 是否成功。Source 会跳过 failed transactions。 |
+| `source.transaction.error` | `unknown` | Transaction error；成功 transaction 为 `null`。 |
+| `source.index` | `number` | Matched event 在 source output 内的索引。 |
+| `source.programId` | `address` | Trigger 中选择的 Program ID。 |
+| `source.event` | `string` | IDL 中的 event name。 |
+| `source.data` | `object` | Decoded event data，key 来自 IDL field names。 |
 
-对于 events，decoded payload 在 `source.data`，名称在 `source.event`。对于 calls/instructions，decoded payload 在 `source.args`，名称在 `source.call`，accounts 可通过 `source.accounts` 和 `source.accountsRaw` 使用。
+#### Solana Call
+
+| Path | Type | Description |
+| --- | --- | --- |
+| `source.block.slot` | `number` | 找到 instruction 的 slot。 |
+| `source.block.hash` | `string \| null` | 该 slot 的 block hash（如果可用）。 |
+| `source.block.timestamp` | `number \| null` | Block timestamp（如果可用）。 |
+| `source.transaction.index` | `number` | Transaction 在 block 内的索引。 |
+| `source.transaction.signature` | `string` | Solana transaction signature。 |
+| `source.transaction.success` | `boolean` | Transaction 是否成功。Source 会跳过 failed transactions。 |
+| `source.transaction.error` | `unknown` | Transaction error；成功 transaction 为 `null`。 |
+| `source.index` | `number` | Matched call 在 source output 内的索引。 |
+| `source.programId` | `address` | Trigger 中选择的 Program ID。 |
+| `source.call` | `string` | IDL 中的 instruction name。 |
+| `source.signers` | `array<string>` | 匹配 instruction 所在 transaction 的 signer 地址。 |
+| `source.args` | `object` | Decoded instruction arguments，key 来自 IDL arg names。 |
+| `source.accounts` | `object` | Instruction account addresses，按 IDL account name keyed；可用时会添加 token account owner aliases。 |
+| `source.accountsMeta` | `object` | Token account metadata，按 IDL account name keyed（可用时）。Metadata fields 可包含 `address`、`owner`、`mint`、`programId`、`decimals`、`rawAmount`、`uiAmount` 和 `uiAmountString`。 |
+| `source.accountsRaw` | `array<string>` | 按 transaction instruction 顺序排列的 account addresses。 |
+| `source.path` | `string` | Instruction path，包含 nested inner instructions。 |
+| `source.inner` | `boolean` | 如果 matched instruction 是 inner instruction，则为 `true`。 |
 
 ## Step 3. Inputs Schema
 

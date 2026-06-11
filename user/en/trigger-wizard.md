@@ -274,13 +274,15 @@ The selected source item defines the `source.*` structure that will be available
 | `source.transaction.success` | `boolean` | Whether the transaction was successful. Failed transactions are skipped by the source. |
 | `source.transaction.error` | `unknown` | Transaction error or `null` for a successful transaction. |
 | `source.index` | `number` | Matched call index inside source output. |
-| `source.path` | `string` | Instruction path, including nested inner instructions. |
-| `source.inner` | `boolean` | `true` if the matched instruction was an inner instruction. |
 | `source.programId` | `address` | Program ID selected in the trigger. |
 | `source.call` | `string` | Instruction name from IDL. |
+| `source.signers` | `array<string>` | Transaction signer addresses for the matched instruction. |
 | `source.args` | `object` | Decoded instruction arguments, keyed by arg names from IDL. |
-| `source.accounts` | `object` | Account addresses, keyed by account names from IDL. |
+| `source.accounts` | `object` | Instruction account addresses keyed by IDL account name, with token account owner aliases added when available. |
+| `source.accountsMeta` | `object` | Token account metadata keyed by IDL account name when available. Metadata fields can include `address`, `owner`, `mint`, `programId`, `decimals`, `rawAmount`, `uiAmount`, and `uiAmountString`. |
 | `source.accountsRaw` | `array<string>` | Account addresses in transaction instruction order. |
+| `source.path` | `string` | Instruction path, including nested inner instructions. |
+| `source.inner` | `boolean` | `true` if the matched instruction was an inner instruction. |
 
 ## Step 3. Inputs Schema
 

@@ -238,11 +238,43 @@ El source item elegido define la estructura `source.*` que estará disponible de
 | `source.stateRoot` | `string` | State root del bloque. |
 | `source.extrinsicsRoot` | `string` | Extrinsics root del bloque. |
 
-#### Solana Event / Call
+#### Solana Event
 
-Solana source items incluyen `source.block.slot`, `source.block.hash`, `source.block.timestamp`, `source.transaction.index`, `source.transaction.signature`, `source.transaction.success`, `source.transaction.error`, `source.index` y `source.programId`.
+| Path | Type | Description |
+| --- | --- | --- |
+| `source.block.slot` | `number` | Slot donde se encontró el event. |
+| `source.block.hash` | `string \| null` | Block hash del slot, si está disponible. |
+| `source.block.timestamp` | `number \| null` | Block timestamp, si está disponible. |
+| `source.transaction.index` | `number` | Índice de la transaction dentro del bloque. |
+| `source.transaction.signature` | `string` | Signature de la Solana transaction. |
+| `source.transaction.success` | `boolean` | Indica si la transaction fue correcta. La source omite failed transactions. |
+| `source.transaction.error` | `unknown` | Error de la transaction o `null` para una transaction correcta. |
+| `source.index` | `number` | Índice del matched event dentro del source output. |
+| `source.programId` | `address` | Program ID seleccionado en el trigger. |
+| `source.event` | `string` | Nombre del event desde el IDL. |
+| `source.data` | `object` | Decoded event data, con keys tomadas de los field names del IDL. |
 
-Para events, el payload decoded está en `source.data` y el nombre en `source.event`. Para calls/instructions, el payload decoded está en `source.args`, el nombre en `source.call`, y las accounts están disponibles como `source.accounts` y `source.accountsRaw`.
+#### Solana Call
+
+| Path | Type | Description |
+| --- | --- | --- |
+| `source.block.slot` | `number` | Slot donde se encontró la instruction. |
+| `source.block.hash` | `string \| null` | Block hash del slot, si está disponible. |
+| `source.block.timestamp` | `number \| null` | Block timestamp, si está disponible. |
+| `source.transaction.index` | `number` | Índice de la transaction dentro del bloque. |
+| `source.transaction.signature` | `string` | Signature de la Solana transaction. |
+| `source.transaction.success` | `boolean` | Indica si la transaction fue correcta. La source omite failed transactions. |
+| `source.transaction.error` | `unknown` | Error de la transaction o `null` para una transaction correcta. |
+| `source.index` | `number` | Índice del matched call dentro del source output. |
+| `source.programId` | `address` | Program ID seleccionado en el trigger. |
+| `source.call` | `string` | Nombre de la instruction desde el IDL. |
+| `source.signers` | `array<string>` | Direcciones de los signers de la transaction para la matched instruction. |
+| `source.args` | `object` | Decoded instruction arguments, con keys tomadas de los arg names del IDL. |
+| `source.accounts` | `object` | Instruction account addresses keyed por nombre de account del IDL, con owner aliases de token accounts añadidos cuando están disponibles. |
+| `source.accountsMeta` | `object` | Metadata de token accounts keyed por nombre de account del IDL, cuando está disponible. Los fields de metadata pueden incluir `address`, `owner`, `mint`, `programId`, `decimals`, `rawAmount`, `uiAmount` y `uiAmountString`. |
+| `source.accountsRaw` | `array<string>` | Account addresses en el orden de la transaction instruction. |
+| `source.path` | `string` | Ruta de la instruction, incluida la anidación de inner instructions. |
+| `source.inner` | `boolean` | `true` si la matched instruction era una inner instruction. |
 
 ## Step 3. Inputs Schema
 

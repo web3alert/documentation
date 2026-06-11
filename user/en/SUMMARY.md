@@ -19,6 +19,10 @@
 * [Data sources](data-sources.md)
 * [Addresses](addresses.md)
 
+## Guides
+
+* [Create a Solana project](guides/create-solana-project.md)
+
 ## API
 
 * [API Overview](api.md)
