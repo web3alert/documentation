@@ -357,9 +357,9 @@ Provider types disponibles:
 - `Value history`;
 - `JavaScript`.
 
-### HTTP
+---
 
-Weight: `2`.
+### HTTP <Badge type="info" text="Weight: 2" />
 
 #### Method
 
@@ -381,9 +381,53 @@ Lista key-value de query parameters. Los valores soportan template substitutions
 
 Body JSON/template opcional para POST request. Body soporta template substitutions.
 
-### GraphQL
+#### Retry until ready
 
-Weight: `2`.
+Polling de readiness opcional y no bloqueante. Úsalo cuando una API externa indexa datos con retraso: el evento on-chain ya llegó, pero sus metadatos aparecen en la API solo unos segundos después. Sin retry el provider devuelve una respuesta vacía o incompleta, el transform aplica valores de fallback y los filtros de subscription sobre los output fields no coinciden.
+
+Cuando la respuesta del provider "no está lista", la ejecución se aparca y se reintenta automáticamente más tarde. El worker no se bloquea durante la espera, el evento conserva su identidad original y el usuario recibe como máximo una notificación. El retry se ejecuta antes del transform y antes de los filtros de subscription, por lo que los filtros ven los datos enriquecidos. Un trigger esperando un retry no se considera roto.
+
+Campos:
+
+- `Enabled` - habilita el retry para el provider;
+- `Attempts` - número máximo de reintentos, de 1 a 20;
+- `Delay, ms` - pausa base entre intentos, de 250 a 60000;
+- `Backoff` - cómo crece la pausa: `Fixed` - la misma pausa siempre, `Linear` - pausa × número de intento, `Exponential` - la pausa se duplica con cada intento;
+- `When exhausted` - qué hacer cuando se agotan los intentos:
+  - `Continue with last response` - continuar con la última respuesta tal cual; el transform aplica su propio fallback;
+  - `Fail the provider` - tratar el provider como fallido: un provider `Optional` produce un resultado vacío, uno obligatorio termina la ejecución sin output;
+- `Retry when` - condiciones que marcan la respuesta como "no lista":
+  - `Empty array` - la respuesta es un array vacío;
+  - `Missing path` - no hay valor en `Ready when path`;
+  - `HTTP error` - la request falló con un error de red o un status no-2xx; sin este flag esos errores siguen siendo errores normales del provider;
+- `Ready when path` - ruta a un campo de la respuesta que debe estar presente; los segmentos se separan con puntos, los índices de array son números;
+- `Equals` - valor opcional al que debe ser igual el campo en `Ready when path`; soporta template substitutions, las cadenas hex se comparan sin distinguir mayúsculas.
+
+El test del provider realiza un solo intento y no espera readiness - el polling solo ocurre en el runtime.
+
+Ejemplo de configuración vía API/MCP:
+
+```json
+{
+  "id": "item",
+  "type": "http",
+  "url": "https://api.example.com/items",
+  "queryParams": { "id": "{{ source.args.0 }}" },
+  "retry": {
+    "attempts": 8,
+    "delayMs": 5000,
+    "backoff": "linear",
+    "retryOn": ["empty_array", "missing_path"],
+    "until": { "path": "0.id", "equals": "{{ source.args.0 }}" }
+  }
+}
+```
+
+Vía API/MCP también se aceptan `maxDelayMs` (tope de una sola pausa) y `maxElapsedMs` (presupuesto total de espera); estos no se muestran en la UI.
+
+---
+
+### GraphQL <Badge type="info" text="Weight: 2" />
 
 #### Endpoint
 
@@ -401,17 +445,23 @@ Variables key-value para GraphQL query. Los valores soportan template substituti
 
 GraphQL query document.
 
-### Chain State
+#### Retry until ready
+
+El provider GraphQL soporta la retry policy. Los campos y el comportamiento se describen en [HTTP -> Retry until ready](#retry-until-ready).
+
+---
+
+### Chain State <Badge type="info" text="Weight: 1" />
 
 `Chain State` lee datos de estado desde blockchain source y añade el resultado al provider output.
-
-Weight: `1`.
 
 #### State Type
 
 Tipo de lectura: `EVM contract`, `Substrate storage` o `Solana account`.
 
-#### EVM Contract
+#### EVM Contract <Badge type="tip" text="state type" />
+
+Ejecuta un read call view/pure de un método del contrato EVM.
 
 ##### Source
 
@@ -435,7 +485,9 @@ En `Auto`, wizard carga métodos view/pure desde ABI y propone elegir método. E
 
 Los campos de arguments aparecen si el method elegido acepta args.
 
-#### Substrate Storage
+#### Substrate Storage <Badge type="tip" text="state type" />
+
+Lee una storage entry del Substrate runtime.
 
 ##### Source
 
@@ -459,7 +511,9 @@ Campos de arguments del storage entry seleccionado.
 
 Block number/hash/template opcional.
 
-#### Solana Account
+#### Solana Account <Badge type="tip" text="state type" />
+
+Lee una Solana account y decodifica su contenido.
 
 ##### Source
 
@@ -475,11 +529,11 @@ IDL JSON opcional con account definitions. Si se activa, el provider decodifica 
 
 El resultado queda disponible como `providers.<id>` e incluye campos base de account y `data` decodificado cuando se encuentra schema. Los resultados correctos se cachean brevemente para evitar RPC requests repetidos al mismo account.
 
-### Value History
+---
+
+### Value History <Badge type="info" text="Weight: 1" />
 
 `Value history` guarda una ventana de últimos valores y calcula aggregates.
-
-Weight: `1`.
 
 #### Partition By
 
@@ -517,7 +571,9 @@ Si `Value type` se elige como `number`, el valor final debe poder convertirse a 
 
 Aggregates adicionales para valores numéricos.
 
-### RPC
+---
+
+### RPC <Badge type="info" text="Weight: 1-2" />
 
 Weight: `1` si se usa source runtime transport. Weight: `2` si se usa direct endpoint transport.
 
@@ -547,9 +603,13 @@ JSON array params.
 
 JSON-RPC body completo opcional para endpoint transport.
 
-### JavaScript
+#### Retry until ready
 
-Weight: `2`.
+El provider RPC soporta la retry policy. Los campos y el comportamiento se describen en [HTTP -> Retry until ready](#retry-until-ready).
+
+---
+
+### JavaScript <Badge type="info" text="Weight: 2" />
 
 #### Variables
 
@@ -560,6 +620,8 @@ Variables key-value para la función.
 JavaScript function source.
 
 JavaScript provider se usa cuando un valor adicional es más fácil de calcular con código basado en source, inputs y providers anteriores.
+
+---
 
 ### Test Provider
 

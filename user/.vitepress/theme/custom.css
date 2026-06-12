@@ -1,0 +1,27 @@
+/* Visual separation between section-level headings (h3, e.g. provider types)
+   and their field-level subheadings (h4): h3 gets a divider line and extra
+   breathing room, h4 stays compact. */
+.vp-doc h3 {
+  border-bottom: 1px solid var(--vp-c-divider);
+  padding-bottom: 8px;
+  margin-top: 40px;
+}
+
+.vp-doc h4 {
+  font-size: 16px;
+  margin-top: 32px;
+}
+
+.vp-doc h5 {
+  font-size: 14px;
+  color: var(--vp-c-text-2);
+  margin-top: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+/* When a subsection heading is immediately followed by its first field
+   heading, keep them clearly separated. */
+.vp-doc h4 + h5 {
+  margin-top: 16px;
+}

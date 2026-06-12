@@ -365,9 +365,9 @@ Available provider types:
 - `Value history`;
 - `JavaScript`.
 
-### HTTP
+---
 
-Weight: `2`.
+### HTTP <Badge type="info" text="Weight: 2" />
 
 #### Method
 
@@ -389,9 +389,53 @@ Key-value list of query parameters. Values support template substitutions.
 
 Optional JSON/template body for POST request. Body supports template substitutions.
 
-### GraphQL
+#### Retry until ready
 
-Weight: `2`.
+Optional non-blocking readiness polling. Use it when an external API indexes data with a delay: the on-chain event has already arrived, but its metadata appears in the API only a few seconds later. Without retry the provider returns an empty or incomplete response, the transform falls back to placeholder values, and subscription filters on output fields do not match.
+
+When the provider response is "not ready", the execution is parked and automatically retried later. The worker is not blocked while waiting, the event keeps its original identity, and the user receives at most one notification. Retry runs before the transform and before subscription filters, so filters see the enriched data. A trigger waiting for a retry is not considered broken.
+
+Fields:
+
+- `Enabled` - enables retry for the provider;
+- `Attempts` - maximum number of retry attempts, from 1 to 20;
+- `Delay, ms` - base pause between attempts, from 250 to 60000;
+- `Backoff` - how the pause grows: `Fixed` - same pause every time, `Linear` - pause × attempt number, `Exponential` - pause doubles with each attempt;
+- `When exhausted` - what to do after attempts run out:
+  - `Continue with last response` - continue with the last response as is; the transform applies its own fallback;
+  - `Fail the provider` - treat the provider as failed: an `Optional` provider yields an empty result, a required one ends the execution without output;
+- `Retry when` - conditions that mark the response as "not ready":
+  - `Empty array` - the response is an empty array;
+  - `Missing path` - there is no value at `Ready when path`;
+  - `HTTP error` - the request failed with a network error or a non-2xx status; without this flag such errors remain regular provider errors;
+- `Ready when path` - path to a response field that must be present; segments are dot-separated, array indices are numbers;
+- `Equals` - optional value the field at `Ready when path` must equal; supports template substitutions, hex strings are compared case-insensitively.
+
+The provider test performs a single attempt and does not wait for readiness - polling only happens in the runtime.
+
+Configuration example via API/MCP:
+
+```json
+{
+  "id": "item",
+  "type": "http",
+  "url": "https://api.example.com/items",
+  "queryParams": { "id": "{{ source.args.0 }}" },
+  "retry": {
+    "attempts": 8,
+    "delayMs": 5000,
+    "backoff": "linear",
+    "retryOn": ["empty_array", "missing_path"],
+    "until": { "path": "0.id", "equals": "{{ source.args.0 }}" }
+  }
+}
+```
+
+API/MCP additionally accept `maxDelayMs` (cap for a single pause) and `maxElapsedMs` (total waiting budget); these are not shown in the UI.
+
+---
+
+### GraphQL <Badge type="info" text="Weight: 2" />
 
 #### Endpoint
 
@@ -409,17 +453,23 @@ Key-value variables for GraphQL query. Values support template substitutions.
 
 GraphQL query document.
 
-### Chain State
+#### Retry until ready
+
+The GraphQL provider supports the retry policy. Fields and behavior are described in [HTTP -> Retry until ready](#retry-until-ready).
+
+---
+
+### Chain State <Badge type="info" text="Weight: 1" />
 
 `Chain State` reads state data from blockchain source and adds the result to provider output.
-
-Weight: `1`.
 
 #### State Type
 
 Read type: `EVM contract`, `Substrate storage`, or `Solana account`.
 
-#### EVM Contract
+#### EVM Contract <Badge type="tip" text="state type" />
+
+Executes a view/pure read call of an EVM contract method.
 
 ##### Source
 
@@ -443,7 +493,9 @@ In `Auto`, the wizard loads view/pure methods from ABI and suggests selecting a 
 
 Argument fields appear if the selected method accepts args.
 
-#### Substrate Storage
+#### Substrate Storage <Badge type="tip" text="state type" />
+
+Reads a storage entry from the Substrate runtime.
 
 ##### Source
 
@@ -467,7 +519,9 @@ Argument fields of the selected storage entry.
 
 Optional block number/hash/template.
 
-#### Solana Account
+#### Solana Account <Badge type="tip" text="state type" />
+
+Reads a Solana account and decodes its contents.
 
 ##### Source
 
@@ -495,11 +549,11 @@ Provider result is available as `providers.<id>`. It returns base account fields
 
 Solana account provider caches successful results for a short time so several triggers/events reading the same account do not send redundant RPC requests.
 
-### Value History
+---
+
+### Value History <Badge type="info" text="Weight: 1" />
 
 `Value history` stores a window of recent values and calculates aggregates.
-
-Weight: `1`.
 
 #### Partition By
 
@@ -537,7 +591,9 @@ If `Value type` is selected as `number`, the final value must be convertible to 
 
 Additional aggregates for numeric values.
 
-### RPC
+---
+
+### RPC <Badge type="info" text="Weight: 1-2" />
 
 Weight: `1` if source runtime transport is used. Weight: `2` if direct endpoint transport is used.
 
@@ -567,9 +623,13 @@ JSON array params.
 
 Optional full JSON-RPC body for endpoint transport.
 
-### JavaScript
+#### Retry until ready
 
-Weight: `2`.
+The RPC provider supports the retry policy. Fields and behavior are described in [HTTP -> Retry until ready](#retry-until-ready).
+
+---
+
+### JavaScript <Badge type="info" text="Weight: 2" />
 
 #### Variables
 
@@ -580,6 +640,8 @@ Key-value variables for the function.
 JavaScript function source.
 
 JavaScript provider is used when an additional value is easier to calculate with code based on source, inputs, and previous providers.
+
+---
 
 ### Test Provider
 
