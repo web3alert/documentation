@@ -105,6 +105,14 @@ Filters 用于缩小 alerts 范围，避免收到多余通知。
 
 对于 filter，需要选择字段、operator 和 value。可用字段取决于 trigger schema。
 
+### Delivery type
+
+控制 inputs 和 filters 匹配后，subscription 发送 alerts 的频率。
+
+- `Every match` 会发送每个通过 filters 的 event。
+- `Once` 只会为该 subscription 发送第一个匹配的 event。
+- `Once per key` 会为每个选中的 output value 发送第一个匹配的 event。请选择稳定的 `Key path`，例如 market、event、account 或 user 字段。除非每个 event 都应该被视为新的 key，否则避免使用 transaction hash 或 block number 这类唯一技术值。
+
 ## Step 3. Action
 
 这一步选择 alerts 发送到哪里。

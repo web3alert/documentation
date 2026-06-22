@@ -105,6 +105,14 @@ Adiciona uma nova condição.
 
 Para o filter escolhe-se um campo, operador e valor. Os campos disponíveis dependem da trigger schema.
 
+### Delivery type
+
+Controla com que frequência a subscription entrega alerts depois de inputs e filters fazerem match.
+
+- `Every match` envia todos os eventos que passam pelos filters.
+- `Once` envia apenas o primeiro evento que faz match nesta subscription.
+- `Once per key` envia o primeiro evento que faz match para cada output value selecionado. Escolha um `Key path` estável, como um campo de market, event, account ou user. Evite valores técnicos únicos como transaction hash ou block number, exceto quando cada evento deve ser tratado como uma nova key.
+
 ## Step 3. Action
 
 Neste passo escolhe-se para onde enviar alerts.
