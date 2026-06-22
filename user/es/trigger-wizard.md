@@ -674,7 +674,9 @@ Para `Raw output` y `Human output` se usa el mismo [schema editor](#schema-edito
 
 ## Step 8. Transform
 
-El paso contiene dos paneles JavaScript:
+El paso empieza con `Output mode`.
+
+En modo `Single output`, el paso contiene dos paneles JavaScript:
 
 - `Raw transform`;
 - `Human transform`.
@@ -682,6 +684,21 @@ El paso contiene dos paneles JavaScript:
 `Raw transform` recibe source, inputs y providers, y devuelve un objeto que corresponde a `Raw output`.
 
 `Human transform` recibe source, inputs, providers y raw output, y devuelve un objeto que corresponde a `Human output`.
+
+En modo `Multi-output`, el paso contiene un panel JavaScript, `Output items transform`. Se usa cuando un source tick o provider query puede producir varios alert items independientes. El transform debe devolver:
+
+```js
+{
+  outputs: [
+    {
+      raw: { /* campos correspondientes a Raw output */ },
+      human: { /* campos correspondientes a Human output */ },
+    },
+  ],
+}
+```
+
+Cada item de `outputs` se emite como un trigger output separado. Las schemas `Raw output` y `Human output` describen un item emitido, y cada item se valida con esas schemas.
 
 El editor sugiere context disponible y muestra validation error si JavaScript es incorrecto.
 

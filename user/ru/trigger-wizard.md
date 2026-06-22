@@ -694,7 +694,9 @@ Filters похожи на inputs, но используются иначе. По
 
 ## Step 8. Transform
 
-Шаг содержит две JavaScript-панели:
+Шаг начинается с `Output mode`.
+
+В режиме `Single output` шаг содержит две JavaScript-панели:
 
 - `Raw transform`;
 - `Human transform`.
@@ -702,6 +704,21 @@ Filters похожи на inputs, но используются иначе. По
 `Raw transform` получает source, inputs и providers и возвращает объект, соответствующий `Raw output`.
 
 `Human transform` получает source, inputs, providers и raw output и возвращает объект, соответствующий `Human output`.
+
+В режиме `Multi-output` шаг содержит одну JavaScript-панель, `Output items transform`. Она используется, когда один source tick или provider query может породить несколько независимых alert items. Transform должен вернуть:
+
+```js
+{
+  outputs: [
+    {
+      raw: { /* поля, соответствующие Raw output */ },
+      human: { /* поля, соответствующие Human output */ },
+    },
+  ],
+}
+```
+
+Каждый item в `outputs` будет отправлен как отдельный trigger output. Schemas `Raw output` и `Human output` описывают один отправляемый item, и каждый item проверяется по этим schemas.
 
 Редактор подсказывает доступный context и показывает validation error, если JavaScript некорректен.
 

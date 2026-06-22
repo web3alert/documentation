@@ -674,7 +674,9 @@ Schema editor 支持 `UI mode` 和 `JSON mode`。
 
 ## Step 8. Transform
 
-这一步包含两个 JavaScript 面板：
+这一步从 `Output mode` 开始。
+
+在 `Single output` 模式中，这一步包含两个 JavaScript 面板：
 
 - `Raw transform`;
 - `Human transform`.
@@ -682,6 +684,21 @@ Schema editor 支持 `UI mode` 和 `JSON mode`。
 `Raw transform` 接收 source、inputs 和 providers，并返回匹配 `Raw output` 的 object。
 
 `Human transform` 接收 source、inputs、providers 和 raw output，并返回匹配 `Human output` 的 object。
+
+在 `Multi-output` 模式中，这一步包含一个 JavaScript 面板：`Output items transform`。当一次 source tick 或 provider query 可以产生多个独立 alert items 时使用它。Transform 应返回：
+
+```js
+{
+  outputs: [
+    {
+      raw: { /* 匹配 Raw output 的字段 */ },
+      human: { /* 匹配 Human output 的字段 */ },
+    },
+  ],
+}
+```
+
+`outputs` 中的每个 item 都会作为单独的 trigger output 发出。`Raw output` 和 `Human output` schemas 描述的是一个被发出的 item，每个 item 都会按这些 schemas 验证。
 
 编辑器会建议可用 context，并在 JavaScript 无效时显示 validation error。
 
