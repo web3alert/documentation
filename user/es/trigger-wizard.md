@@ -119,6 +119,22 @@ JSON IDL del program elegido. El wizard puede intentar cargarlo automáticamente
 
 Entry obligatoria desde IDL. Para `event` se elige una entrada de `events`; para `call` se elige una instruction de `instructions`. Las accounts de una instruction quedan disponibles como `source.accounts.*`.
 
+### Types Source
+
+`Types source` es una configuración opcional a nivel de trigger. Indica al wizard de dónde debe cargar el catálogo de tipos usado por los campos de schema con tipo `lookup`.
+
+Los campos lookup no incrustan todo el schema anidado dentro del campo. En su lugar guardan una referencia a un tipo con nombre dentro de un catálogo. Cuando el subscription wizard o el trigger editor necesita mostrar los campos internos de ese tipo lookup, solicita el catálogo para el trigger elegido y resuelve la referencia. Esto es útil para Substrate runtime metadata, Solana IDL custom types, catálogos importados y otros schemas donde los objetos son grandes, se reutilizan en varios lugares o son recursivos. Mantenerlos como lookups evita copiar estructuras profundas en cada campo y evita que los tipos recursivos se expandan indefinidamente en la UI.
+
+Si `Types source` está desactivado, se usa el comportamiento por defecto: el backend intenta primero usar types específicos del trigger si existen, y después hace fallback a project/source types cuando se pueden inferir desde el source elegido. Los timer triggers normalmente no tienen source inferido, así que el catálogo queda vacío salvo que esta configuración esté activada.
+
+Modos disponibles:
+
+- `Source node` - elegir un data source y usar el catálogo de tipos importado desde el runtime o metadata de ese source.
+- `API / imported catalog` - llamar a un HTTP endpoint que devuelve un catálogo de tipos. El endpoint puede devolver una lista completa de types, un objeto `{ schemas: ... }`, un wrapper `{ types: [...] }`/`{ data: [...] }` o una lista importada de elementos `{ id, schema }`.
+- `Inline / manual` - pegar un JSON object donde las keys son nombres de tipos y los values son definiciones de tipo estilo JSON Schema.
+
+Usa esta configuración cuando un trigger recibe datos de un source, pero el schema editor debe resolver lookups desde otro source, desde un catálogo importado o desde un conjunto de tipos mantenido manualmente.
+
 ### Source Payload
 
 El source item elegido define la estructura `source.*` que estará disponible después en el wizard: en inputs/templates, providers, activation condition, filters, data transform y defaults.

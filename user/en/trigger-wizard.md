@@ -127,6 +127,22 @@ Required entry from IDL.
 
 For `event`, an event from `events` is selected. For `call`, an instruction from `instructions` is selected. If `call` is selected, accounts from IDL become available as named fields under `source.accounts.*`.
 
+### Types Source
+
+`Types source` is an optional trigger-level setting that tells the wizard where to load the type catalog used by schema fields with type `lookup`.
+
+Lookup fields do not inline the whole nested schema. Instead, they store a reference to a named type from a catalog. When the subscription wizard or trigger editor needs to show fields inside that lookup type, it requests the catalog for the selected trigger and resolves the reference. This is useful for Substrate runtime metadata, Solana IDL custom types, imported catalogs, and other schemas where objects are large, reused in many places, or recursive. Keeping them as lookups avoids copying deep structures into every field and prevents recursive types from expanding endlessly in the UI.
+
+If `Types source` is disabled, the trigger uses the default behavior: the backend first tries trigger-specific types if they exist, then falls back to project/source types when they can be inferred from the selected source. Timer triggers usually have no inferred source, so the catalog is empty unless this setting is enabled.
+
+Available modes:
+
+- `Source node` - choose a data source and use the type catalog imported from that source runtime or metadata.
+- `API / imported catalog` - call an HTTP endpoint that returns a type catalog. The endpoint can return a full types list, a `{ schemas: ... }` object, a `{ types: [...] }`/`{ data: [...] }` wrapper, or an imported list of `{ id, schema }` items.
+- `Inline / manual` - paste a JSON object where keys are type names and values are JSON Schema-like type definitions.
+
+Use this setting when a trigger receives data from one source but its schema editor should resolve lookups from another source, from an imported catalog, or from a manually maintained set of types.
+
 ### Source Payload
 
 The selected source item defines the `source.*` structure that will be available later in the wizard: in inputs/templates, providers, activation condition, filters, data transform, and defaults.

@@ -119,6 +119,22 @@ trigger 应该触发的必填时间间隔。
 
 IDL 中的必填 entry。`event` 选择 `events` 中的项；`call` 选择 `instructions` 中的 instruction。Instruction 的 accounts 会作为 `source.accounts.*` 可用。
 
+### Types Source
+
+`Types source` 是 trigger 级别的可选设置。它告诉 wizard 从哪里加载类型目录，这个目录会被 schema 中 `lookup` 类型的字段使用。
+
+Lookup 字段不会把完整的嵌套 schema 直接写进字段里，而是保存一个指向目录中命名类型的引用。当 subscription wizard 或 trigger editor 需要展示这个 lookup 类型内部的字段时，会按当前 trigger 请求类型目录并解析这个引用。这对 Substrate runtime metadata、Solana IDL custom types、导入的 catalogs，以及对象很大、在多处复用或递归的 schemas 很有用。使用 lookup 可以避免把深层结构复制到每个字段中，也能避免递归类型在 UI 中无限展开。
+
+如果关闭 `Types source`，会使用默认行为：backend 会先尝试 trigger-specific types，如果没有，再在可以从所选 source 推断时 fallback 到 project/source types。Timer trigger 通常没有可推断的 source，所以除非启用这个设置，否则目录为空。
+
+可用模式：
+
+- `Source node` - 选择一个 data source，并使用从该 source 的 runtime 或 metadata 导入的类型目录。
+- `API / imported catalog` - 调用返回类型目录的 HTTP endpoint。Endpoint 可以返回完整 types 列表、`{ schemas: ... }` 对象、`{ types: [...] }`/`{ data: [...] }` 包装对象，或导入的 `{ id, schema }` item 列表。
+- `Inline / manual` - 粘贴一个 JSON object，其中 keys 是类型名称，values 是类似 JSON Schema 的类型定义。
+
+当 trigger 从一个 source 接收数据，但 schema editor 需要从另一个 source、导入目录或手动维护的类型集合解析 lookups 时，可以使用这个设置。
+
 ### Source Payload
 
 所选 source item 会定义稍后在向导中可用的 `source.*` 结构：inputs/templates、providers、activation condition、filters、data transform 和 defaults 都会用到它。

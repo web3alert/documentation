@@ -127,6 +127,22 @@ Wizard может попытаться загрузить IDL автоматич
 
 Для `event` выбирается event из `events`. Для `call` выбирается instruction из `instructions`. Если выбран `call`, accounts из IDL становятся доступными как именованные поля `source.accounts.*`.
 
+### Types source
+
+`Types source` - опциональная настройка на уровне trigger. Она указывает wizard-у, откуда загружать каталог типов, который используется schema-полями с типом `lookup`.
+
+Lookup-поля не встраивают всю вложенную schema внутрь поля. Вместо этого они хранят ссылку на именованный тип из каталога. Когда subscription wizard или trigger editor должен показать поля внутри такого lookup-типа, он запрашивает каталог для выбранного trigger и разворачивает ссылку. Это полезно для Substrate runtime metadata, Solana IDL custom types, импортированных каталогов и любых schemas, где объекты большие, переиспользуются в нескольких местах или рекурсивны. Lookup позволяет не копировать глубокие структуры в каждое поле и не разворачивать рекурсивные типы бесконечно в UI.
+
+Если `Types source` выключен, используется поведение по умолчанию: backend сначала пробует trigger-specific types, если они есть, затем fallback на project/source types, когда их можно вывести из выбранного source. У timer trigger обычно нет source, поэтому каталог пустой, если эта настройка не включена.
+
+Доступные режимы:
+
+- `Source node` - выбрать data source и использовать каталог типов, импортированный из runtime или metadata этого source.
+- `API / imported catalog` - вызвать HTTP endpoint, который возвращает каталог типов. Endpoint может вернуть полный список types, объект `{ schemas: ... }`, обертку `{ types: [...] }`/`{ data: [...] }` или импортированный список элементов `{ id, schema }`.
+- `Inline / manual` - вставить JSON object, где keys - имена типов, а values - JSON Schema-like определения типов.
+
+Используйте эту настройку, когда trigger читает данные из одного source, но schema editor должен разворачивать lookups из другого source, импортированного каталога или вручную поддерживаемого набора типов.
+
 ### Source payload
 
 Выбранный source item определяет структуру `source.*`, которая будет доступна дальше в wizard: в inputs/templates, providers, activation condition, filters, data transform и defaults.
