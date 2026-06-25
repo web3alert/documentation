@@ -130,10 +130,10 @@ Si `Types source` está desactivado, se usa el comportamiento por defecto: el ba
 Modos disponibles:
 
 - `Source node` - elegir un data source y usar el catálogo de tipos importado desde el runtime o metadata de ese source.
-- `API / imported catalog` - llamar a un HTTP endpoint que devuelve un catálogo de tipos. El endpoint puede devolver una lista completa de types, un objeto `{ schemas: ... }`, un wrapper `{ types: [...] }`/`{ data: [...] }` o una lista importada de elementos `{ id, schema }`.
+- `API / imported catalog` - llamar a una HTTP API que devuelve un catálogo de tipos. El wizard pide un único Base URL. El backend carga el catálogo desde `Base URL + /catalog`; ese endpoint puede devolver una lista completa de types, un objeto `{ schemas: ... }`, un wrapper `{ types: [...] }`/`{ data: [...] }` o una lista importada de elementos `{ id, schema }`.
 - `Inline / manual` - pegar un JSON object donde las keys son nombres de tipos y los values son definiciones de tipo estilo JSON Schema.
 
-Para controles de filtro dinámicos como `cascade`, un API catalog también puede proporcionar un lookup endpoint. El wizard lo llama para cargar listas de options para los `Lookup ref` seleccionados, incluidas listas dependientes como series -> event -> market. La condition guardada en la subscription sigue almacenando un único valor de filtro normal.
+Para controles de filtro dinámicos como `cascade`, un API catalog también debe proporcionar `Base URL + /lookup`. El wizard llama ese endpoint con query params como `ref`, `q`, `value`, `limit` e IDs de los pasos cascade anteriores para cargar listas de options para los `Lookup ref` seleccionados. La condition guardada en la subscription sigue almacenando un único valor de filtro normal.
 
 Usa esta configuración cuando un trigger recibe datos de un source, pero el schema editor debe resolver lookups desde otro source, desde un catálogo importado o desde un conjunto de tipos mantenido manualmente.
 

@@ -138,10 +138,10 @@ If `Types source` is disabled, the trigger uses the default behavior: the backen
 Available modes:
 
 - `Source node` - choose a data source and use the type catalog imported from that source runtime or metadata.
-- `API / imported catalog` - call an HTTP endpoint that returns a type catalog. The endpoint can return a full types list, a `{ schemas: ... }` object, a `{ types: [...] }`/`{ data: [...] }` wrapper, or an imported list of `{ id, schema }` items.
+- `API / imported catalog` - call an HTTP API that returns a type catalog. The wizard asks for one Base URL. The backend loads the catalog from `Base URL + /catalog`; that endpoint can return a full types list, a `{ schemas: ... }` object, a `{ types: [...] }`/`{ data: [...] }` wrapper, or an imported list of `{ id, schema }` items.
 - `Inline / manual` - paste a JSON object where keys are type names and values are JSON Schema-like type definitions.
 
-For dynamic filter controls such as `cascade`, an API catalog can also provide a lookup endpoint. The wizard calls it to load option lists for selected `Lookup ref` values, including dependent lists such as series -> event -> market. The saved subscription condition still stores one normal filter value.
+For dynamic filter controls such as `cascade`, an API catalog should also provide `Base URL + /lookup`. The wizard calls this endpoint with query parameters such as `ref`, `q`, `value`, `limit`, and previous cascade step IDs to load option lists for selected `Lookup ref` values. The saved subscription condition still stores one normal filter value.
 
 Use this setting when a trigger receives data from one source but its schema editor should resolve lookups from another source, from an imported catalog, or from a manually maintained set of types.
 
