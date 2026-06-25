@@ -133,6 +133,8 @@ Modos disponibles:
 - `API / imported catalog` - llamar a un HTTP endpoint que devuelve un catálogo de tipos. El endpoint puede devolver una lista completa de types, un objeto `{ schemas: ... }`, un wrapper `{ types: [...] }`/`{ data: [...] }` o una lista importada de elementos `{ id, schema }`.
 - `Inline / manual` - pegar un JSON object donde las keys son nombres de tipos y los values son definiciones de tipo estilo JSON Schema.
 
+Para controles de filtro dinámicos como `cascade`, un API catalog también puede proporcionar un lookup endpoint. El wizard lo llama para cargar listas de options para los `Lookup ref` seleccionados, incluidas listas dependientes como series -> event -> market. La condition guardada en la subscription sigue almacenando un único valor de filtro normal.
+
 Usa esta configuración cuando un trigger recibe datos de un source, pero el schema editor debe resolver lookups desde otro source, desde un catálogo importado o desde un conjunto de tipos mantenido manualmente.
 
 ### Source Payload
@@ -342,6 +344,8 @@ En `UI mode`, schema consiste en properties. Cada property se puede desplegar, c
 `enum` - conjunto de variants, donde cada variant tiene nombre y tipo propio. Este tipo está disponible en output schema, pero está desactivado para trigger inputs y filters. Para inputs y filters hay que definir un valor concreto por el que subscription podrá comparar o filtrar source item; enum variants son demasiado ambiguos para este escenario.
 
 `lookup` - referencia a un tipo desde metadata/IDL, por ejemplo un Substrate runtime type o un Solana custom defined type. Para él se elige `Lookup ref`. Este tipo es útil cuando hay que conservar la relación con runtime/source type en vez de describir la estructura manualmente.
+
+`cascade` - helper de UI para seleccionar un único valor `string` mediante varios pasos lookup. Es útil para filters donde el valor final es difícil de escribir manualmente, pero puede encontrarse siguiendo una secuencia: primero elegir un grupo y después un elemento dentro de ese grupo. Cada paso tiene `ID` y `Lookup ref`; `Label` opcional solo afecta a la UI del subscription wizard. El orden de los pasos define las dependencias automáticamente: cada paso después del primero se carga con el valor del paso anterior. En la trigger schema se guarda igualmente como `string` con `io.ryabina.notify.type: "cascade"`, y las subscriptions siguen guardando una condition normal sobre el filter field original.
 
 ## Step 4. Data Providers
 

@@ -141,6 +141,8 @@ Available modes:
 - `API / imported catalog` - call an HTTP endpoint that returns a type catalog. The endpoint can return a full types list, a `{ schemas: ... }` object, a `{ types: [...] }`/`{ data: [...] }` wrapper, or an imported list of `{ id, schema }` items.
 - `Inline / manual` - paste a JSON object where keys are type names and values are JSON Schema-like type definitions.
 
+For dynamic filter controls such as `cascade`, an API catalog can also provide a lookup endpoint. The wizard calls it to load option lists for selected `Lookup ref` values, including dependent lists such as series -> event -> market. The saved subscription condition still stores one normal filter value.
+
 Use this setting when a trigger receives data from one source but its schema editor should resolve lookups from another source, from an imported catalog, or from a manually maintained set of types.
 
 ### Source Payload
@@ -350,6 +352,8 @@ In `UI mode`, schema consists of properties. Each property can be expanded, coll
 `enum` - set of variants, where each variant has a name and its own type. This type is available in output schema, but disabled for trigger inputs and filters. Inputs and filters need to define a concrete value by which subscription can compare or filter source item; enum variants are too ambiguous for this scenario.
 
 `lookup` - reference to a type from metadata/IDL, for example a Substrate runtime type or a Solana custom defined type. It requires selecting `Lookup ref`. This type is useful when you need to preserve a relation to runtime/source type rather than describe the structure manually.
+
+`cascade` - UI helper for selecting one `string` value through several lookup steps. It is mainly useful for filters where the final value is hard to enter manually but can be found through a sequence, for example choosing a group first and then an item inside that group. Each step has an `ID` and a `Lookup ref`; optional `Label` only affects the subscription wizard UI. Step order defines dependencies automatically: every step after the first is loaded with the previous step value. The trigger schema is still saved as a `string` with `io.ryabina.notify.type: "cascade"`, and subscriptions still store a normal condition on the original filter field.
 
 ## Step 4. Data Providers
 
