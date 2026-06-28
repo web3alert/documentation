@@ -767,6 +767,16 @@ Cada linha contém:
 
 Ao guardar, cada link deve ter title e URL.
 
+#### Default delivery
+
+Periodicidade de entrega recomendada para novas subscriptions criadas a partir deste trigger.
+
+- `Every match` envia cada output correspondente.
+- `Once` envia apenas o primeiro output correspondente para uma regra de subscription.
+- `Once per key` envia o primeiro output para cada key path selecionado. Para triggers fan-out ou polling, usa um output field estável, como o id da entidade.
+
+Se este painel estiver desativado, as novas subscriptions começam com `Every match`.
+
 Os campos usam autocomplete e Handlebars/template helpers. Defaults são renderizados a partir de trigger output, por isso aqui não se usa context `source`, `inputs` ou `providers`.
 
 Autocomplete sugere:

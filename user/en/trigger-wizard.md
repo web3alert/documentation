@@ -787,6 +787,16 @@ Each row contains:
 
 On save, each link must have both title and URL.
 
+#### Default delivery
+
+Suggested delivery periodicity for new subscriptions created from this trigger.
+
+- `Every match` sends every matching output.
+- `Once` sends only the first matching output for a subscription rule.
+- `Once per key` sends the first output for each selected key path. Use a stable output field such as an entity id for fan-out or polling triggers.
+
+If this panel is disabled, new subscriptions start with `Every match`.
+
 Fields use autocomplete and Handlebars/template helpers. Defaults are rendered from trigger output, so `source`, `inputs`, or `providers` context is not used here.
 
 Autocomplete suggests:

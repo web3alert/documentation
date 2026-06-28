@@ -767,6 +767,16 @@ Cover URL。
 
 保存时，每个 link 都必须同时有 title 和 URL。
 
+#### Default delivery
+
+从此 trigger 创建新 subscription 时建议使用的投递频率。
+
+- `Every match` 会发送每一个匹配的 output。
+- `Once` 只会为一条 subscription rule 发送第一个匹配的 output。
+- `Once per key` 会为每个选定 key path 发送第一个 output。对于 fan-out 或 polling triggers，请使用稳定的 output field，例如实体 id。
+
+如果此面板关闭，新 subscriptions 会从 `Every match` 开始。
+
 字段使用 autocomplete 和 Handlebars/template helpers。Defaults 会从 trigger output 渲染，因此这里不使用 `source`、`inputs` 或 `providers` context。
 
 Autocomplete 会建议：
