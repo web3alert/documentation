@@ -647,7 +647,7 @@
 | `kind` | `"private" \| "group" \| "supergroup" \| "channel"?` | Tipo de Telegram destination, cuando está disponible. |
 | `topic` | `object?` | Forum topic seleccionado, cuando está configurado. |
 | `topic.messageThreadId` | `number` | Thread id del Telegram forum topic. |
-| `topic.title` | `string?` | Título visible del forum topic. |
+| `topic.title` | `string?` | Título visible del forum topic. El display label indicado al vincularlo tiene prioridad sobre el nombre obtenido de Telegram. Si ninguno está disponible, el cliente puede mostrar `General` o `Topic #ID`. |
 
 ### ExternalResourceView
 

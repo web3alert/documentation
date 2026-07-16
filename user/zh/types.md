@@ -647,7 +647,7 @@
 | `kind` | `"private" \| "group" \| "supergroup" \| "channel"?` | Telegram destination 类型（如可用）。 |
 | `topic` | `object?` | 已选择的 forum topic（如已配置）。 |
 | `topic.messageThreadId` | `number` | Telegram forum topic thread id。 |
-| `topic.title` | `string?` | Forum topic 可见标题。 |
+| `topic.title` | `string?` | Forum topic 的可见标题。绑定时提供的 display label 优先于从 Telegram 获取的名称；若两者都缺失，客户端可显示 `General` 或 `Topic #ID`。 |
 
 ### ExternalResourceView
 

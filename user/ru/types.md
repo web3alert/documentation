@@ -647,7 +647,7 @@
 | `kind` | `"private" \| "group" \| "supergroup" \| "channel"?` | Тип Telegram destination, если он доступен. |
 | `topic` | `object?` | Выбранный forum topic, если он настроен. |
 | `topic.messageThreadId` | `number` | Thread id Telegram forum topic. |
-| `topic.title` | `string?` | Видимое название forum topic. |
+| `topic.title` | `string?` | Видимое название forum topic. Display label, указанный при привязке, имеет приоритет над именем, полученным из Telegram. Если оба отсутствуют, клиент может показать `General` или `Topic #ID`. |
 
 ### ExternalResourceView
 
