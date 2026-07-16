@@ -633,9 +633,21 @@
 | `ready` | `boolean` | Whether the resource is ready. |
 | `remark` | `string \| null` | Resource status remark. |
 | `data` | `object \| null?` | Resource setup data. |
+| `destinationSummary` | `TelegramResourceDestinationSummary?` | Sanitized destination details. Present only in the owner-private view of a configured Telegram external resource; omitted from public and short views. |
 | `tags` | `string[]` | Tags. |
 | `labels` | `Record<string, string>` | Labels. |
 | `meta.title` | `string?` | Visible title. |
+
+### TelegramResourceDestinationSummary
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `service` | `"telegram"` | Delivery service. |
+| `title` | `string` | Visible destination title. |
+| `kind` | `"private" \| "group" \| "supergroup" \| "channel"?` | Telegram destination kind, when available. |
+| `topic` | `object?` | Selected forum topic, when configured. |
+| `topic.messageThreadId` | `number` | Telegram forum topic thread id. |
+| `topic.title` | `string?` | Visible forum topic title. |
 
 ### ExternalResourceView
 

@@ -633,9 +633,21 @@
 | `ready` | `boolean` | Resource 是否 ready。 |
 | `remark` | `string \| null` | Resource status 备注。 |
 | `data` | `object \| null?` | Resource setup data。 |
+| `destinationSummary` | `TelegramResourceDestinationSummary?` | 经过清理的 destination 信息。仅在已配置的外部 Telegram resource 的 owner-private view 中返回；public 和 short views 中不会返回。 |
 | `tags` | `string[]` | Tags。 |
 | `labels` | `Record<string, string>` | Labels。 |
 | `meta.title` | `string?` | 可见标题。 |
+
+### TelegramResourceDestinationSummary
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `service` | `"telegram"` | Delivery service。 |
+| `title` | `string` | Destination 可见标题。 |
+| `kind` | `"private" \| "group" \| "supergroup" \| "channel"?` | Telegram destination 类型（如可用）。 |
+| `topic` | `object?` | 已选择的 forum topic（如已配置）。 |
+| `topic.messageThreadId` | `number` | Telegram forum topic thread id。 |
+| `topic.title` | `string?` | Forum topic 可见标题。 |
 
 ### ExternalResourceView
 

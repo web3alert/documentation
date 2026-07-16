@@ -633,9 +633,21 @@
 | `ready` | `boolean` | Готов ли resource. |
 | `remark` | `string \| null` | Статусное примечание resource. |
 | `data` | `object \| null?` | Данные setup resource. |
+| `destinationSummary` | `TelegramResourceDestinationSummary?` | Безопасное описание destination. Присутствует только в owner-private view настроенного внешнего Telegram resource; отсутствует в public и short views. |
 | `tags` | `string[]` | Теги. |
 | `labels` | `Record<string, string>` | Метки. |
 | `meta.title` | `string?` | Видимое название. |
+
+### TelegramResourceDestinationSummary
+
+| Поле | Тип | Описание |
+| --- | --- | --- |
+| `service` | `"telegram"` | Сервис доставки. |
+| `title` | `string` | Видимое название destination. |
+| `kind` | `"private" \| "group" \| "supergroup" \| "channel"?` | Тип Telegram destination, если он доступен. |
+| `topic` | `object?` | Выбранный forum topic, если он настроен. |
+| `topic.messageThreadId` | `number` | Thread id Telegram forum topic. |
+| `topic.title` | `string?` | Видимое название forum topic. |
 
 ### ExternalResourceView
 
