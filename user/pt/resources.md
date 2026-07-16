@@ -44,11 +44,32 @@ Atualmente estão disponíveis quatro tipos de resources.
 
 ### Telegram
 
-Telegram resource é usado para enviar alerts para Telegram chat.
+Telegram resource envia alerts para um chat privado, group, topic de um forum ou channel.
 
-É um external resource: durante a criação, o serviço primeiro mostra instruções. O utilizador segue essas instruções no Telegram, depois disso o resource fica ready e pode ser escolhido em subscriptions.
+Só um owner do workspace Web3alert pode iniciar o setup ou alterar este destino.
+Este requisito de role no Web3alert é separado das permissões de administrator
+do chat Telegram descritas abaixo.
 
-Este flow é necessário porque o Web3alert deve receber uma ligação confirmada a um chat, group ou channel específico, e não apenas uma string arbitrária.
+Usa uma external setup session segura. Abra o Telegram a partir do formulário do
+resource e escolha no bot um destes destinos:
+
+- o chat privado com o bot;
+- um group ou supergroup;
+- um channel;
+- `General` ou um topic específico de um forum group.
+
+Para ligar um group, forum ou channel, o utilizador que faz o setup tem de ser
+owner ou administrator com permissão para adicionar e promover o bot. O bot
+Web3alert também tem de ser administrator. Num channel precisa de permissão para
+publicar mensagens; num group ou forum deve poder gerir o chat e enviar
+mensagens.
+
+Depois de escolher um forum, selecione `Use General` para enviar alerts para
+General. Para usar outro topic, abra-o no Telegram e envie `/bindtopic` dentro
+desse topic.
+
+Esta confirmação impede que um chat id arbitrário seja guardado como destino. A
+setup session expira após 15 minutos.
 
 ### Discord
 
@@ -122,11 +143,20 @@ Este campo aparece para resources Discord, Slack e Webhook.
 
 Nele cola-se o webhook URL do serviço correspondente. Para Discord e Slack, URL é validado pelo formato da plataforma específica.
 
-### Get instructions
+### Configure in Telegram
 
-Para Telegram, em vez de URL usa-se o botão `Get instructions`.
+Para Telegram usa-se `Configure in Telegram` em vez de URL. Num resource já
+configurado, o mesmo flow aparece como `Change destination`.
 
-Depois de clicar, o serviço cria um draft resource e mostra instruções de ligação. Quando o Telegram confirma a ligação, o resource fica ready e aparece na lista de canais de entrega disponíveis.
+O serviço cria uma setup session de 15 minutos e abre o bot Web3alert. O link de
+setup de utilização única não deve ser guardado nem incluído em logs. Termine a
+escolha do destino no Telegram e volte ao Web3alert; o resource fica ready
+quando o bot confirma a seleção.
+
+O rebind é atómico. Enquanto o setup estiver pendente, os alerts existentes
+continuam a usar o destino atual. O target só muda depois de uma confirmação
+bem-sucedida; cancelar, deixar expirar a session ou um erro mantêm o target
+anterior.
 
 ### Add a resource
 
@@ -138,7 +168,7 @@ Para Discord, Slack e Webhook, o botão `Add a resource` cria imediatamente o re
 
 É possível alterar title e campos de ligação se o tipo de resource o suportar. Name permanece read-only porque faz parte do fullname estável.
 
-Se resource for usado em subscriptions, alterar URL ou ligação afeta todas as subscriptions que enviam alerts para esse resource.
+Se resource for usado em subscriptions, alterar URL ou ligação afeta todas as subscriptions que enviam alerts para esse resource. O Telegram mantém o destino anterior até o novo setup terminar com sucesso.
 
 ## Delete resource
 

@@ -1,8 +1,9 @@
 # Resources API
 
-Endpoints Resources управляют delivery resources и external setup flow.
+Endpoints Resources управляют delivery resources и их публичными setup flows.
+Все маршруты на этой странице используют канонический namespace `/api`.
 
-## GET /api/v2/resources
+## GET /api/resources
 
 Возвращает resources.
 
@@ -17,7 +18,7 @@ Endpoints Resources управляют delivery resources и external setup flow
 
 Ответ: [ResourceView[]](types.md#resourceview).
 
-## GET /api/v2/resources/:fullname
+## GET /api/resources/:fullname
 
 Возвращает resource.
 
@@ -31,7 +32,7 @@ Endpoints Resources управляют delivery resources и external setup flow
 
 Ответ: [ResourceView](types.md#resourceview).
 
-## PUT /api/v2/resources/:fullname
+## PUT /api/resources/:fullname
 
 Создает или обновляет resource.
 
@@ -57,7 +58,7 @@ Endpoints Resources управляют delivery resources и external setup flow
 
 Ответ: [ResourceView](types.md#resourceview).
 
-## DELETE /api/v2/resources/:fullname
+## DELETE /api/resources/:fullname
 
 Удаляет resource.
 
@@ -71,7 +72,76 @@ Endpoints Resources управляют delivery resources и external setup flow
 
 Ответ: [OperationResult](types.md#operationresult).
 
-## GET /api/v2/resources/external/:token
+## POST /api/resources/:fullname/setup-sessions
+
+Создает безопасную setup session для выбора Telegram destination. Авторизованный
+account должен быть владельцем workspace, которому принадлежит resource, а сам
+resource должен использовать внешний Telegram blueprint.
+
+У resource может быть только одна активная setup session. Новая session переводит
+предыдущую активную session в статус `superseded`, но не меняет текущий destination
+resource.
+
+Аргументы:
+
+| Аргумент | Где | Описание |
+| --- | --- | --- |
+| `fullname` | Path | Fullname Telegram resource. |
+
+Тело запроса: нет.
+
+Ответ:
+
+| Поле | Описание |
+| --- | --- |
+| `id` | ID setup session для проверки статуса или отмены. |
+| `status` | `pending`. |
+| `setupToken` | Одноразовый секрет для запуска setup flow в Telegram-боте. Возвращается только в этом ответе; его нельзя логировать или сохранять. |
+| `expiresAt` | ISO timestamp. Session и `setupToken` истекают через 15 минут после создания. |
+
+Старый destination продолжает получать alerts, пока Telegram не подтвердит новую
+цель и session не перейдет в статус `completed`.
+
+## GET /api/resources/:fullname/setup-sessions/:id
+
+Возвращает публичный статус Telegram destination setup session. Ответ никогда не
+содержит `setupToken`.
+
+Аргументы:
+
+| Аргумент | Где | Описание |
+| --- | --- | --- |
+| `fullname` | Path | Fullname Telegram resource. |
+| `id` | Path | ID setup session. |
+
+Тело запроса: нет.
+
+Ответ:
+
+| Поле | Описание |
+| --- | --- |
+| `id` | ID setup session. |
+| `resourceFullname` | Fullname resource. |
+| `status` | `pending`, `claimed`, `completed`, `cancelled`, `expired` или `superseded`. |
+| `expiresAt` | ISO timestamp окончания session. |
+
+## DELETE /api/resources/:fullname/setup-sessions/:id
+
+Отменяет активную Telegram destination setup session. Для уже настроенного
+resource отмена безопасна: его текущий destination не изменяется.
+
+Аргументы:
+
+| Аргумент | Где | Описание |
+| --- | --- | --- |
+| `fullname` | Path | Fullname Telegram resource. |
+| `id` | Path | ID setup session. |
+
+Тело запроса: нет.
+
+Ответ: пустой успешный ответ.
+
+## GET /api/resources/external/:token
 
 Открывает external resource setup по token.
 
@@ -85,7 +155,7 @@ Endpoints Resources управляют delivery resources и external setup flow
 
 Ответ: [ExternalResourceView](types.md#externalresourceview).
 
-## POST /api/v2/resources/external/:token
+## POST /api/resources/external/:token
 
 Отправляет payload для external resource setup.
 

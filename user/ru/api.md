@@ -188,12 +188,15 @@ X-RateLimit-Window: 60000
 
 | Метод | Endpoint | Назначение |
 | --- | --- | --- |
-| `GET` | `/api/v2/resources` | Список resources. |
-| `GET` | `/api/v2/resources/:fullname` | Получить resource. |
-| `PUT` | `/api/v2/resources/:fullname` | Создать или обновить resource. |
-| `DELETE` | `/api/v2/resources/:fullname` | Удалить resource. |
-| `GET` | `/api/v2/resources/external/:token` | Открыть external resource setup по токену. |
-| `POST` | `/api/v2/resources/external/:token` | Отправить payload external resource setup. |
+| `GET` | `/api/resources` | Список resources. |
+| `GET` | `/api/resources/:fullname` | Получить resource. |
+| `PUT` | `/api/resources/:fullname` | Создать или обновить resource. |
+| `DELETE` | `/api/resources/:fullname` | Удалить resource. |
+| `POST` | `/api/resources/:fullname/setup-sessions` | Создать Telegram destination setup session. |
+| `GET` | `/api/resources/:fullname/setup-sessions/:id` | Получить статус setup session. |
+| `DELETE` | `/api/resources/:fullname/setup-sessions/:id` | Отменить setup session. |
+| `GET` | `/api/resources/external/:token` | Открыть external resource setup по токену. |
+| `POST` | `/api/resources/external/:token` | Отправить payload external resource setup. |
 
 ## Data Sources
 

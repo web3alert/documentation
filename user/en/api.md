@@ -188,12 +188,15 @@ Details: [Resources API](api-resources.md).
 
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
-| `GET` | `/api/v2/resources` | List resources. |
-| `GET` | `/api/v2/resources/:fullname` | Get resource. |
-| `PUT` | `/api/v2/resources/:fullname` | Create or update resource. |
-| `DELETE` | `/api/v2/resources/:fullname` | Delete resource. |
-| `GET` | `/api/v2/resources/external/:token` | Open external resource setup by token. |
-| `POST` | `/api/v2/resources/external/:token` | Submit external resource setup payload. |
+| `GET` | `/api/resources` | List resources. |
+| `GET` | `/api/resources/:fullname` | Get resource. |
+| `PUT` | `/api/resources/:fullname` | Create or update resource. |
+| `DELETE` | `/api/resources/:fullname` | Delete resource. |
+| `POST` | `/api/resources/:fullname/setup-sessions` | Start a Telegram destination setup session. |
+| `GET` | `/api/resources/:fullname/setup-sessions/:id` | Get setup-session status. |
+| `DELETE` | `/api/resources/:fullname/setup-sessions/:id` | Cancel a setup session. |
+| `GET` | `/api/resources/external/:token` | Open external resource setup by token. |
+| `POST` | `/api/resources/external/:token` | Submit external resource setup payload. |
 
 ## Data Sources
 

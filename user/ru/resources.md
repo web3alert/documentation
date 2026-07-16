@@ -44,11 +44,31 @@ Resources принадлежат текущему workspace. Если перек
 
 ### Telegram
 
-Telegram resource используется для отправки alerts в Telegram chat.
+Telegram resource отправляет alerts в личный chat с ботом, group, topic forum-группы или channel.
 
-Это external resource: при создании сервис сначала выдает инструкции. Пользователь следует этим инструкциям в Telegram, после чего resource становится ready и его можно выбирать в subscriptions.
+Запустить setup или сменить этот destination может только владелец Web3alert
+workspace. Это требование к роли в Web3alert отдельно от прав администратора
+Telegram chat, описанных ниже.
 
-Такой flow нужен потому, что Web3alert должен получить подтвержденную связь с конкретным chat, group или channel, а не просто произвольную строку.
+Для него используется безопасная external setup session. Откройте Telegram из
+формы resource и выберите в боте один из вариантов:
+
+- личный chat с ботом;
+- group или supergroup;
+- channel;
+- `General` или конкретный topic в forum-группе.
+
+Для подключения group, forum или channel пользователь, который выполняет setup,
+должен быть владельцем или администратором с правом добавить и повысить бота до
+администратора. Бот Web3alert также должен быть администратором. В channel ему
+требуется право публиковать сообщения, а в group или forum — право управлять
+чатом и отправлять сообщения.
+
+После выбора forum нажмите `Use General`, чтобы отправлять alerts в General. Для
+другого topic откройте его в Telegram и отправьте в нем команду `/bindtopic`.
+
+Подтверждение не позволяет сохранить произвольный chat id как destination.
+Setup session истекает через 15 минут.
 
 ### Discord
 
@@ -122,11 +142,19 @@ Name входит в fullname resource и используется как вну
 
 В него вставляется webhook URL соответствующего сервиса. Для Discord и Slack URL валидируется по формату конкретной платформы.
 
-### Get instructions
+### Configure in Telegram
 
-Для Telegram вместо URL используется кнопка `Get instructions`.
+Для Telegram вместо URL используется кнопка `Configure in Telegram`. У уже
+настроенного resource тот же flow доступен через `Change destination`.
 
-После нажатия сервис создает draft resource и показывает инструкции подключения. Когда Telegram подтверждает подключение, resource становится ready и появляется в списке доступных каналов доставки.
+Сервис создает setup session на 15 минут и открывает бота Web3alert. Одноразовую
+setup-ссылку нельзя сохранять или добавлять в логи. Завершите выбор destination в
+Telegram и вернитесь в Web3alert; resource станет ready после подтверждения ботом.
+
+Перепривязка атомарна. Пока setup не завершен, существующие alerts продолжают
+отправляться в текущий destination. Target меняется только после успешного
+подтверждения; отмена, истечение session или ошибка оставляют старый target без
+изменений.
 
 ### Add a resource
 
@@ -138,7 +166,7 @@ Name входит в fullname resource и используется как вну
 
 Можно изменить title и поля подключения, если тип resource это поддерживает. Name остается read-only, потому что он является частью стабильного fullname.
 
-Если resource используется в subscriptions, изменение URL или подключения повлияет на все subscriptions, которые отправляют alerts в этот resource.
+Если resource используется в subscriptions, изменение URL или подключения повлияет на все subscriptions, которые отправляют alerts в этот resource. Для Telegram предыдущий destination продолжает работать до успешного завершения новой setup session.
 
 ## Delete resource
 

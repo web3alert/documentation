@@ -188,12 +188,15 @@ X-RateLimit-Window: 60000
 
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
-| `GET` | `/api/v2/resources` | resources 列表。 |
-| `GET` | `/api/v2/resources/:fullname` | 获取 resource。 |
-| `PUT` | `/api/v2/resources/:fullname` | 创建或更新 resource。 |
-| `DELETE` | `/api/v2/resources/:fullname` | 删除 resource。 |
-| `GET` | `/api/v2/resources/external/:token` | 通过 token 打开 external resource setup。 |
-| `POST` | `/api/v2/resources/external/:token` | 发送 external resource setup payload。 |
+| `GET` | `/api/resources` | resources 列表。 |
+| `GET` | `/api/resources/:fullname` | 获取 resource。 |
+| `PUT` | `/api/resources/:fullname` | 创建或更新 resource。 |
+| `DELETE` | `/api/resources/:fullname` | 删除 resource。 |
+| `POST` | `/api/resources/:fullname/setup-sessions` | 启动 Telegram destination setup session。 |
+| `GET` | `/api/resources/:fullname/setup-sessions/:id` | 获取 setup session 状态。 |
+| `DELETE` | `/api/resources/:fullname/setup-sessions/:id` | 取消 setup session。 |
+| `GET` | `/api/resources/external/:token` | 通过 token 打开 external resource setup。 |
+| `POST` | `/api/resources/external/:token` | 发送 external resource setup payload。 |
 
 ## Data Sources
 
