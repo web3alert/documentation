@@ -85,7 +85,8 @@ Payload: 与 `POST /api/subscriptions` 相同结构。
 
 Payload: 无。
 
-响应：[OperationResult](types.md#operationresult)。
+响应：`HTTP 204 No Content`，响应体为空。
+<!-- api-contract: response=204; body=empty -->
 
 ## PUT /api/subscriptions/:id/state
 

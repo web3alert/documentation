@@ -372,6 +372,28 @@ function validateStateSwitchContract(section, requirementTokens) {
   return errors;
 }
 
+function validateSubscriptionDeleteContract(section, contractMarker) {
+  if (section == null) {
+    return ['subscription delete route section is missing'];
+  }
+
+  const errors = [];
+  const contractMarkers = section
+    .split('\n')
+    .map(line => line.trim())
+    .filter(line => line.startsWith('<!-- api-contract:'));
+  if (contractMarkers.length != 1 || contractMarkers[0] != contractMarker) {
+    errors.push('subscription delete response must carry the exact 204/empty contract marker');
+  }
+  if (!section.includes('HTTP 204 No Content')) {
+    errors.push('subscription delete response must be HTTP 204 No Content');
+  }
+  if (/operationresult/i.test(section)) {
+    errors.push('subscription delete response must not reference OperationResult');
+  }
+  return errors;
+}
+
 function compareRouteSets(actual, expected, context) {
   const actualSet = new Set(actual);
   const expectedSet = new Set(expected);
@@ -389,6 +411,7 @@ function compareRouteSets(actual, expected, context) {
 const issues = [];
 const files = await listMarkdownFiles(userRoot);
 const expectedPublicRoutes = unique(publicCanonicalRoutes);
+const subscriptionDeleteContractMarker = '<!-- api-contract: response=204; body=empty -->';
 const fixtureRequirementTokens = { required: 'Yes', optional: 'No' };
 const validStateContractFixture = `
 | Field | Required | Description |
@@ -449,6 +472,56 @@ for (const fixture of invalidStateContractFixtures) {
     ).length == 0
   ) {
     issues.push(`subscription state contract validator accepts ${fixture.name}`);
+  }
+}
+
+const validSubscriptionDeleteFixtures = [
+  `Response: HTTP 204 No Content with an empty body.
+${subscriptionDeleteContractMarker}`,
+  `Формулировка ответа изменена: HTTP 204 No Content.
+${subscriptionDeleteContractMarker}`,
+];
+for (const section of validSubscriptionDeleteFixtures) {
+  if (
+    validateSubscriptionDeleteContract(
+      section,
+      subscriptionDeleteContractMarker,
+    ).length > 0
+  ) {
+    issues.push('subscription delete validator rejects a harmless visible reword fixture');
+  }
+}
+
+const invalidSubscriptionDeleteFixtures = [
+  ['missing marker', 'Response: HTTP 204 No Content.'],
+  [
+    'missing 204',
+    `Response body is empty.
+${subscriptionDeleteContractMarker}`,
+  ],
+  [
+    'altered body marker',
+    'Response: HTTP 204 No Content.\n<!-- api-contract: response=204; body=none -->',
+  ],
+  [
+    'mixed-case OperationResult',
+    `Response: HTTP 204 No Content. oPeRaTiOnReSuLt
+${subscriptionDeleteContractMarker}`,
+  ],
+  [
+    'lowercase operationresult',
+    `Response: HTTP 204 No Content. operationresult
+${subscriptionDeleteContractMarker}`,
+  ],
+];
+for (const [name, section] of invalidSubscriptionDeleteFixtures) {
+  if (
+    validateSubscriptionDeleteContract(
+      section,
+      subscriptionDeleteContractMarker,
+    ).length == 0
+  ) {
+    issues.push(`subscription delete validator accepts ${name}`);
   }
 }
 
@@ -554,6 +627,18 @@ for (const locale of locales) {
   }[locale];
 
   for (const error of validateStateSwitchContract(stateSection, requirementTokens)) {
+    issues.push(`${locale}: ${error}`);
+  }
+
+  const deleteSection = routeSection(
+    subscriptions,
+    'DELETE /api/subscriptions/:id',
+  );
+
+  for (const error of validateSubscriptionDeleteContract(
+    deleteSection,
+    subscriptionDeleteContractMarker,
+  )) {
     issues.push(`${locale}: ${error}`);
   }
 }

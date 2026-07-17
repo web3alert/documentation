@@ -85,7 +85,8 @@ Endpoints Subscriptions управляют subscriptions workspace, их сос�
 
 Тело запроса: нет.
 
-Ответ: [OperationResult](types.md#operationresult).
+Ответ: `HTTP 204 No Content` с пустым телом.
+<!-- api-contract: response=204; body=empty -->
 
 ## PUT /api/subscriptions/:id/state
 

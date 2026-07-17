@@ -85,7 +85,8 @@ Argumentos:
 
 Payload: nenhum.
 
-Resposta: [OperationResult](types.md#operationresult).
+Resposta: `HTTP 204 No Content` com corpo vazio.
+<!-- api-contract: response=204; body=empty -->
 
 ## PUT /api/subscriptions/:id/state
 
