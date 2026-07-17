@@ -101,10 +101,14 @@ Payload:
 
 | Campo | Obrigatório | Descrição |
 | --- | --- | --- |
-| `state` | Sim | `on`, `off` ou `blocked`. |
-| `issue` | Não | Motivo legível para humanos do bloqueio/desativação. |
+| `state` | Sim | Estado pretendido da subscription: `on` ou `off`. |
 
-Resposta: [SubscriptionView](types.md#subscriptionview).
+Resposta:
+
+| Campo | Obrigatório | Descrição |
+| --- | --- | --- |
+| `state` | Sim | Estado efetivo da subscription: `on`, `off` ou `blocked`. |
+| `issue` | Não | Problema ou motivo do estado atual, quando disponível. |
 
 ## POST /api/subscriptions/test
 

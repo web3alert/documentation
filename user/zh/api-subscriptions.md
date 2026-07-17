@@ -101,10 +101,14 @@ Payload:
 
 | 字段 | 必填 | 说明 |
 | --- | --- | --- |
-| `state` | 是 | `on`、`off` 或 `blocked`。 |
-| `issue` | 否 | 人类可读的 block/disable reason。 |
+| `state` | 是 | subscription 的目标状态：`on` 或 `off`。 |
 
-响应：[SubscriptionView](types.md#subscriptionview)。
+响应：
+
+| 字段 | 必填 | 说明 |
+| --- | --- | --- |
+| `state` | 是 | subscription 的实际状态：`on`、`off` 或 `blocked`。 |
+| `issue` | 否 | 当前状态的问题或状态原因（如有）。 |
 
 ## POST /api/subscriptions/test
 

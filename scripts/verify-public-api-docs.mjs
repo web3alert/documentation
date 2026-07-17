@@ -245,6 +245,133 @@ function routePath(route) {
   return route.slice(route.indexOf(' ') + 1);
 }
 
+function routeSection(markdown, route) {
+  const heading = `## ${route}`;
+  const start = markdown.indexOf(heading);
+  if (start == -1) {
+    return undefined;
+  }
+
+  const next = markdown.indexOf('\n## ', start + heading.length);
+  return markdown.slice(start, next == -1 ? markdown.length : next);
+}
+
+function markdownTableRow(line) {
+  const trimmed = line.trim();
+  if (!trimmed.startsWith('|') || !trimmed.endsWith('|')) {
+    return undefined;
+  }
+
+  return trimmed
+    .slice(1, -1)
+    .split('|')
+    .map(cell => cell.trim());
+}
+
+function isMarkdownTableDivider(cells) {
+  return cells.length > 0 && cells.every(cell => /^:?-{3,}:?$/.test(cell));
+}
+
+function markdownTables(markdown) {
+  const lines = markdown.split('\n');
+  const tables = [];
+
+  for (let index = 0; index < lines.length - 1; index += 1) {
+    const header = markdownTableRow(lines[index]);
+    const divider = markdownTableRow(lines[index + 1]);
+    if (
+      header == null
+      || divider == null
+      || divider.length != header.length
+      || !isMarkdownTableDivider(divider)
+    ) {
+      continue;
+    }
+
+    const rows = [];
+    let rowIndex = index + 2;
+    for (; rowIndex < lines.length; rowIndex += 1) {
+      const row = markdownTableRow(lines[rowIndex]);
+      if (row == null || row.length != header.length || isMarkdownTableDivider(row)) {
+        break;
+      }
+      rows.push(row);
+    }
+
+    tables.push({ header, rows });
+    index = rowIndex - 1;
+  }
+
+  return tables;
+}
+
+function tableField(row) {
+  const match = row[0]?.match(/^`([^`]+)`$/);
+  return match?.[1];
+}
+
+function inlineCodeTokens(cell = '') {
+  return [...cell.matchAll(/`([^`]+)`/g)].map(([, token]) => token);
+}
+
+function exactValues(actual, expected) {
+  return actual.length == expected.length
+    && expected.every(value => actual.includes(value));
+}
+
+function validateStateSwitchContract(section, requirementTokens) {
+  if (section == null) {
+    return ['subscription state route section is missing'];
+  }
+
+  const contractTables = markdownTables(section)
+    .filter(table => table.rows.some(row => tableField(row) == 'state'));
+  if (contractTables.length != 2) {
+    return [`expected two state contract tables, found ${contractTables.length}`];
+  }
+
+  const [request, response] = contractTables;
+  const requestFields = request.rows.map(tableField);
+  const responseFields = response.rows.map(tableField);
+  const requestState = request.rows.find(row => tableField(row) == 'state');
+  const responseState = response.rows.find(row => tableField(row) == 'state');
+  const responseIssue = response.rows.find(row => tableField(row) == 'issue');
+  const errors = [];
+
+  if (request.header.length != 3 || !exactValues(requestFields, ['state'])) {
+    errors.push('request table must contain exactly the state field');
+  }
+  if (requestState?.[1] != requirementTokens.required) {
+    errors.push('request state field must be required');
+  }
+  if (!exactValues(inlineCodeTokens(requestState?.[2]), ['on', 'off'])) {
+    errors.push('request state enum must be exactly on|off');
+  }
+
+  if (
+    response.header.length != 3
+    || !exactValues(responseFields, ['state', 'issue'])
+  ) {
+    errors.push('response table must contain exactly state and issue fields');
+  }
+  if (responseState?.[1] != requirementTokens.required) {
+    errors.push('response state field must be required');
+  }
+  if (responseIssue?.[1] != requirementTokens.optional) {
+    errors.push('response issue field must be optional');
+  }
+  if (
+    !exactValues(
+      inlineCodeTokens(responseState?.[2]),
+      ['on', 'off', 'blocked'],
+    )
+  ) {
+    errors.push('response state enum must be exactly on|off|blocked');
+  }
+
+  return errors;
+}
+
 function compareRouteSets(actual, expected, context) {
   const actualSet = new Set(actual);
   const expectedSet = new Set(expected);
@@ -262,6 +389,68 @@ function compareRouteSets(actual, expected, context) {
 const issues = [];
 const files = await listMarkdownFiles(userRoot);
 const expectedPublicRoutes = unique(publicCanonicalRoutes);
+const fixtureRequirementTokens = { required: 'Yes', optional: 'No' };
+const validStateContractFixture = `
+| Field | Required | Description |
+| --- | --- | --- |
+| \`state\` | Yes | \`on\` or \`off\`. |
+
+Arbitrary renamed response label:
+
+| Field | Required | Description |
+| --- | --- | --- |
+| \`state\` | Yes | \`on\`, \`off\`, or \`blocked\`. |
+| \`issue\` | No | Current status reason. |
+`;
+const invalidStateContractFixtures = [
+  {
+    name: 'extra request field',
+    markdown: validStateContractFixture.replace(
+      '| `state` | Yes | `on` or `off`. |',
+      '| `state` | Yes | `on` or `off`. |\n| `issue` | No | Extra. |',
+    ),
+  },
+  {
+    name: 'extra response field',
+    markdown: validStateContractFixture.replace(
+      '| `issue` | No | Current status reason. |',
+      '| `issue` | No | Current status reason. |\n| `extra` | No | Extra. |',
+    ),
+  },
+  {
+    name: 'required response issue',
+    markdown: validStateContractFixture.replace(
+      '| `issue` | No | Current status reason. |',
+      '| `issue` | Yes | Current status reason. |',
+    ),
+  },
+  {
+    name: 'extra paused enum',
+    markdown: validStateContractFixture.replace(
+      '`on`, `off`, or `blocked`',
+      '`on`, `off`, `blocked`, or `paused`',
+    ),
+  },
+];
+
+if (
+  validateStateSwitchContract(
+    validStateContractFixture,
+    fixtureRequirementTokens,
+  ).length > 0
+) {
+  issues.push('subscription state contract validator rejects its valid fixture');
+}
+for (const fixture of invalidStateContractFixtures) {
+  if (
+    validateStateSwitchContract(
+      fixture.markdown,
+      fixtureRequirementTokens,
+    ).length == 0
+  ) {
+    issues.push(`subscription state contract validator accepts ${fixture.name}`);
+  }
+}
 
 if (publicCanonicalRoutes.length != 136) {
   issues.push(`public canonical manifest must contain 136 routes, found ${publicCanonicalRoutes.length}`);
@@ -347,6 +536,26 @@ for (const locale of locales) {
     detailedRoutes,
     `${locale}: overview compared with detailed API pages`,
   );
+
+  const subscriptions = await readFile(
+    path.join(userRoot, locale, 'api-subscriptions.md'),
+    'utf8',
+  );
+  const stateSection = routeSection(
+    subscriptions,
+    'PUT /api/subscriptions/:id/state',
+  );
+  const requirementTokens = {
+    en: { required: 'Yes', optional: 'No' },
+    es: { required: 'Sí', optional: 'No' },
+    pt: { required: 'Sim', optional: 'Não' },
+    ru: { required: 'Да', optional: 'Нет' },
+    zh: { required: '是', optional: '否' },
+  }[locale];
+
+  for (const error of validateStateSwitchContract(stateSection, requirementTokens)) {
+    issues.push(`${locale}: ${error}`);
+  }
 }
 
 if (issues.length > 0) {

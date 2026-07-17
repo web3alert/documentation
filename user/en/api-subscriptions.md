@@ -101,10 +101,14 @@ Payload:
 
 | Field | Required | Description |
 | --- | --- | --- |
-| `state` | Yes | `on`, `off`, or `blocked`. |
-| `issue` | No | Human-readable block/disable reason. |
+| `state` | Yes | Desired subscription state: `on` or `off`. |
 
-Response: [SubscriptionView](types.md#subscriptionview).
+Response:
+
+| Field | Required | Description |
+| --- | --- | --- |
+| `state` | Yes | Effective subscription state: `on`, `off`, or `blocked`. |
+| `issue` | No | Current-state issue or status reason, when available. |
 
 ## POST /api/subscriptions/test
 
