@@ -151,13 +151,21 @@ Respuesta: respuesta de éxito vacía.
 
 ## GET /api/resources/external/:token
 
-Abre external resource setup por token.
+<!-- api-contract: resource-token=persistent-bearer-capability; setup-token=separate-one-time-15m; transport=https-only; logging=forbidden -->
+
+Lee el estado de external resource setup mediante la capability del resource.
+
+Seguridad: `:token` es una bearer capability persistente del resource, no el
+`setupToken` de un solo uso y 15 minutos de las Telegram setup sessions. Trata
+la URL completa como un secreto: envíala solo por HTTPS y no la incluyas en
+analytics, logs de aplicaciones, mensajes de soporte ni enlaces que transmitan
+el referrer.
 
 Argumentos:
 
 | Argumento | Ubicación | Descripción |
 | --- | --- | --- |
-| `token` | Path | Token de external setup. |
+| `token` | Path | Bearer capability persistente del resource. |
 
 Payload: ninguno.
 
@@ -165,13 +173,13 @@ Respuesta: [ExternalResourceView](types.md#externalresourceview).
 
 ## POST /api/resources/external/:token
 
-Envía payload para external resource setup.
+Envía el payload de external resource setup mediante la capability del resource.
 
 Argumentos:
 
 | Argumento | Ubicación | Descripción |
 | --- | --- | --- |
-| `token` | Path | Token de external setup. |
+| `token` | Path | Bearer capability persistente del resource. |
 
 Payload:
 

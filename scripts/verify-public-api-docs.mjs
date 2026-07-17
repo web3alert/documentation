@@ -803,6 +803,21 @@ function compareRouteSets(actual, expected, context) {
   }
 }
 
+function validateResourceCapabilityContract(section, marker) {
+  if (section == null) {
+    return ['external resource capability route section is missing'];
+  }
+
+  const markerCount = section.split(marker).length - 1;
+  if (markerCount != 1) {
+    return [
+      'external resource capability route must carry exactly one persistent-token security marker',
+    ];
+  }
+
+  return [];
+}
+
 const issues = [];
 const files = await listMarkdownFiles(userRoot);
 const expectedPublicRoutes = unique(publicCanonicalRoutes);
@@ -811,6 +826,7 @@ const tokenContractMarker = '<!-- api-contract: auth=provider-credentials; exist
 const tokenSummaryContractMarker = '<!-- api-contract: auth=provider-credentials; existing-bearer=not-required; token=fresh-persistent -->';
 const linkCreateContractMarker = '<!-- api-contract: auth=anonymous; uri=leading-slash-required; uri-prefix=/link/-forbidden; invalid-uri=400; response=Link-key-uri -->';
 const linkGetContractMarker = '<!-- api-contract: auth=anonymous; not-found=400; response=Link-key-uri -->';
+const resourceCapabilityContractMarker = '<!-- api-contract: resource-token=persistent-bearer-capability; setup-token=separate-one-time-15m; transport=https-only; logging=forbidden -->';
 const expectedAddressTypes = ['plain', 'ss58', 'evm', 'solana', 'bitcoin', 'cosmos'];
 const expectedWorkspaceAvatarResponseFields = [
   'url',
@@ -1366,6 +1382,17 @@ for (const locale of locales) {
   }
 
   for (const error of validateStateSwitchContract(stateSection, requirementTokens)) {
+    issues.push(`${locale}: ${error}`);
+  }
+
+  const resources = await readFile(
+    path.join(userRoot, locale, 'api-resources.md'),
+    'utf8',
+  );
+  for (const error of validateResourceCapabilityContract(
+    routeSection(resources, 'GET /api/resources/external/:token'),
+    resourceCapabilityContractMarker,
+  )) {
     issues.push(`${locale}: ${error}`);
   }
 

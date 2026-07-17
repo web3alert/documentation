@@ -152,13 +152,20 @@ resource отмена безопасна: его текущий destination не
 
 ## GET /api/resources/external/:token
 
-Открывает external resource setup по token.
+<!-- api-contract: resource-token=persistent-bearer-capability; setup-token=separate-one-time-15m; transport=https-only; logging=forbidden -->
+
+Читает состояние external resource setup по capability ресурса.
+
+Безопасность: `:token` — это постоянная bearer capability ресурса, а не
+одноразовый 15-минутный `setupToken` Telegram setup session. Считайте секретом
+весь URL: передавайте его только по HTTPS и не помещайте в аналитику, логи
+приложений, сообщения поддержки или ссылки, передающие referrer.
 
 Аргументы:
 
 | Аргумент | Где | Описание |
 | --- | --- | --- |
-| `token` | Path | Токен external setup. |
+| `token` | Path | Постоянная bearer capability ресурса. |
 
 Тело запроса: нет.
 
@@ -166,13 +173,13 @@ resource отмена безопасна: его текущий destination не
 
 ## POST /api/resources/external/:token
 
-Отправляет payload для external resource setup.
+Отправляет payload external resource setup по capability ресурса.
 
 Аргументы:
 
 | Аргумент | Где | Описание |
 | --- | --- | --- |
-| `token` | Path | Токен external setup. |
+| `token` | Path | Постоянная bearer capability ресурса. |
 
 Тело запроса:
 

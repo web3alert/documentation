@@ -142,13 +142,20 @@ Payload: 无。
 
 ## GET /api/resources/external/:token
 
-通过 token 打开 external resource setup。
+<!-- api-contract: resource-token=persistent-bearer-capability; setup-token=separate-one-time-15m; transport=https-only; logging=forbidden -->
+
+通过 resource capability 读取 external resource setup 状态。
+
+安全说明：`:token` 是 resource 的长期 bearer capability，不是 Telegram
+setup session 中有效期为 15 分钟的一次性 `setupToken`。请将完整 URL
+视为 secret：仅通过 HTTPS 传输，不要写入 analytics、应用日志、支持消息，
+也不要放入会发送 referrer 的链接。
 
 参数：
 
 | 参数 | 位置 | 说明 |
 | --- | --- | --- |
-| `token` | Path | External setup token。 |
+| `token` | Path | Resource 的长期 bearer capability。 |
 
 Payload: 无。
 
@@ -156,13 +163,13 @@ Payload: 无。
 
 ## POST /api/resources/external/:token
 
-发送 external resource setup payload。
+通过 resource capability 提交 external resource setup payload。
 
 参数：
 
 | 参数 | 位置 | 说明 |
 | --- | --- | --- |
-| `token` | Path | External setup token。 |
+| `token` | Path | Resource 的长期 bearer capability。 |
 
 Payload:
 

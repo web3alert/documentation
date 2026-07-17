@@ -152,13 +152,20 @@ Response: empty success response.
 
 ## GET /api/resources/external/:token
 
-Opens external resource setup by token.
+<!-- api-contract: resource-token=persistent-bearer-capability; setup-token=separate-one-time-15m; transport=https-only; logging=forbidden -->
+
+Reads external resource setup state through the resource capability.
+
+Security: `:token` is a persistent bearer capability for the resource, not the
+15-minute one-time `setupToken` used by Telegram setup sessions. Treat the
+complete URL as a secret. Send it only over HTTPS and never put it in analytics,
+application logs, support messages, or referrer-bearing links.
 
 Arguments:
 
 | Argument | Location | Description |
 | --- | --- | --- |
-| `token` | Path | External setup token. |
+| `token` | Path | Persistent resource bearer capability. |
 
 Payload: none.
 
@@ -166,13 +173,13 @@ Response: [ExternalResourceView](types.md#externalresourceview).
 
 ## POST /api/resources/external/:token
 
-Sends payload for external resource setup.
+Submits external resource setup payload through the resource capability.
 
 Arguments:
 
 | Argument | Location | Description |
 | --- | --- | --- |
-| `token` | Path | External setup token. |
+| `token` | Path | Persistent resource bearer capability. |
 
 Payload:
 
