@@ -72,6 +72,15 @@ Details: [Account API](api-account.md).
 | `GET` | `/api/account/settings` | Get account settings. |
 | `PUT` | `/api/account/settings` | Save account settings. |
 
+## Links
+
+Details: [Links API](api-links.md).
+
+| Method | Endpoint | Purpose |
+| --- | --- | --- |
+| `POST` | `/api/links` | Create an anonymous short link for an internal Web3alert path. |
+| `GET` | `/api/links/:key` | Resolve an anonymous short-link key; an unknown key returns `400`. |
+
 ## Workspaces
 
 Details: [Workspaces API](api-workspaces.md).

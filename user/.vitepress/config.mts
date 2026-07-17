@@ -36,6 +36,7 @@ type LocaleMeta = {
     apiOverview: string;
     types: string;
     accountApi: string;
+    linksApi: string;
     workspacesApi: string;
     projectsApi: string;
     projectTransfersApi: string;
@@ -86,6 +87,7 @@ const locales: Record<LocaleKey, LocaleMeta> = {
       apiOverview: 'API Overview',
       types: 'Types',
       accountApi: 'Account API',
+      linksApi: 'Links API',
       workspacesApi: 'Workspaces API',
       projectsApi: 'Projects API',
       projectTransfersApi: 'Project Transfers API',
@@ -134,6 +136,7 @@ const locales: Record<LocaleKey, LocaleMeta> = {
       apiOverview: 'Обзор API',
       types: 'Типы',
       accountApi: 'Account API',
+      linksApi: 'API ссылок',
       workspacesApi: 'Workspaces API',
       projectsApi: 'Projects API',
       projectTransfersApi: 'Project Transfers API',
@@ -182,6 +185,7 @@ const locales: Record<LocaleKey, LocaleMeta> = {
       apiOverview: 'API Overview',
       types: 'Types',
       accountApi: 'Account API',
+      linksApi: 'Links API',
       workspacesApi: 'Workspaces API',
       projectsApi: 'Projects API',
       projectTransfersApi: 'Project Transfers API',
@@ -230,6 +234,7 @@ const locales: Record<LocaleKey, LocaleMeta> = {
       apiOverview: 'Resumen de API',
       types: 'Tipos',
       accountApi: 'Account API',
+      linksApi: 'API de enlaces',
       workspacesApi: 'Workspaces API',
       projectsApi: 'Projects API',
       projectTransfersApi: 'Project Transfers API',
@@ -278,6 +283,7 @@ const locales: Record<LocaleKey, LocaleMeta> = {
       apiOverview: 'Visão geral da API',
       types: 'Tipos',
       accountApi: 'Account API',
+      linksApi: 'API de ligações',
       workspacesApi: 'Workspaces API',
       projectsApi: 'Projects API',
       projectTransfersApi: 'Project Transfers API',
@@ -326,6 +332,7 @@ const locales: Record<LocaleKey, LocaleMeta> = {
       apiOverview: 'API 概览',
       types: '类型',
       accountApi: 'Account API',
+      linksApi: '链接 API',
       workspacesApi: 'Workspaces API',
       projectsApi: 'Projects API',
       projectTransfersApi: 'Project Transfers API',
@@ -405,6 +412,7 @@ const createThemeConfig = (locale: LocaleMeta) => {
       { text: locale.sections.apiOverview, link: linkFor(locale, '/api') },
       { text: locale.sections.types, link: linkFor(locale, '/types') },
       { text: locale.sections.accountApi, link: linkFor(locale, '/api-account') },
+      { text: locale.sections.linksApi, link: linkFor(locale, '/api-links') },
       { text: locale.sections.workspacesApi, link: linkFor(locale, '/api-workspaces') },
       { text: locale.sections.projectsApi, link: linkFor(locale, '/api-projects') },
       { text: locale.sections.projectTransfersApi, link: linkFor(locale, '/api-project-transfers') },

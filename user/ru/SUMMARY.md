@@ -28,6 +28,7 @@
 * [Обзор API](api.md)
 * [Типы](types.md)
 * [Account API](api-account.md)
+* [API ссылок](api-links.md)
 * [Workspaces API](api-workspaces.md)
 * [Projects API](api-projects.md)
 * [Project Transfers API](api-project-transfers.md)

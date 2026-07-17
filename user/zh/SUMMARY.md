@@ -28,6 +28,7 @@
 * [API 概览](api.md)
 * [类型](types.md)
 * [Account API](api-account.md)
+* [链接 API](api-links.md)
 * [Workspaces API](api-workspaces.md)
 * [Projects API](api-projects.md)
 * [Project Transfers API](api-project-transfers.md)

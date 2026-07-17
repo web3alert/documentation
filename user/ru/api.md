@@ -72,6 +72,15 @@ X-RateLimit-Window: 60000
 | `GET` | `/api/account/settings` | Получить account settings. |
 | `PUT` | `/api/account/settings` | Сохранить account settings. |
 
+## Ссылки
+
+Подробнее: [API ссылок](api-links.md).
+
+| Метод | Endpoint | Назначение |
+| --- | --- | --- |
+| `POST` | `/api/links` | Создать анонимную короткую ссылку для внутреннего пути Web3alert. |
+| `GET` | `/api/links/:key` | Разрешить анонимный ключ; неизвестный ключ возвращает `400`. |
+
 ## Workspaces
 
 Подробно: [Workspaces API](api-workspaces.md).

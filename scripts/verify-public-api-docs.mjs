@@ -28,6 +28,7 @@ const expectedApiFiles = [
   'api-billing.md',
   'api-builder-registry.md',
   'api-data-sources.md',
+  'api-links.md',
   'api-project-transfers.md',
   'api-projects.md',
   'api-resources.md',
@@ -52,6 +53,8 @@ const publicCanonicalRoutes = [
   'PUT /api/me/workspace',
   'GET /api/account/settings',
   'PUT /api/account/settings',
+  'POST /api/links',
+  'GET /api/links/:key',
   'GET /api/workspaces',
   'GET /api/workspaces/:fullname',
   'PUT /api/workspaces/:fullname',
@@ -527,6 +530,128 @@ function validateTokenSummaryContract(markdown, contractMarker) {
   return errors;
 }
 
+function contractMarkers(section) {
+  return section
+    .split('\n')
+    .map(line => line.trim())
+    .filter(line => line.startsWith('<!-- api-contract:'));
+}
+
+function validateLinkResponseTable(section, requirementTokens, subject) {
+  const responseTables = markdownTables(section)
+    .filter(table => exactValues(table.rows.map(tableField), ['key', 'uri']));
+  const errors = [];
+
+  if (responseTables.length != 1) {
+    return [
+      `${subject} must contain one Link response table, found ${responseTables.length}`,
+    ];
+  }
+
+  const [response] = responseTables;
+  if (response.header.length != 3) {
+    errors.push(`${subject} Link response table must have exactly three columns`);
+  }
+  for (const field of ['key', 'uri']) {
+    if (response.rows.find(row => tableField(row) == field)?.[1] != requirementTokens.required) {
+      errors.push(`${subject} Link response ${field} field must be required`);
+    }
+  }
+
+  return errors;
+}
+
+function validateLinkCreateContract(section, requirementTokens, contractMarker) {
+  if (section == null) {
+    return ['link create route section is missing'];
+  }
+
+  const errors = [];
+  if (
+    contractMarkers(section).length != 1
+    || contractMarkers(section)[0] != contractMarker
+  ) {
+    errors.push('link create route must carry the exact anonymous URI contract marker');
+  }
+
+  const payloadTables = markdownTables(section)
+    .filter(table => exactValues(table.rows.map(tableField), ['uri']));
+  if (payloadTables.length != 1) {
+    errors.push(`link create payload must contain one uri table, found ${payloadTables.length}`);
+  } else {
+    const [payload] = payloadTables;
+    if (payload.header.length != 3) {
+      errors.push('link create payload table must have exactly three columns');
+    }
+    if (payload.rows[0]?.[1] != requirementTokens.required) {
+      errors.push('link create uri field must be required');
+    }
+  }
+
+  errors.push(...validateLinkResponseTable(
+    section,
+    requirementTokens,
+    'link create response',
+  ));
+
+  const visibleSection = section.replace(/<!--[\s\S]*?-->/g, '');
+  if (!visibleSection.includes('`/`') || !visibleSection.includes('`/link/`')) {
+    errors.push('link create route must visibly document both URI path constraints');
+  }
+  if (
+    !visibleSection.includes('HTTP 400 Bad Request')
+    || !visibleSection.includes('`invalid uri`')
+  ) {
+    errors.push('link create route must document the HTTP 400 invalid-uri response');
+  }
+
+  const requestBlocks = [...visibleSection.matchAll(/```http\s*\n([\s\S]*?)\n```/g)]
+    .map(([, request]) => request);
+  if (requestBlocks.length != 1) {
+    errors.push(`link create route must contain one HTTP request example, found ${requestBlocks.length}`);
+  } else {
+    const [request] = requestBlocks;
+    if (!request.startsWith('POST /api/links\n')) {
+      errors.push('link create request example must use canonical POST /api/links');
+    }
+    if (/^Authorization\s*:/im.test(request)) {
+      errors.push('anonymous link create request must not send an Authorization header');
+    }
+  }
+
+  return errors;
+}
+
+function validateLinkGetContract(section, requirementTokens, contractMarker) {
+  if (section == null) {
+    return ['link get route section is missing'];
+  }
+
+  const errors = [];
+  if (
+    contractMarkers(section).length != 1
+    || contractMarkers(section)[0] != contractMarker
+  ) {
+    errors.push('link get route must carry the exact anonymous not-found contract marker');
+  }
+
+  errors.push(...validateLinkResponseTable(
+    section,
+    requirementTokens,
+    'link get response',
+  ));
+
+  const visibleSection = section.replace(/<!--[\s\S]*?-->/g, '');
+  if (
+    !visibleSection.includes('HTTP 400 Bad Request')
+    || !visibleSection.includes('`shortcut not found`')
+  ) {
+    errors.push('link get route must document the exact HTTP 400 not-found response');
+  }
+
+  return errors;
+}
+
 function validateWorkspaceAvatarContract(
   section,
   requirementTokens,
@@ -684,6 +809,8 @@ const expectedPublicRoutes = unique(publicCanonicalRoutes);
 const empty204ContractMarker = '<!-- api-contract: response=204; body=empty -->';
 const tokenContractMarker = '<!-- api-contract: auth=provider-credentials; existing-bearer=not-required; token=fresh-persistent; first-login=may-provision-account-workspace -->';
 const tokenSummaryContractMarker = '<!-- api-contract: auth=provider-credentials; existing-bearer=not-required; token=fresh-persistent -->';
+const linkCreateContractMarker = '<!-- api-contract: auth=anonymous; uri=leading-slash-required; uri-prefix=/link/-forbidden; invalid-uri=400; response=Link-key-uri -->';
+const linkGetContractMarker = '<!-- api-contract: auth=anonymous; not-found=400; response=Link-key-uri -->';
 const expectedAddressTypes = ['plain', 'ss58', 'evm', 'solana', 'bitcoin', 'cosmos'];
 const expectedWorkspaceAvatarResponseFields = [
   'url',
@@ -1057,8 +1184,11 @@ for (const [name, section] of [
   }
 }
 
-if (publicCanonicalRoutes.length != 136) {
-  issues.push(`public canonical manifest must contain 136 routes, found ${publicCanonicalRoutes.length}`);
+if (expectedApiFiles.length != 15) {
+  issues.push(`API file manifest must contain 15 files, found ${expectedApiFiles.length}`);
+}
+if (publicCanonicalRoutes.length != 138) {
+  issues.push(`public canonical manifest must contain 138 routes, found ${publicCanonicalRoutes.length}`);
 }
 if (new Set(publicCanonicalRoutes).size != publicCanonicalRoutes.length) {
   issues.push(`public canonical manifest contains duplicates: ${duplicates(publicCanonicalRoutes).join(', ')}`);
@@ -1066,8 +1196,8 @@ if (new Set(publicCanonicalRoutes).size != publicCanonicalRoutes.length) {
 if (excludedCanonicalRoutes.size != 8) {
   issues.push(`canonical exclusion manifest must contain 8 routes, found ${excludedCanonicalRoutes.size}`);
 }
-if (expectedPublicRoutes.length != 136) {
-  issues.push(`public route manifest must contain 136 routes, found ${expectedPublicRoutes.length}`);
+if (expectedPublicRoutes.length != 138) {
+  issues.push(`public route manifest must contain 138 routes, found ${expectedPublicRoutes.length}`);
 }
 for (const [excludedRoute, reason] of excludedCanonicalRoutes) {
   if (publicCanonicalRoutes.includes(excludedRoute)) {
@@ -1083,6 +1213,14 @@ for (const file of files) {
   for (const [index, line] of lines.entries()) {
     if (/\/internal(?:\/|\b)/.test(line)) {
       issues.push(`${relativePath}:${index + 1}: service-only API namespace is not public`);
+    }
+    if (
+      /^#{2,6} (GET|POST|PUT|PATCH|DELETE) \/link(?:\/|\b)/.test(line)
+      || /^\| `(GET|POST|PUT|PATCH|DELETE)` \| `\/link(?:\/|`)/.test(line)
+    ) {
+      issues.push(
+        `${relativePath}:${index + 1}: frontend /link paths must not be presented as API endpoints`,
+      );
     }
     for (const [excludedRoute, reason] of excludedCanonicalRoutes) {
       const excludedPath = routePath(excludedRoute);
@@ -1178,6 +1316,25 @@ for (const locale of locales) {
   for (const error of validateMeMetaContract(
     routeSection(account, 'PUT /api/me/meta'),
     requirementTokens,
+  )) {
+    issues.push(`${locale}: ${error}`);
+  }
+
+  const links = await readFile(
+    path.join(userRoot, locale, 'api-links.md'),
+    'utf8',
+  );
+  for (const error of validateLinkCreateContract(
+    routeSection(links, 'POST /api/links'),
+    requirementTokens,
+    linkCreateContractMarker,
+  )) {
+    issues.push(`${locale}: ${error}`);
+  }
+  for (const error of validateLinkGetContract(
+    routeSection(links, 'GET /api/links/:key'),
+    requirementTokens,
+    linkGetContractMarker,
   )) {
     issues.push(`${locale}: ${error}`);
   }

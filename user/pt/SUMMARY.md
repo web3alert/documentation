@@ -28,6 +28,7 @@
 * [Visão geral da API](api.md)
 * [Tipos](types.md)
 * [Account API](api-account.md)
+* [API de ligações](api-links.md)
 * [Workspaces API](api-workspaces.md)
 * [Projects API](api-projects.md)
 * [Project Transfers API](api-project-transfers.md)

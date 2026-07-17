@@ -72,6 +72,15 @@ X-RateLimit-Window: 60000
 | `GET` | `/api/account/settings` | 获取 account settings。 |
 | `PUT` | `/api/account/settings` | 保存 account settings。 |
 
+## 链接
+
+详情：[链接 API](api-links.md)。
+
+| 方法 | Endpoint | 用途 |
+| --- | --- | --- |
+| `POST` | `/api/links` | 为 Web3alert 站内路径创建匿名短链接。 |
+| `GET` | `/api/links/:key` | 解析匿名短链接 key；未知 key 返回 `400`。 |
+
 ## Workspaces
 
 详情：[Workspaces API](api-workspaces.md)。
