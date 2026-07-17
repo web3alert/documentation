@@ -2,7 +2,7 @@
 
 Subscription endpoints 用于管理 workspace subscriptions、它们的 state、testing 和 delivery logs。
 
-## GET /api/v1/subscriptions
+## GET /api/subscriptions
 
 返回当前 workspace/account 的 subscriptions。
 
@@ -12,7 +12,7 @@ Payload: 无。
 
 响应：[SubscriptionView[]](types.md#subscriptionview)。
 
-## POST /api/v1/subscriptions
+## POST /api/subscriptions
 
 按 rules 或 template 直接创建 subscription。
 
@@ -45,7 +45,7 @@ Template subscription payload:
 
 响应：[SubscriptionView](types.md#subscriptionview)。
 
-## GET /api/v1/subscriptions/:id
+## GET /api/subscriptions/:id
 
 返回 subscription。
 
@@ -59,7 +59,7 @@ Payload: 无。
 
 响应：[SubscriptionView](types.md#subscriptionview)。
 
-## POST /api/v1/subscriptions/:id
+## PUT /api/subscriptions/:id
 
 更新 subscription。
 
@@ -69,11 +69,11 @@ Payload: 无。
 | --- | --- | --- |
 | `id` | Path | Subscription id。 |
 
-Payload: 与 `POST /api/v1/subscriptions` 相同结构。
+Payload: 与 `POST /api/subscriptions` 相同结构。
 
 响应：[SubscriptionView](types.md#subscriptionview)。
 
-## DELETE /api/v1/subscriptions/:id
+## DELETE /api/subscriptions/:id
 
 删除 subscription。
 
@@ -87,7 +87,7 @@ Payload: 无。
 
 响应：[OperationResult](types.md#operationresult)。
 
-## POST /api/v1/subscriptions/:id/state
+## PUT /api/subscriptions/:id/state
 
 修改 subscription state。
 

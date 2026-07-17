@@ -22,34 +22,6 @@ async function listMarkdownFiles(directory) {
   return files.sort();
 }
 
-const allowedCompatibilityFiles = new Map([
-  ['account', new Set(['api.md', 'api-account.md'])],
-  ['subscription', new Set(['api.md', 'api-subscriptions.md'])],
-  ['addressbook', new Set(['api.md', 'api-addresses.md'])],
-  ['overview', new Set(['api.md'])],
-]);
-
-const allowedCompatibilityRoutes = new Set([
-  'POST /api/v1/token',
-  'DELETE /api/v1/me',
-  'PUT /api/v1/me/meta',
-  'POST /api/v1/me/avatar',
-  'GET /api/v1/me/workspace',
-  'POST /api/v1/me/workspace',
-  'GET /api/v1/account/settings',
-  'POST /api/v1/account/settings',
-  'GET /api/v1/subscriptions',
-  'POST /api/v1/subscriptions',
-  'GET /api/v1/subscriptions/:id',
-  'POST /api/v1/subscriptions/:id',
-  'DELETE /api/v1/subscriptions/:id',
-  'POST /api/v1/subscriptions/:id/state',
-  'GET /api/v1/addressbook',
-  'POST /api/v1/addressbook',
-  'POST /api/v1/addressbook/:id',
-  'DELETE /api/v1/addressbook/:id',
-]);
-
 const expectedApiFiles = [
   'api-account.md',
   'api-addresses.md',
@@ -71,7 +43,15 @@ const expectedApiFiles = [
 // Any runtime route addition must be explicitly classified before it becomes
 // part of the public documentation contract.
 const publicCanonicalRoutes = [
+  'POST /api/token',
   'GET /api/me',
+  'DELETE /api/me',
+  'PUT /api/me/meta',
+  'POST /api/me/avatar',
+  'GET /api/me/workspace',
+  'PUT /api/me/workspace',
+  'GET /api/account/settings',
+  'PUT /api/account/settings',
   'GET /api/workspaces',
   'GET /api/workspaces/:fullname',
   'PUT /api/workspaces/:fullname',
@@ -131,6 +111,12 @@ const publicCanonicalRoutes = [
   'GET /api/triggers/substrate/source',
   'GET /api/triggers/substrate/pallets',
   'GET /api/triggers/substrate/pallet',
+  'GET /api/subscriptions',
+  'POST /api/subscriptions',
+  'GET /api/subscriptions/:id',
+  'PUT /api/subscriptions/:id',
+  'DELETE /api/subscriptions/:id',
+  'PUT /api/subscriptions/:id/state',
   'POST /api/subscriptions/test',
   'GET /api/subscriptions/:id/alerts/history',
   'GET /api/subscriptions/alerts/history',
@@ -143,6 +129,10 @@ const publicCanonicalRoutes = [
   'DELETE /api/resources/:fullname/setup-sessions/:id',
   'GET /api/resources/external/:token',
   'POST /api/resources/external/:token',
+  'GET /api/addresses',
+  'POST /api/addresses',
+  'PUT /api/addresses/:id',
+  'DELETE /api/addresses/:id',
   'GET /api/actions',
   'GET /api/actions/:fullname',
   'PUT /api/actions/:fullname',
@@ -216,20 +206,6 @@ const excludedCanonicalRoutes = new Map([
   ],
 ]);
 
-function classifyAllowedV1Path(apiPath) {
-  if (apiPath == '/api/v1/*') return 'overview';
-  if (/^\/api\/v1\/(?:token|me|me\/(?:meta|avatar|workspace)|account\/settings)$/.test(apiPath)) {
-    return 'account';
-  }
-  if (/^\/api\/v1\/subscriptions(?:\/:id(?:\/state)?)?$/.test(apiPath)) {
-    return 'subscription';
-  }
-  if (/^\/api\/v1\/addressbook(?:\/:id)?$/.test(apiPath)) {
-    return 'addressbook';
-  }
-  return undefined;
-}
-
 function documentedRoutes(markdown) {
   return [...markdown.matchAll(/^#{2,6} (GET|POST|PUT|PATCH|DELETE) (\/api\/\S+)$/gm)]
     .map(([, method, apiPath]) => `${method} ${apiPath}`)
@@ -284,27 +260,19 @@ function compareRouteSets(actual, expected, context) {
 
 const issues = [];
 const files = await listMarkdownFiles(userRoot);
-const expectedPublicAndCompatibilityRoutes = unique([
-  ...publicCanonicalRoutes,
-  ...allowedCompatibilityRoutes,
-]);
+const expectedPublicRoutes = unique(publicCanonicalRoutes);
 
-if (publicCanonicalRoutes.length != 117) {
-  issues.push(`public canonical manifest must contain 117 routes, found ${publicCanonicalRoutes.length}`);
+if (publicCanonicalRoutes.length != 135) {
+  issues.push(`public canonical manifest must contain 135 routes, found ${publicCanonicalRoutes.length}`);
 }
 if (new Set(publicCanonicalRoutes).size != publicCanonicalRoutes.length) {
   issues.push(`public canonical manifest contains duplicates: ${duplicates(publicCanonicalRoutes).join(', ')}`);
 }
-if (allowedCompatibilityRoutes.size != 18) {
-  issues.push(`compatibility manifest must contain 18 routes, found ${allowedCompatibilityRoutes.size}`);
-}
 if (excludedCanonicalRoutes.size != 8) {
   issues.push(`canonical exclusion manifest must contain 8 routes, found ${excludedCanonicalRoutes.size}`);
 }
-if (expectedPublicAndCompatibilityRoutes.length != 135) {
-  issues.push(
-    `combined public manifest must contain 135 routes, found ${expectedPublicAndCompatibilityRoutes.length}`,
-  );
+if (expectedPublicRoutes.length != 135) {
+  issues.push(`public route manifest must contain 135 routes, found ${expectedPublicRoutes.length}`);
 }
 for (const [excludedRoute, reason] of excludedCanonicalRoutes) {
   if (publicCanonicalRoutes.includes(excludedRoute)) {
@@ -314,7 +282,6 @@ for (const [excludedRoute, reason] of excludedCanonicalRoutes) {
 
 for (const file of files) {
   const relativePath = path.relative(userRoot, file);
-  const basename = path.basename(file);
   const markdown = await readFile(file, 'utf8');
   const lines = markdown.split('\n');
 
@@ -335,23 +302,7 @@ for (const file of files) {
     }
     for (const match of line.matchAll(/\/api\/v\d+(?:\/(?:[A-Za-z0-9_:/-]+|\*))?/g)) {
       const apiPath = match[0];
-      if (!apiPath.startsWith('/api/v1/')) {
-        issues.push(`${relativePath}:${index + 1}: use a canonical /api path instead of ${apiPath}`);
-        continue;
-      }
-      const group = classifyAllowedV1Path(apiPath);
-      if (!group || !allowedCompatibilityFiles.get(group)?.has(basename)) {
-        issues.push(`${relativePath}:${index + 1}: unexpected compatibility path ${apiPath}`);
-      }
-    }
-
-    for (const match of line.matchAll(
-      /\b(GET|POST|PUT|PATCH|DELETE)\b[`\s|]{1,12}(\/api\/v1\/(?:[A-Za-z0-9_:/-]+|\*))/g,
-    )) {
-      const route = `${match[1]} ${match[2]}`;
-      if (!allowedCompatibilityRoutes.has(route)) {
-        issues.push(`${relativePath}:${index + 1}: unexpected compatibility route ${route}`);
-      }
+      issues.push(`${relativePath}:${index + 1}: use a canonical /api path instead of ${apiPath}`);
     }
   }
 }
@@ -382,13 +333,13 @@ for (const locale of locales) {
   const routesFromOverview = unique(overviewRoutesRaw);
   compareRouteSets(
     detailedRoutes,
-    expectedPublicAndCompatibilityRoutes,
-    `${locale}: detailed routes compared with audited public and compatibility manifests`,
+    expectedPublicRoutes,
+    `${locale}: detailed routes compared with audited public manifest`,
   );
   compareRouteSets(
     routesFromOverview,
-    expectedPublicAndCompatibilityRoutes,
-    `${locale}: overview routes compared with audited public and compatibility manifests`,
+    expectedPublicRoutes,
+    `${locale}: overview routes compared with audited public manifest`,
   );
   compareRouteSets(
     routesFromOverview,
@@ -404,6 +355,6 @@ if (issues.length > 0) {
 
 console.log(
   `Verified ${files.length} public Markdown files, ${publicCanonicalRoutes.length} canonical routes, `
-  + `${allowedCompatibilityRoutes.size} compatibility routes, and ${expectedApiFiles.length} API files `
+  + `${expectedApiFiles.length} API files `
   + `across ${locales.length} locales`,
 );

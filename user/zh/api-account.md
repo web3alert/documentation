@@ -4,7 +4,7 @@ Account endpoints 用于处理当前用户、metadata、avatar 和选中的 work
 
 除 token 在 external auth flow 后创建的情况外，所有 endpoints 都需要 `Authorization: Bearer <token>`。
 
-## POST /api/v1/token
+## POST /api/token
 
 为已认证的 identity 创建或返回 API token。
 
@@ -29,7 +29,7 @@ Payload: 无。
 
 响应：[Me](types.md#me)。
 
-## DELETE /api/v1/me
+## DELETE /api/me
 
 删除当前 account。
 
@@ -39,7 +39,7 @@ Payload: 无。
 
 响应：[OperationResult](types.md#operationresult)。
 
-## PUT /api/v1/me/meta
+## PUT /api/me/meta
 
 更新 user metadata。
 
@@ -53,7 +53,7 @@ Payload:
 
 响应：[Me](types.md#me)。
 
-## POST /api/v1/me/avatar
+## POST /api/me/avatar
 
 上传当前 account avatar。
 
@@ -69,7 +69,7 @@ Payload:
 
 响应：[AvatarUploadResult](types.md#avataruploadresult)。
 
-## GET /api/v1/me/workspace
+## GET /api/me/workspace
 
 返回当前 account 选中的 workspace。
 
@@ -79,7 +79,7 @@ Payload: 无。
 
 响应：[CurrentWorkspaceResponse](types.md#currentworkspaceresponse)。
 
-## POST /api/v1/me/workspace
+## PUT /api/me/workspace
 
 切换当前 account 选中的 workspace。
 
@@ -93,7 +93,7 @@ Payload:
 
 响应：[CurrentWorkspaceResponse](types.md#currentworkspaceresponse)。
 
-## GET /api/v1/account/settings
+## GET /api/account/settings
 
 返回 account settings。
 
@@ -103,7 +103,7 @@ Payload: 无。
 
 响应：[AccountSettings](types.md#accountsettings)。
 
-## POST /api/v1/account/settings
+## PUT /api/account/settings
 
 保存 account settings。
 

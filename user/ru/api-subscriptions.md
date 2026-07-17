@@ -2,7 +2,7 @@
 
 Endpoints Subscriptions управляют subscriptions workspace, их состоянием, тестированием и delivery logs.
 
-## GET /api/v1/subscriptions
+## GET /api/subscriptions
 
 Возвращает subscriptions текущего workspace/account.
 
@@ -12,7 +12,7 @@ Endpoints Subscriptions управляют subscriptions workspace, их сос�
 
 Ответ: [SubscriptionView[]](types.md#subscriptionview).
 
-## POST /api/v1/subscriptions
+## POST /api/subscriptions
 
 Создает subscription напрямую по rules или по template.
 
@@ -45,7 +45,7 @@ Endpoints Subscriptions управляют subscriptions workspace, их сос�
 
 Ответ: [SubscriptionView](types.md#subscriptionview).
 
-## GET /api/v1/subscriptions/:id
+## GET /api/subscriptions/:id
 
 Возвращает subscription.
 
@@ -59,7 +59,7 @@ Endpoints Subscriptions управляют subscriptions workspace, их сос�
 
 Ответ: [SubscriptionView](types.md#subscriptionview).
 
-## POST /api/v1/subscriptions/:id
+## PUT /api/subscriptions/:id
 
 Обновляет subscription.
 
@@ -69,11 +69,11 @@ Endpoints Subscriptions управляют subscriptions workspace, их сос�
 | --- | --- | --- |
 | `id` | Path | Subscription id. |
 
-Тело запроса: такая же структура, как в `POST /api/v1/subscriptions`.
+Тело запроса: такая же структура, как в `POST /api/subscriptions`.
 
 Ответ: [SubscriptionView](types.md#subscriptionview).
 
-## DELETE /api/v1/subscriptions/:id
+## DELETE /api/subscriptions/:id
 
 Удаляет subscription.
 
@@ -87,7 +87,7 @@ Endpoints Subscriptions управляют subscriptions workspace, их сос�
 
 Ответ: [OperationResult](types.md#operationresult).
 
-## POST /api/v1/subscriptions/:id/state
+## PUT /api/subscriptions/:id/state
 
 Меняет state subscription.
 

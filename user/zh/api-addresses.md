@@ -2,7 +2,7 @@
 
 Address book endpoints 用于管理可在 workspace/account 中复用的 addresses。
 
-## GET /api/v1/addressbook
+## GET /api/addresses
 
 返回 address book。
 
@@ -12,7 +12,7 @@ Payload: 无。
 
 响应：[AddressEntry[]](types.md#addressentry)。
 
-## POST /api/v1/addressbook
+## POST /api/addresses
 
 创建 address book entry。
 
@@ -28,7 +28,7 @@ Payload:
 
 响应：[AddressEntry](types.md#addressentry)。
 
-## POST /api/v1/addressbook/:id
+## PUT /api/addresses/:id
 
 更新 address book entry。
 
@@ -48,7 +48,7 @@ Payload:
 
 响应：[AddressEntry](types.md#addressentry)。
 
-## DELETE /api/v1/addressbook/:id
+## DELETE /api/addresses/:id
 
 删除 address book entry。
 

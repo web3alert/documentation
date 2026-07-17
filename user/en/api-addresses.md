@@ -2,7 +2,7 @@
 
 Address book endpoints manage reusable workspace/account addresses.
 
-## GET /api/v1/addressbook
+## GET /api/addresses
 
 Returns the address book.
 
@@ -12,7 +12,7 @@ Payload: none.
 
 Response: [AddressEntry[]](types.md#addressentry).
 
-## POST /api/v1/addressbook
+## POST /api/addresses
 
 Creates an address book entry.
 
@@ -28,7 +28,7 @@ Payload:
 
 Response: [AddressEntry](types.md#addressentry).
 
-## POST /api/v1/addressbook/:id
+## PUT /api/addresses/:id
 
 Updates an address book entry.
 
@@ -48,7 +48,7 @@ Payload:
 
 Response: [AddressEntry](types.md#addressentry).
 
-## DELETE /api/v1/addressbook/:id
+## DELETE /api/addresses/:id
 
 Deletes an address book entry.
 

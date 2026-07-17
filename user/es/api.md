@@ -8,11 +8,8 @@ Base URL:
 https://web3alert.io
 ```
 
-Los endpoints de Marketplace y builder usan rutas canónicas `/api/*`. Un
-conjunto limitado de endpoints de account, subscription y address book sigue
-temporalmente en rutas públicas de compatibilidad `/api/v1/*` hasta su
-migración canónica. Los endpoints entre servicios no forman parte de esta
-referencia pública.
+Todos los endpoints públicos para clientes usan rutas canónicas `/api/*`.
+Los endpoints entre servicios no forman parte de esta referencia pública.
 
 ## Auth
 
@@ -65,15 +62,15 @@ Detalles: [Account API](api-account.md).
 
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
-| `POST` | `/api/v1/token` | Crear u obtener API token después de auth flow. |
+| `POST` | `/api/token` | Crear u obtener API token después de auth flow. |
 | `GET` | `/api/me` | Obtener account actual, identity, tier y memberships. |
-| `DELETE` | `/api/v1/me` | Eliminar account actual. |
-| `PUT` | `/api/v1/me/meta` | Actualizar account metadata. |
-| `POST` | `/api/v1/me/avatar` | Subir avatar del account actual. |
-| `GET` | `/api/v1/me/workspace` | Obtener workspace account actual. |
-| `POST` | `/api/v1/me/workspace` | Cambiar workspace account actual. |
-| `GET` | `/api/v1/account/settings` | Obtener account settings. |
-| `POST` | `/api/v1/account/settings` | Guardar account settings. |
+| `DELETE` | `/api/me` | Eliminar account actual. |
+| `PUT` | `/api/me/meta` | Actualizar account metadata. |
+| `POST` | `/api/me/avatar` | Subir avatar del account actual. |
+| `GET` | `/api/me/workspace` | Obtener workspace account actual. |
+| `PUT` | `/api/me/workspace` | Cambiar workspace account actual. |
+| `GET` | `/api/account/settings` | Obtener account settings. |
+| `PUT` | `/api/account/settings` | Guardar account settings. |
 
 ## Workspaces
 
@@ -182,12 +179,12 @@ Detalles: [Subscriptions API](api-subscriptions.md).
 
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
-| `GET` | `/api/v1/subscriptions` | Listar subscriptions del workspace/account actual. |
-| `POST` | `/api/v1/subscriptions` | Crear subscription. |
-| `GET` | `/api/v1/subscriptions/:id` | Obtener subscription. |
-| `POST` | `/api/v1/subscriptions/:id` | Actualizar subscription. |
-| `DELETE` | `/api/v1/subscriptions/:id` | Eliminar subscription. |
-| `POST` | `/api/v1/subscriptions/:id/state` | Activar o desactivar subscription. |
+| `GET` | `/api/subscriptions` | Listar subscriptions del workspace/account actual. |
+| `POST` | `/api/subscriptions` | Crear subscription. |
+| `GET` | `/api/subscriptions/:id` | Obtener subscription. |
+| `PUT` | `/api/subscriptions/:id` | Actualizar subscription. |
+| `DELETE` | `/api/subscriptions/:id` | Eliminar subscription. |
+| `PUT` | `/api/subscriptions/:id/state` | Activar o desactivar subscription. |
 | `POST` | `/api/subscriptions/test` | Test de subscription. |
 | `GET` | `/api/subscriptions/alerts/history` | Workspace subscription logs. |
 | `GET` | `/api/subscriptions/:id/alerts/history` | Logs de una subscription concreta. |
@@ -259,10 +256,10 @@ Detalles: [Addresses API](api-addresses.md).
 
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
-| `GET` | `/api/v1/addressbook` | Listar addresses. |
-| `POST` | `/api/v1/addressbook` | Crear address. |
-| `POST` | `/api/v1/addressbook/:id` | Actualizar address. |
-| `DELETE` | `/api/v1/addressbook/:id` | Eliminar address. |
+| `GET` | `/api/addresses` | Listar addresses. |
+| `POST` | `/api/addresses` | Crear address. |
+| `PUT` | `/api/addresses/:id` | Actualizar address. |
+| `DELETE` | `/api/addresses/:id` | Eliminar address. |
 
 ## Apps, Actions, Blueprints and Types
 

@@ -4,7 +4,7 @@ Account endpoints trabajan con el usuario actual, sus metadata, avatar y workspa
 
 Todos los endpoints requieren `Authorization: Bearer <token>`, excepto los casos en los que token se crea después de un external auth flow.
 
-## POST /api/v1/token
+## POST /api/token
 
 Crea o devuelve un API token para la identity autenticada.
 
@@ -29,7 +29,7 @@ Payload: ninguno.
 
 Respuesta: [Me](types.md#me).
 
-## DELETE /api/v1/me
+## DELETE /api/me
 
 Elimina el account actual.
 
@@ -39,7 +39,7 @@ Payload: ninguno.
 
 Respuesta: [OperationResult](types.md#operationresult).
 
-## PUT /api/v1/me/meta
+## PUT /api/me/meta
 
 Actualiza metadata del usuario.
 
@@ -53,7 +53,7 @@ Payload:
 
 Respuesta: [Me](types.md#me).
 
-## POST /api/v1/me/avatar
+## POST /api/me/avatar
 
 Sube el avatar del account actual.
 
@@ -69,7 +69,7 @@ Payload:
 
 Respuesta: [AvatarUploadResult](types.md#avataruploadresult).
 
-## GET /api/v1/me/workspace
+## GET /api/me/workspace
 
 Devuelve el workspace seleccionado del account actual.
 
@@ -79,7 +79,7 @@ Payload: ninguno.
 
 Respuesta: [CurrentWorkspaceResponse](types.md#currentworkspaceresponse).
 
-## POST /api/v1/me/workspace
+## PUT /api/me/workspace
 
 Cambia el workspace seleccionado del account actual.
 
@@ -93,7 +93,7 @@ Payload:
 
 Respuesta: [CurrentWorkspaceResponse](types.md#currentworkspaceresponse).
 
-## GET /api/v1/account/settings
+## GET /api/account/settings
 
 Devuelve account settings.
 
@@ -103,7 +103,7 @@ Payload: ninguno.
 
 Respuesta: [AccountSettings](types.md#accountsettings).
 
-## POST /api/v1/account/settings
+## PUT /api/account/settings
 
 Guarda account settings.
 

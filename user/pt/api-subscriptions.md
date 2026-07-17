@@ -2,7 +2,7 @@
 
 Os endpoints Subscription gerem workspace subscriptions, o seu state, testing e delivery logs.
 
-## GET /api/v1/subscriptions
+## GET /api/subscriptions
 
 Devolve subscriptions do workspace/account atual.
 
@@ -12,7 +12,7 @@ Payload: nenhum.
 
 Resposta: [SubscriptionView[]](types.md#subscriptionview).
 
-## POST /api/v1/subscriptions
+## POST /api/subscriptions
 
 Cria uma subscription diretamente por rules ou por template.
 
@@ -45,7 +45,7 @@ Payload para template subscription:
 
 Resposta: [SubscriptionView](types.md#subscriptionview).
 
-## GET /api/v1/subscriptions/:id
+## GET /api/subscriptions/:id
 
 Devolve uma subscription.
 
@@ -59,7 +59,7 @@ Payload: nenhum.
 
 Resposta: [SubscriptionView](types.md#subscriptionview).
 
-## POST /api/v1/subscriptions/:id
+## PUT /api/subscriptions/:id
 
 Atualiza uma subscription.
 
@@ -69,11 +69,11 @@ Argumentos:
 | --- | --- | --- |
 | `id` | Path | Subscription id. |
 
-Payload: mesma estrutura de `POST /api/v1/subscriptions`.
+Payload: mesma estrutura de `POST /api/subscriptions`.
 
 Resposta: [SubscriptionView](types.md#subscriptionview).
 
-## DELETE /api/v1/subscriptions/:id
+## DELETE /api/subscriptions/:id
 
 Elimina uma subscription.
 
@@ -87,7 +87,7 @@ Payload: nenhum.
 
 Resposta: [OperationResult](types.md#operationresult).
 
-## POST /api/v1/subscriptions/:id/state
+## PUT /api/subscriptions/:id/state
 
 Altera o state de uma subscription.
 

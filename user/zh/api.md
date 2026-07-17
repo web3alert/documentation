@@ -8,9 +8,8 @@ Base URL:
 https://web3alert.io
 ```
 
-Marketplace 和 builder endpoints 使用规范的 `/api/*` 路径。少量 account、
-subscription 和 address book endpoints 在完成规范迁移前仍暂时使用公开的
-`/api/v1/*` 兼容路径。服务间 endpoints 不属于此公开 API 文档。
+所有公开客户端 endpoints 都使用规范的 `/api/*` 路径。服务间 endpoints
+不属于此公开 API 文档。
 
 ## Auth
 
@@ -63,15 +62,15 @@ X-RateLimit-Window: 60000
 
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
-| `POST` | `/api/v1/token` | auth flow 后创建或获取 API token。 |
+| `POST` | `/api/token` | auth flow 后创建或获取 API token。 |
 | `GET` | `/api/me` | 获取当前 account、identity、tier 和 memberships。 |
-| `DELETE` | `/api/v1/me` | 删除当前 account。 |
-| `PUT` | `/api/v1/me/meta` | 更新 account metadata。 |
-| `POST` | `/api/v1/me/avatar` | 上传当前 account avatar。 |
-| `GET` | `/api/v1/me/workspace` | 获取当前 workspace account。 |
-| `POST` | `/api/v1/me/workspace` | 切换当前 workspace account。 |
-| `GET` | `/api/v1/account/settings` | 获取 account settings。 |
-| `POST` | `/api/v1/account/settings` | 保存 account settings。 |
+| `DELETE` | `/api/me` | 删除当前 account。 |
+| `PUT` | `/api/me/meta` | 更新 account metadata。 |
+| `POST` | `/api/me/avatar` | 上传当前 account avatar。 |
+| `GET` | `/api/me/workspace` | 获取当前 workspace account。 |
+| `PUT` | `/api/me/workspace` | 切换当前 workspace account。 |
+| `GET` | `/api/account/settings` | 获取 account settings。 |
+| `PUT` | `/api/account/settings` | 保存 account settings。 |
 
 ## Workspaces
 
@@ -180,12 +179,12 @@ X-RateLimit-Window: 60000
 
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
-| `GET` | `/api/v1/subscriptions` | 当前 workspace/account subscriptions 列表。 |
-| `POST` | `/api/v1/subscriptions` | 创建 subscription。 |
-| `GET` | `/api/v1/subscriptions/:id` | 获取 subscription。 |
-| `POST` | `/api/v1/subscriptions/:id` | 更新 subscription。 |
-| `DELETE` | `/api/v1/subscriptions/:id` | 删除 subscription。 |
-| `POST` | `/api/v1/subscriptions/:id/state` | 启用或关闭 subscription。 |
+| `GET` | `/api/subscriptions` | 当前 workspace/account subscriptions 列表。 |
+| `POST` | `/api/subscriptions` | 创建 subscription。 |
+| `GET` | `/api/subscriptions/:id` | 获取 subscription。 |
+| `PUT` | `/api/subscriptions/:id` | 更新 subscription。 |
+| `DELETE` | `/api/subscriptions/:id` | 删除 subscription。 |
+| `PUT` | `/api/subscriptions/:id/state` | 启用或关闭 subscription。 |
 | `POST` | `/api/subscriptions/test` | Test subscription。 |
 | `GET` | `/api/subscriptions/alerts/history` | Workspace subscription logs。 |
 | `GET` | `/api/subscriptions/:id/alerts/history` | 指定 subscription 的 logs。 |
@@ -256,10 +255,10 @@ X-RateLimit-Window: 60000
 
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
-| `GET` | `/api/v1/addressbook` | addresses 列表。 |
-| `POST` | `/api/v1/addressbook` | 创建 address。 |
-| `POST` | `/api/v1/addressbook/:id` | 更新 address。 |
-| `DELETE` | `/api/v1/addressbook/:id` | 删除 address。 |
+| `GET` | `/api/addresses` | addresses 列表。 |
+| `POST` | `/api/addresses` | 创建 address。 |
+| `PUT` | `/api/addresses/:id` | 更新 address。 |
+| `DELETE` | `/api/addresses/:id` | 删除 address。 |
 
 ## Apps, Actions, Blueprints and Types
 

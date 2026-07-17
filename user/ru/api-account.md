@@ -4,7 +4,7 @@ Endpoints Account работают с текущим пользователем,
 
 Все endpoints требуют `Authorization: Bearer <token>`, кроме случаев, когда токен создается после внешнего процесса авторизации.
 
-## POST /api/v1/token
+## POST /api/token
 
 Создает или возвращает API-токен для авторизованной identity.
 
@@ -29,7 +29,7 @@ Endpoints Account работают с текущим пользователем,
 
 Ответ: [Me](types.md#me).
 
-## DELETE /api/v1/me
+## DELETE /api/me
 
 Удаляет текущий account.
 
@@ -39,7 +39,7 @@ Endpoints Account работают с текущим пользователем,
 
 Ответ: [OperationResult](types.md#operationresult).
 
-## PUT /api/v1/me/meta
+## PUT /api/me/meta
 
 Обновляет пользовательские метаданные.
 
@@ -53,7 +53,7 @@ Endpoints Account работают с текущим пользователем,
 
 Ответ: [Me](types.md#me).
 
-## POST /api/v1/me/avatar
+## POST /api/me/avatar
 
 Загружает avatar текущего account.
 
@@ -69,7 +69,7 @@ Endpoints Account работают с текущим пользователем,
 
 Ответ: [AvatarUploadResult](types.md#avataruploadresult).
 
-## GET /api/v1/me/workspace
+## GET /api/me/workspace
 
 Возвращает выбранный workspace текущего account.
 
@@ -79,7 +79,7 @@ Endpoints Account работают с текущим пользователем,
 
 Ответ: [CurrentWorkspaceResponse](types.md#currentworkspaceresponse).
 
-## POST /api/v1/me/workspace
+## PUT /api/me/workspace
 
 Меняет выбранный workspace текущего account.
 
@@ -93,7 +93,7 @@ Endpoints Account работают с текущим пользователем,
 
 Ответ: [CurrentWorkspaceResponse](types.md#currentworkspaceresponse).
 
-## GET /api/v1/account/settings
+## GET /api/account/settings
 
 Возвращает account settings.
 
@@ -103,7 +103,7 @@ Endpoints Account работают с текущим пользователем,
 
 Ответ: [AccountSettings](types.md#accountsettings).
 
-## POST /api/v1/account/settings
+## PUT /api/account/settings
 
 Сохраняет account settings.
 
