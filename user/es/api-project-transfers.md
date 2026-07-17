@@ -2,7 +2,7 @@
 
 Project transfer endpoints mueven ownership de project entre workspaces mediante request/accept flow.
 
-## POST /api/v2/projects/:fullname/transfer/plan
+## POST /api/projects/:fullname/transfer/plan
 
 Devuelve plan de transferencia de project sin aplicar cambios.
 
@@ -21,7 +21,7 @@ Payload:
 
 Respuesta: [ProjectTransferPlan](types.md#projecttransferplan).
 
-## POST /api/v2/projects/:fullname/transfer-requests
+## POST /api/projects/:fullname/transfer-requests
 
 Crea transfer request. Project se moverá solo después de accept por parte del owner del target workspace.
 
@@ -41,7 +41,7 @@ Payload:
 
 Respuesta: [ProjectTransferRequest](types.md#projecttransferrequest).
 
-## GET /api/v2/project-transfer-requests
+## GET /api/project-transfer-requests
 
 Devuelve incoming/outgoing transfer requests.
 
@@ -57,7 +57,7 @@ Payload: ninguno.
 
 Respuesta: [ProjectTransferRequest[]](types.md#projecttransferrequest).
 
-## POST /api/v2/project-transfer-requests/:id/accept
+## POST /api/project-transfer-requests/:id/accept
 
 Acepta incoming transfer request y aplica transferencia de project.
 
@@ -75,7 +75,7 @@ Payload: optional action object.
 
 Respuesta: [ProjectTransferAcceptResult](types.md#projecttransferacceptresult).
 
-## POST /api/v2/project-transfer-requests/:id/reject
+## POST /api/project-transfer-requests/:id/reject
 
 Rechaza incoming transfer request.
 
@@ -93,7 +93,7 @@ Payload:
 
 Respuesta: [ProjectTransferRequest](types.md#projecttransferrequest).
 
-## POST /api/v2/project-transfer-requests/:id/cancel
+## POST /api/project-transfer-requests/:id/cancel
 
 Cancela outgoing transfer request.
 

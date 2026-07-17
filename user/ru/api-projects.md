@@ -2,7 +2,7 @@
 
 Endpoints Projects управляют marketplace integrations: metadata, visibility/access level, links и загруженными icon/cover images.
 
-## GET /api/v2/projects
+## GET /api/projects
 
 Возвращает список projects, доступных текущему account.
 
@@ -17,7 +17,7 @@ Endpoints Projects управляют marketplace integrations: metadata, visibi
 
 Ответ: [ProjectView[]](types.md#projectview).
 
-## GET /api/v2/projects/create-capability
+## GET /api/projects/create-capability
 
 Проверяет, может ли текущий account/workspace создать project.
 
@@ -27,7 +27,7 @@ Endpoints Projects управляют marketplace integrations: metadata, visibi
 
 Ответ: [ProjectCreateCapability](types.md#projectcreatecapability).
 
-## GET /api/v2/projects/:fullname
+## GET /api/projects/:fullname
 
 Возвращает project по fullname.
 
@@ -41,7 +41,7 @@ Endpoints Projects управляют marketplace integrations: metadata, visibi
 
 Ответ: [ProjectView](types.md#projectview).
 
-## PUT /api/v2/projects/:fullname
+## PUT /api/projects/:fullname
 
 Создает или обновляет project.
 
@@ -73,7 +73,7 @@ Endpoints Projects управляют marketplace integrations: metadata, visibi
 
 Ответ: [ProjectView](types.md#projectview).
 
-## DELETE /api/v2/projects/:fullname
+## DELETE /api/projects/:fullname
 
 Удаляет project.
 
@@ -87,7 +87,7 @@ Endpoints Projects управляют marketplace integrations: metadata, visibi
 
 Ответ: [OperationResult](types.md#operationresult).
 
-## GET /api/v2/projects/by-link/:token
+## GET /api/projects/by-link/:token
 
 Открывает private project по access link.
 
@@ -101,7 +101,7 @@ Endpoints Projects управляют marketplace integrations: metadata, visibi
 
 Ответ: [ProjectView](types.md#projectview).
 
-## POST /api/v2/projects/:fullname/access-links
+## POST /api/projects/:fullname/access-links
 
 Создает access link для private project.
 
@@ -120,7 +120,7 @@ Endpoints Projects управляют marketplace integrations: metadata, visibi
 
 Ответ: [ProjectAccessLink](types.md#projectaccesslink).
 
-## POST /api/v2/projects/:fullname/assets/images
+## POST /api/projects/:fullname/assets/images
 
 Загружает изображение project для `icon` или `cover`.
 
@@ -141,7 +141,7 @@ Endpoints Projects управляют marketplace integrations: metadata, visibi
 
 Ответ: [ProjectImageUploadResult](types.md#projectimageuploadresult). Этот URL затем передается в `meta.icon` или `meta.cover` при сохранении project.
 
-## DELETE /api/v2/projects/:fullname/images/:asset
+## DELETE /api/projects/:fullname/images/:asset
 
 Удаляет загруженное изображение project.
 

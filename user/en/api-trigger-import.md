@@ -2,7 +2,7 @@
 
 Trigger import endpoints help generate trigger drafts from external descriptions: EVM ABI, Substrate metadata/pallets, Solana IDL, and source metadata.
 
-## POST /api/v2/triggers/import/evm
+## POST /api/triggers/import/evm
 
 Loads and normalizes EVM ABI entries.
 
@@ -19,7 +19,10 @@ Payload: EVM ABI import input. Usually contains ABI JSON or ABI entries.
 
 Response: [EvmAbiImportResult](types.md#evmabiimportresult).
 
-## POST /api/v2/triggers/import/evm/abi
+This endpoint only returns ABI import entries. It does not save triggers; save
+selected trigger drafts separately with `PUT /api/triggers/:fullname`.
+
+## POST /api/triggers/import/evm/abi
 
 Tries to load ABI by contract address.
 
@@ -34,7 +37,7 @@ Payload:
 
 Response: [EvmAbiResult](types.md#evmabiresult).
 
-## POST /api/v2/triggers/import/evm/drafts
+## POST /api/triggers/import/evm/drafts
 
 Generates EVM trigger drafts from ABI.
 
@@ -57,7 +60,23 @@ Common fields:
 
 Response: [TriggerImportDraftsResult](types.md#triggerimportdraftsresult).
 
-## POST /api/v2/triggers/import/solana/idl
+## POST /api/triggers/import/hypercore/drafts
+
+Generates HyperCore trigger drafts from the selected runtime source and actions.
+
+Arguments: none.
+
+Payload:
+
+| Field | Required | Description |
+| --- | --- | --- |
+| `project` | Yes | Project fullname. |
+| `source` | Yes | HyperCore runtime source. |
+| `actionTypes` | No | Action types to include. |
+
+Response contains a `drafts` array.
+
+## POST /api/triggers/import/solana/idl
 
 Tries to load Solana IDL by Program ID.
 
@@ -72,7 +91,7 @@ Request body:
 
 Response: Solana IDL metadata object with `source`, `programId`, IDL/metadata account address, and `idl`.
 
-## POST /api/v2/triggers/import/solana/drafts
+## POST /api/triggers/import/solana/drafts
 
 Generates Solana trigger drafts from IDL.
 
@@ -92,7 +111,7 @@ Request body:
 
 Response: [TriggerImportDraftsResult](types.md#triggerimportdraftsresult).
 
-## POST /api/v2/triggers/import/substrate/drafts
+## POST /api/triggers/import/substrate/drafts
 
 Generates Substrate trigger drafts from metadata/pallet selection.
 
@@ -117,7 +136,7 @@ Common fields:
 
 Response: [TriggerImportDraftsResult](types.md#triggerimportdraftsresult).
 
-## GET /api/v2/triggers/substrate/source
+## GET /api/triggers/substrate/source
 
 Returns Substrate source info used by import wizard.
 
@@ -131,7 +150,7 @@ Payload: none.
 
 Response: [SubstrateSourceInfo](types.md#substratesourceinfo).
 
-## GET /api/v2/triggers/substrate/pallets
+## GET /api/triggers/substrate/pallets
 
 Returns list of Substrate pallets for selected source.
 
@@ -145,7 +164,7 @@ Payload: none.
 
 Response: [SubstratePalletSummary[]](types.md#substratepalletsummary).
 
-## GET /api/v2/triggers/substrate/pallet
+## GET /api/triggers/substrate/pallet
 
 Returns metadata of a specific Substrate pallet.
 

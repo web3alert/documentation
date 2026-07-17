@@ -2,7 +2,7 @@
 
 Project transfer endpoints 通过 request/accept flow 在 workspaces 之间转移 project ownership。
 
-## POST /api/v2/projects/:fullname/transfer/plan
+## POST /api/projects/:fullname/transfer/plan
 
 返回 project transfer plan，但不应用任何更改。
 
@@ -21,7 +21,7 @@ Payload:
 
 响应：[ProjectTransferPlan](types.md#projecttransferplan)。
 
-## POST /api/v2/projects/:fullname/transfer-requests
+## POST /api/projects/:fullname/transfer-requests
 
 创建 transfer request。只有 target workspace owner accept 后，project 才会被转移。
 
@@ -41,7 +41,7 @@ Payload:
 
 响应：[ProjectTransferRequest](types.md#projecttransferrequest)。
 
-## GET /api/v2/project-transfer-requests
+## GET /api/project-transfer-requests
 
 返回 incoming/outgoing transfer requests。
 
@@ -57,7 +57,7 @@ Payload: 无。
 
 响应：[ProjectTransferRequest[]](types.md#projecttransferrequest)。
 
-## POST /api/v2/project-transfer-requests/:id/accept
+## POST /api/project-transfer-requests/:id/accept
 
 接受 incoming transfer request 并应用 project transfer。
 
@@ -75,7 +75,7 @@ Payload: optional action object.
 
 响应：[ProjectTransferAcceptResult](types.md#projecttransferacceptresult)。
 
-## POST /api/v2/project-transfer-requests/:id/reject
+## POST /api/project-transfer-requests/:id/reject
 
 拒绝 incoming transfer request。
 
@@ -93,7 +93,7 @@ Payload:
 
 响应：[ProjectTransferRequest](types.md#projecttransferrequest)。
 
-## POST /api/v2/project-transfer-requests/:id/cancel
+## POST /api/project-transfer-requests/:id/cancel
 
 取消 outgoing transfer request。
 

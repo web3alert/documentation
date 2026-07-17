@@ -2,7 +2,7 @@
 
 Trigger import endpoints 帮助根据外部描述生成 trigger drafts：EVM ABI、Substrate metadata/pallets、Solana IDL 和 source metadata。
 
-## POST /api/v2/triggers/import/evm
+## POST /api/triggers/import/evm
 
 加载并规范化 EVM ABI entries。
 
@@ -19,7 +19,10 @@ Payload: EVM ABI import input。通常包含 ABI JSON 或 ABI entries。
 
 响应：[EvmAbiImportResult](types.md#evmabiimportresult)。
 
-## POST /api/v2/triggers/import/evm/abi
+此 endpoint 只返回 ABI import entries，不会保存 triggers。请另行使用
+`PUT /api/triggers/:fullname` 保存选中的 drafts。
+
+## POST /api/triggers/import/evm/abi
 
 尝试按 contract address 加载 ABI。
 
@@ -34,7 +37,7 @@ Payload:
 
 响应：[EvmAbiResult](types.md#evmabiresult)。
 
-## POST /api/v2/triggers/import/evm/drafts
+## POST /api/triggers/import/evm/drafts
 
 根据 ABI 生成 EVM trigger drafts。
 
@@ -57,7 +60,23 @@ Common fields:
 
 响应：[TriggerImportDraftsResult](types.md#triggerimportdraftsresult)。
 
-## POST /api/v2/triggers/import/solana/idl
+## POST /api/triggers/import/hypercore/drafts
+
+根据所选 runtime source 和 actions 生成 HyperCore trigger drafts。
+
+参数：无。
+
+Payload:
+
+| 字段 | 必填 | 说明 |
+| --- | --- | --- |
+| `project` | 是 | Project fullname。 |
+| `source` | 是 | HyperCore runtime source。 |
+| `actionTypes` | 否 | 要包含的 action 类型。 |
+
+响应包含 `drafts` 数组。
+
+## POST /api/triggers/import/solana/idl
 
 尝试按 Program ID 加载 Solana IDL。
 
@@ -70,7 +89,7 @@ Payload:
 
 响应：Solana IDL metadata object，包含 `source`、`programId`、IDL/metadata account address 和 `idl`。
 
-## POST /api/v2/triggers/import/solana/drafts
+## POST /api/triggers/import/solana/drafts
 
 根据 IDL 生成 Solana trigger drafts。
 
@@ -88,7 +107,7 @@ Payload:
 
 响应：[TriggerImportDraftsResult](types.md#triggerimportdraftsresult)。
 
-## POST /api/v2/triggers/import/substrate/drafts
+## POST /api/triggers/import/substrate/drafts
 
 根据 metadata/pallet selection 生成 Substrate trigger drafts。
 
@@ -113,7 +132,7 @@ Common fields:
 
 响应：[TriggerImportDraftsResult](types.md#triggerimportdraftsresult)。
 
-## GET /api/v2/triggers/substrate/source
+## GET /api/triggers/substrate/source
 
 返回 import wizard 使用的 Substrate source info。
 
@@ -127,7 +146,7 @@ Payload: 无。
 
 响应：[SubstrateSourceInfo](types.md#substratesourceinfo)。
 
-## GET /api/v2/triggers/substrate/pallets
+## GET /api/triggers/substrate/pallets
 
 返回所选 source 的 Substrate pallets 列表。
 
@@ -141,7 +160,7 @@ Payload: 无。
 
 响应：[SubstratePalletSummary[]](types.md#substratepalletsummary)。
 
-## GET /api/v2/triggers/substrate/pallet
+## GET /api/triggers/substrate/pallet
 
 返回指定 Substrate pallet 的 metadata。
 

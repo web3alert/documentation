@@ -19,7 +19,7 @@ Payload:
 
 Respuesta: [TokenResponse](types.md#tokenresponse).
 
-## GET /api/v1/me
+## GET /api/me
 
 Devuelve el account actual, identity, tier, memberships y workspace seleccionado.
 

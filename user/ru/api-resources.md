@@ -72,6 +72,9 @@ Endpoints Resources управляют delivery resources и их публичн
 
 Ответ: [OperationResult](types.md#operationresult).
 
+Три setup-session endpoints ниже доступны, только когда на сервере включена
+безопасная настройка Telegram destination.
+
 ## POST /api/resources/:fullname/setup-sessions
 
 Создает безопасную setup session для выбора Telegram destination. Авторизованный
@@ -101,6 +104,12 @@ resource.
 
 Старый destination продолжает получать alerts, пока Telegram не подтвердит новую
 цель и session не перейдет в статус `completed`.
+
+После завершения сервер сохраняет подтвержденный target в приватном `data`,
+устанавливает `ready: true` и очищает `remark`. Controller workspace получает
+безопасное название, тип и опциональный topic через `destinationSummary`;
+Telegram target id и приватные данные в этом view отсутствуют. Для отображения
+настроенного destination нужно использовать `destinationSummary`, а не `remark`.
 
 ## GET /api/resources/:fullname/setup-sessions/:id
 

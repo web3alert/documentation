@@ -72,6 +72,9 @@ Payload: ninguno.
 
 Respuesta: [OperationResult](types.md#operationresult).
 
+Los tres endpoints de setup session siguientes solo están disponibles cuando el
+setup seguro del destino de Telegram está habilitado en el servidor.
+
 ## POST /api/resources/:fullname/setup-sessions
 
 Inicia una setup session segura para elegir el destino de Telegram. La cuenta
@@ -100,6 +103,12 @@ Respuesta:
 
 El destino existente sigue recibiendo alerts hasta que Telegram confirma el
 nuevo destino y la session pasa a `completed`.
+
+Al completarse, el servidor guarda el target confirmado en `data` privado,
+establece `ready` en `true` y limpia `remark`. Un controller del workspace
+recibe el nombre seguro, el tipo y el topic opcional mediante
+`destinationSummary`; el Telegram target id y los datos privados no se exponen.
+Usa `destinationSummary`, no `remark`, para mostrar el destino configurado.
 
 ## GET /api/resources/:fullname/setup-sessions/:id
 

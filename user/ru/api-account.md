@@ -19,7 +19,7 @@ Endpoints Account работают с текущим пользователем,
 
 Ответ: [TokenResponse](types.md#tokenresponse).
 
-## GET /api/v1/me
+## GET /api/me
 
 Возвращает текущий account, identity, tier, memberships и выбранный workspace.
 

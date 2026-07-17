@@ -2,7 +2,7 @@
 
 Template endpoints 用于管理 project 的 root template、groups、topics 和 rules。
 
-## GET /api/v2/projects/:fullname/templates
+## GET /api/projects/:fullname/templates
 
 返回 project templates。
 
@@ -16,7 +16,7 @@ Payload: 无。
 
 响应：[ProjectTemplate[]](types.md#projecttemplate)。
 
-## GET /api/v2/projects/:fullname/template
+## GET /api/projects/:fullname/template
 
 返回 project root template。
 
@@ -30,7 +30,7 @@ Payload: 无。
 
 响应：[ProjectTemplate](types.md#projecttemplate)，或 not found。
 
-## POST /api/v2/projects/:fullname/templates
+## POST /api/projects/:fullname/templates
 
 为 project 创建 template/group。
 
@@ -54,7 +54,7 @@ Payload:
 
 响应：[ProjectTemplate](types.md#projecttemplate)。
 
-## GET /api/v2/projects/:fullname/templates/:id
+## GET /api/projects/:fullname/templates/:id
 
 返回 template。
 
@@ -69,7 +69,7 @@ Payload: 无。
 
 响应：[ProjectTemplate](types.md#projecttemplate)。
 
-## PUT /api/v2/projects/:fullname/templates/:id
+## PUT /api/projects/:fullname/templates/:id
 
 更新 template。
 
@@ -80,11 +80,11 @@ Payload: 无。
 | `fullname` | Path | Project fullname。 |
 | `id` | Path | Template id。 |
 
-Payload: 与 `POST /api/v2/projects/:fullname/templates` 相同结构。
+Payload: 与 `POST /api/projects/:fullname/templates` 相同结构。
 
 响应：[ProjectTemplate](types.md#projecttemplate)。
 
-## DELETE /api/v2/projects/:fullname/templates/:id
+## DELETE /api/projects/:fullname/templates/:id
 
 删除 template。
 

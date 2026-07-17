@@ -2,7 +2,7 @@
 
 Project endpoints gestionan marketplace integrations: metadata, visibility/access level, links y uploaded icon/cover images.
 
-## GET /api/v2/projects
+## GET /api/projects
 
 Devuelve lista de projects disponibles para current account.
 
@@ -17,7 +17,7 @@ Payload: ninguno.
 
 Respuesta: [ProjectView[]](types.md#projectview).
 
-## GET /api/v2/projects/create-capability
+## GET /api/projects/create-capability
 
 Comprueba si current account/workspace puede crear project.
 
@@ -27,7 +27,7 @@ Payload: ninguno.
 
 Respuesta: [ProjectCreateCapability](types.md#projectcreatecapability).
 
-## GET /api/v2/projects/:fullname
+## GET /api/projects/:fullname
 
 Devuelve project por fullname.
 
@@ -41,7 +41,7 @@ Payload: ninguno.
 
 Respuesta: [ProjectView](types.md#projectview).
 
-## PUT /api/v2/projects/:fullname
+## PUT /api/projects/:fullname
 
 Crea o actualiza project.
 
@@ -73,7 +73,7 @@ Payload:
 
 Respuesta: [ProjectView](types.md#projectview).
 
-## DELETE /api/v2/projects/:fullname
+## DELETE /api/projects/:fullname
 
 Elimina project.
 
@@ -87,7 +87,7 @@ Payload: ninguno.
 
 Respuesta: [OperationResult](types.md#operationresult).
 
-## GET /api/v2/projects/by-link/:token
+## GET /api/projects/by-link/:token
 
 Abre private project por access link.
 
@@ -101,7 +101,7 @@ Payload: ninguno.
 
 Respuesta: [ProjectView](types.md#projectview).
 
-## POST /api/v2/projects/:fullname/access-links
+## POST /api/projects/:fullname/access-links
 
 Crea access link para private project.
 
@@ -120,7 +120,7 @@ Payload:
 
 Respuesta: [ProjectAccessLink](types.md#projectaccesslink).
 
-## POST /api/v2/projects/:fullname/assets/images
+## POST /api/projects/:fullname/assets/images
 
 Sube project image para `icon` o `cover`.
 
@@ -141,7 +141,7 @@ Payload:
 
 Respuesta: [ProjectImageUploadResult](types.md#projectimageuploadresult). Este URL se pasa después en `meta.icon` o `meta.cover` al guardar project.
 
-## DELETE /api/v2/projects/:fullname/images/:asset
+## DELETE /api/projects/:fullname/images/:asset
 
 Elimina uploaded project image.
 

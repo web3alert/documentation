@@ -71,6 +71,8 @@ Payload: 无。
 
 响应：[OperationResult](types.md#operationresult)。
 
+以下三个 setup-session endpoints 仅在服务器启用安全 Telegram destination setup 时可用。
+
 ## POST /api/resources/:fullname/setup-sessions
 
 启动一个安全的 Telegram destination setup session。已认证账号必须是该 resource 所属 workspace 的 owner，并且 resource 必须使用 Telegram external blueprint。
@@ -95,6 +97,11 @@ Payload: 无。
 | `expiresAt` | ISO timestamp。Session 和 `setupToken` 会在创建 15 分钟后过期。 |
 
 在 Telegram 确认新 destination 且 session 变为 `completed` 之前，现有 destination 会继续接收 alerts。
+
+完成后，服务器把已确认 target 保存到私有 `data`，将 `ready` 设为 `true`，并清空
+`remark`。Workspace controller 通过 `destinationSummary` 获得安全的名称、类型和可选
+topic；Telegram target id 和私有数据不会出现在该 view 中。展示已配置 destination
+时应使用 `destinationSummary`，而不是 `remark`。
 
 ## GET /api/resources/:fullname/setup-sessions/:id
 

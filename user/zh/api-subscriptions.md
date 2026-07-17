@@ -106,7 +106,7 @@ Payload:
 
 响应：[SubscriptionView](types.md#subscriptionview)。
 
-## POST /api/v2/subscriptions/test
+## POST /api/subscriptions/test
 
 测试现有 subscription 或 draft subscription。
 
@@ -128,7 +128,7 @@ Payload:
 
 响应：[SubscriptionTestResult](types.md#subscriptiontestresult)。
 
-## GET /api/v2/subscriptions/alerts/history
+## GET /api/subscriptions/alerts/history
 
 返回当前 workspace 的 subscription logs。
 
@@ -145,7 +145,7 @@ Payload: 无。
 
 响应：[SubscriptionAlertLog[]](types.md#subscriptionalertlog)。
 
-## GET /api/v2/subscriptions/:id/alerts/history
+## GET /api/subscriptions/:id/alerts/history
 
 返回指定 subscription 的 logs。
 

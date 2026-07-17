@@ -2,7 +2,7 @@
 
 Project endpoints gerem marketplace integrations: metadata, visibility/access level, links e uploaded icon/cover images.
 
-## GET /api/v2/projects
+## GET /api/projects
 
 Devolve lista de projects disponíveis para current account.
 
@@ -17,7 +17,7 @@ Payload: nenhum.
 
 Resposta: [ProjectView[]](types.md#projectview).
 
-## GET /api/v2/projects/create-capability
+## GET /api/projects/create-capability
 
 Verifica se current account/workspace pode criar project.
 
@@ -27,7 +27,7 @@ Payload: nenhum.
 
 Resposta: [ProjectCreateCapability](types.md#projectcreatecapability).
 
-## GET /api/v2/projects/:fullname
+## GET /api/projects/:fullname
 
 Devolve project por fullname.
 
@@ -41,7 +41,7 @@ Payload: nenhum.
 
 Resposta: [ProjectView](types.md#projectview).
 
-## PUT /api/v2/projects/:fullname
+## PUT /api/projects/:fullname
 
 Cria ou atualiza project.
 
@@ -73,7 +73,7 @@ Payload:
 
 Resposta: [ProjectView](types.md#projectview).
 
-## DELETE /api/v2/projects/:fullname
+## DELETE /api/projects/:fullname
 
 Elimina project.
 
@@ -87,7 +87,7 @@ Payload: nenhum.
 
 Resposta: [OperationResult](types.md#operationresult).
 
-## GET /api/v2/projects/by-link/:token
+## GET /api/projects/by-link/:token
 
 Abre private project por access link.
 
@@ -101,7 +101,7 @@ Payload: nenhum.
 
 Resposta: [ProjectView](types.md#projectview).
 
-## POST /api/v2/projects/:fullname/access-links
+## POST /api/projects/:fullname/access-links
 
 Cria access link para private project.
 
@@ -120,7 +120,7 @@ Payload:
 
 Resposta: [ProjectAccessLink](types.md#projectaccesslink).
 
-## POST /api/v2/projects/:fullname/assets/images
+## POST /api/projects/:fullname/assets/images
 
 Envia project image para `icon` ou `cover`.
 
@@ -141,7 +141,7 @@ Payload:
 
 Resposta: [ProjectImageUploadResult](types.md#projectimageuploadresult). Este URL depois é passado em `meta.icon` ou `meta.cover` ao guardar project.
 
-## DELETE /api/v2/projects/:fullname/images/:asset
+## DELETE /api/projects/:fullname/images/:asset
 
 Elimina uploaded project image.
 

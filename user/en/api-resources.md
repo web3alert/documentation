@@ -72,6 +72,9 @@ Payload: none.
 
 Response: [OperationResult](types.md#operationresult).
 
+The three setup-session endpoints below are available only when secure Telegram
+destination setup is enabled on the server.
+
 ## POST /api/resources/:fullname/setup-sessions
 
 Starts a secure Telegram destination setup session. The authenticated account
@@ -101,6 +104,12 @@ Response:
 
 The existing destination continues receiving alerts until Telegram confirms the
 new destination and the session becomes `completed`.
+
+On completion, the server stores the confirmed target in private `data`, sets
+`ready` to `true`, and clears `remark`. A workspace controller reading the
+resource receives the safe destination name, kind, and optional topic through
+`destinationSummary`; the Telegram target id and raw private data are omitted.
+Use `destinationSummary`, not `remark`, to display the configured destination.
 
 ## GET /api/resources/:fullname/setup-sessions/:id
 

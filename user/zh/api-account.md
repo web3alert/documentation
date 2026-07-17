@@ -19,7 +19,7 @@ Payload:
 
 响应：[TokenResponse](types.md#tokenresponse)。
 
-## GET /api/v1/me
+## GET /api/me
 
 返回当前 account、identity、tier、memberships 和选中的 workspace。
 

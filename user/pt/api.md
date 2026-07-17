@@ -8,7 +8,11 @@ Base URL:
 https://web3alert.io
 ```
 
-A versão principal da API para marketplace e builder functionality é `v2`. Alguns endpoints de account/subscription/address book ainda permanecem em `v1`.
+Os endpoints de Marketplace e do builder usam rotas canónicas `/api/*`. Um
+conjunto limitado de endpoints de account, subscription e address book
+permanece temporariamente nas rotas públicas de compatibilidade `/api/v1/*`
+até à migração canónica. Os endpoints entre serviços não fazem parte desta
+referência pública.
 
 ## Auth
 
@@ -62,7 +66,7 @@ Detalhes: [Account API](api-account.md).
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
 | `POST` | `/api/v1/token` | Criar ou obter API token depois de auth flow. |
-| `GET` | `/api/v1/me` | Obter account atual, identity, tier e memberships. |
+| `GET` | `/api/me` | Obter account atual, identity, tier e memberships. |
 | `DELETE` | `/api/v1/me` | Eliminar account atual. |
 | `PUT` | `/api/v1/me/meta` | Atualizar account metadata. |
 | `POST` | `/api/v1/me/avatar` | Enviar avatar do account atual. |
@@ -77,15 +81,15 @@ Detalhes: [Workspaces API](api-workspaces.md).
 
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
-| `GET` | `/api/v2/workspaces` | Listar workspaces do account atual. |
-| `GET` | `/api/v2/workspaces/:fullname` | Obter workspace. |
-| `PUT` | `/api/v2/workspaces/:fullname` | Criar ou atualizar workspace. |
-| `DELETE` | `/api/v2/workspaces/:fullname` | Eliminar workspace. |
-| `POST` | `/api/v2/workspaces/:fullname/avatar` | Enviar workspace avatar. |
-| `GET` | `/api/v2/workspaces/:workspace/acl` | Obter members/ACL do workspace. |
-| `POST` | `/api/v2/workspaces/:workspace/acl` | Criar invite ou ACL entry. |
-| `PUT` | `/api/v2/workspaces/:workspace/acl/:entryId` | Alterar papel de member. |
-| `DELETE` | `/api/v2/workspaces/:workspace/acl/:entryId` | Eliminar member/ACL entry. |
+| `GET` | `/api/workspaces` | Listar workspaces do account atual. |
+| `GET` | `/api/workspaces/:fullname` | Obter workspace. |
+| `PUT` | `/api/workspaces/:fullname` | Criar ou atualizar workspace. |
+| `DELETE` | `/api/workspaces/:fullname` | Eliminar workspace. |
+| `POST` | `/api/workspaces/:fullname/avatar` | Enviar workspace avatar. |
+| `GET` | `/api/workspaces/:workspace/acl` | Obter members/ACL do workspace. |
+| `POST` | `/api/workspaces/:workspace/acl` | Criar invite ou ACL entry. |
+| `PUT` | `/api/workspaces/:workspace/acl/:entryId` | Alterar papel de member. |
+| `DELETE` | `/api/workspaces/:workspace/acl/:entryId` | Eliminar member/ACL entry. |
 
 ## Projects
 
@@ -93,15 +97,15 @@ Detalhes: [Projects API](api-projects.md).
 
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
-| `GET` | `/api/v2/projects` | Listar projects disponíveis. |
-| `GET` | `/api/v2/projects/create-capability` | Verificar capacidade de criar project. |
-| `GET` | `/api/v2/projects/:fullname` | Obter project. |
-| `PUT` | `/api/v2/projects/:fullname` | Criar ou atualizar project. |
-| `DELETE` | `/api/v2/projects/:fullname` | Eliminar project. |
-| `GET` | `/api/v2/projects/by-link/:token` | Abrir private project por access link. |
-| `POST` | `/api/v2/projects/:fullname/access-links` | Criar access link para project. |
-| `POST` | `/api/v2/projects/:fullname/assets/images` | Enviar project icon ou cover. |
-| `DELETE` | `/api/v2/projects/:fullname/images/:asset` | Eliminar uploaded project image. |
+| `GET` | `/api/projects` | Listar projects disponíveis. |
+| `GET` | `/api/projects/create-capability` | Verificar capacidade de criar project. |
+| `GET` | `/api/projects/:fullname` | Obter project. |
+| `PUT` | `/api/projects/:fullname` | Criar ou atualizar project. |
+| `DELETE` | `/api/projects/:fullname` | Eliminar project. |
+| `GET` | `/api/projects/by-link/:token` | Abrir private project por access link. |
+| `POST` | `/api/projects/:fullname/access-links` | Criar access link para project. |
+| `POST` | `/api/projects/:fullname/assets/images` | Enviar project icon ou cover. |
+| `DELETE` | `/api/projects/:fullname/images/:asset` | Eliminar uploaded project image. |
 
 ## Project Transfers
 
@@ -109,12 +113,12 @@ Detalhes: [Project Transfers API](api-project-transfers.md).
 
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
-| `POST` | `/api/v2/projects/:fullname/transfer/plan` | Obter plano de transferência do project. |
-| `POST` | `/api/v2/projects/:fullname/transfer-requests` | Criar transfer request. |
-| `GET` | `/api/v2/project-transfer-requests` | Listar incoming/outgoing transfer requests. |
-| `POST` | `/api/v2/project-transfer-requests/:id/accept` | Aceitar transfer request. |
-| `POST` | `/api/v2/project-transfer-requests/:id/reject` | Rejeitar transfer request. |
-| `POST` | `/api/v2/project-transfer-requests/:id/cancel` | Cancelar outgoing transfer request. |
+| `POST` | `/api/projects/:fullname/transfer/plan` | Obter plano de transferência do project. |
+| `POST` | `/api/projects/:fullname/transfer-requests` | Criar transfer request. |
+| `GET` | `/api/project-transfer-requests` | Listar incoming/outgoing transfer requests. |
+| `POST` | `/api/project-transfer-requests/:id/accept` | Aceitar transfer request. |
+| `POST` | `/api/project-transfer-requests/:id/reject` | Rejeitar transfer request. |
+| `POST` | `/api/project-transfer-requests/:id/cancel` | Cancelar outgoing transfer request. |
 
 ## Triggers
 
@@ -122,22 +126,25 @@ Detalhes: [Triggers API](api-triggers.md).
 
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
-| `GET` | `/api/v2/triggers` | Listar triggers com filters. |
-| `GET` | `/api/v2/triggers/:fullname` | Obter trigger. |
-| `PUT` | `/api/v2/triggers/:fullname` | Criar ou guardar trigger completo. |
-| `PATCH` | `/api/v2/triggers/:fullname` | Atualizar trigger parcialmente. |
-| `DELETE` | `/api/v2/triggers/:fullname` | Eliminar trigger. |
-| `POST` | `/api/v2/triggers/patch` | Bulk patch de triggers. |
-| `POST` | `/api/v2/triggers/remove` | Bulk remove de triggers. |
-| `GET` | `/api/v2/triggers/:fullname/draft` | Obter draft view do trigger. |
-| `PUT` | `/api/v2/triggers/:fullname/draft` | Guardar trigger draft. |
-| `POST` | `/api/v2/triggers/:fullname/draft/validate` | Validar trigger draft. |
-| `POST` | `/api/v2/triggers/preview` | Preview da execução de trigger. |
-| `POST` | `/api/v2/triggers/test` | Testar trigger com sample source item. |
-| `POST` | `/api/v2/triggers/test-block` | Testar trigger num block específico. |
-| `POST` | `/api/v2/triggers/providers/test` | Testar um provider. |
-| `GET` | `/api/v2/triggers/runtime-sources` | Listar runtime data sources. |
-| `POST` | `/api/v2/triggers/find-latest-block` | Encontrar ou preparar test input/block para trigger. |
+| `GET` | `/api/triggers` | Listar triggers com filters. |
+| `GET` | `/api/triggers/:fullname` | Obter trigger. |
+| `PUT` | `/api/triggers/:fullname` | Criar ou guardar trigger completo. |
+| `PATCH` | `/api/triggers/:fullname` | Atualizar trigger parcialmente. |
+| `DELETE` | `/api/triggers/:fullname` | Eliminar trigger. |
+| `POST` | `/api/triggers/patch` | Bulk patch de triggers. |
+| `POST` | `/api/triggers/remove` | Bulk remove de triggers. |
+| `GET` | `/api/triggers/:fullname/draft` | Obter draft view do trigger. |
+| `PUT` | `/api/triggers/:fullname/draft` | Guardar trigger draft. |
+| `POST` | `/api/triggers/:fullname/draft/validate` | Validar trigger draft. |
+| `GET` | `/api/triggers/:fullname/logs` | Obter logs agregados de delivery e source pressure. |
+| `POST` | `/api/triggers/:fullname/reset-test-status` | Repor o estado de teste do trigger. |
+| `POST` | `/api/triggers/preview` | Preview da activation e dos transforms sobre um input. |
+| `POST` | `/api/triggers/test` | Testar trigger com sample source item. |
+| `POST` | `/api/triggers/test-block` | Testar trigger num block específico. |
+| `POST` | `/api/triggers/providers/test` | Testar um provider. |
+| `GET` | `/api/triggers/hypercore/actions` | Listar actions HyperCore disponíveis no builder. |
+| `GET` | `/api/triggers/runtime-sources` | Listar runtime data sources. |
+| `POST` | `/api/triggers/find-latest-block` | Encontrar ou preparar test input/block para trigger. |
 
 ## Trigger Import
 
@@ -145,13 +152,16 @@ Detalhes: [Trigger Import API](api-trigger-import.md).
 
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
-| `POST` | `/api/v2/triggers/import/evm` | Carregar EVM ABI entries. |
-| `POST` | `/api/v2/triggers/import/evm/abi` | Detetar/carregar ABI por contract address. |
-| `POST` | `/api/v2/triggers/import/evm/drafts` | Gerar EVM trigger drafts. |
-| `POST` | `/api/v2/triggers/import/substrate/drafts` | Gerar Substrate trigger drafts. |
-| `GET` | `/api/v2/triggers/substrate/source` | Obter Substrate source info. |
-| `GET` | `/api/v2/triggers/substrate/pallets` | Obter lista de Substrate pallets. |
-| `GET` | `/api/v2/triggers/substrate/pallet` | Obter metadata de um Substrate pallet. |
+| `POST` | `/api/triggers/import/evm` | Carregar EVM ABI entries sem guardar triggers. |
+| `POST` | `/api/triggers/import/evm/abi` | Detetar/carregar ABI por contract address. |
+| `POST` | `/api/triggers/import/evm/drafts` | Gerar EVM trigger drafts. |
+| `POST` | `/api/triggers/import/hypercore/drafts` | Gerar HyperCore trigger drafts. |
+| `POST` | `/api/triggers/import/solana/idl` | Carregar metadata de Solana IDL. |
+| `POST` | `/api/triggers/import/solana/drafts` | Gerar Solana trigger drafts. |
+| `POST` | `/api/triggers/import/substrate/drafts` | Gerar Substrate trigger drafts. |
+| `GET` | `/api/triggers/substrate/source` | Obter Substrate source info. |
+| `GET` | `/api/triggers/substrate/pallets` | Obter lista de Substrate pallets. |
+| `GET` | `/api/triggers/substrate/pallet` | Obter metadata de um Substrate pallet. |
 
 ## Templates
 
@@ -159,12 +169,12 @@ Detalhes: [Templates API](api-templates.md).
 
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
-| `GET` | `/api/v2/projects/:fullname/templates` | Listar templates do project. |
-| `GET` | `/api/v2/projects/:fullname/template` | Obter root template do project. |
-| `POST` | `/api/v2/projects/:fullname/templates` | Criar template/group. |
-| `GET` | `/api/v2/projects/:fullname/templates/:id` | Obter template. |
-| `PUT` | `/api/v2/projects/:fullname/templates/:id` | Atualizar template. |
-| `DELETE` | `/api/v2/projects/:fullname/templates/:id` | Eliminar template. |
+| `GET` | `/api/projects/:fullname/templates` | Listar templates do project. |
+| `GET` | `/api/projects/:fullname/template` | Obter root template do project. |
+| `POST` | `/api/projects/:fullname/templates` | Criar template/group. |
+| `GET` | `/api/projects/:fullname/templates/:id` | Obter template. |
+| `PUT` | `/api/projects/:fullname/templates/:id` | Atualizar template. |
+| `DELETE` | `/api/projects/:fullname/templates/:id` | Eliminar template. |
 
 ## Subscriptions
 
@@ -178,9 +188,9 @@ Detalhes: [Subscriptions API](api-subscriptions.md).
 | `POST` | `/api/v1/subscriptions/:id` | Atualizar subscription. |
 | `DELETE` | `/api/v1/subscriptions/:id` | Eliminar subscription. |
 | `POST` | `/api/v1/subscriptions/:id/state` | Ativar ou desativar subscription. |
-| `POST` | `/api/v2/subscriptions/test` | Testar subscription. |
-| `GET` | `/api/v2/subscriptions/alerts/history` | Workspace subscription logs. |
-| `GET` | `/api/v2/subscriptions/:id/alerts/history` | Logs de uma subscription específica. |
+| `POST` | `/api/subscriptions/test` | Testar subscription. |
+| `GET` | `/api/subscriptions/alerts/history` | Workspace subscription logs. |
+| `GET` | `/api/subscriptions/:id/alerts/history` | Logs de uma subscription específica. |
 
 ## Resources
 
@@ -198,22 +208,50 @@ Detalhes: [Resources API](api-resources.md).
 | `GET` | `/api/resources/external/:token` | Abrir external resource setup por token. |
 | `POST` | `/api/resources/external/:token` | Enviar external resource setup payload. |
 
+As três rotas de setup session só estão disponíveis quando o setup seguro do
+destino Telegram está ativado no servidor.
+
 ## Data Sources
 
 Detalhes: [Data Sources API](api-data-sources.md).
 
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
-| `GET` | `/api/v2/custom-sources` | Listar custom data sources. |
-| `GET` | `/api/v2/custom-sources/create-capability` | Verificar capacidade de criar custom source. |
-| `POST` | `/api/v2/custom-sources/verify` | Verificar custom source config. |
-| `GET` | `/api/v2/custom-sources/:fullname` | Obter custom source. |
-| `PUT` | `/api/v2/custom-sources/:fullname` | Criar ou atualizar custom source. |
-| `DELETE` | `/api/v2/custom-sources/:fullname` | Eliminar custom source. |
-| `GET` | `/api/v2/custom-sources/:fullname/logs` | Obter custom source logs. |
-| `POST` | `/api/v2/custom-sources/:fullname/test-status` | Verificar status de custom source. |
-| `POST` | `/api/v2/custom-sources/:fullname/restart` | Reiniciar custom source. |
-| `POST` | `/api/v2/custom-sources/:fullname/reset-lag` | Fazer reset do lag de custom source. |
+| `GET` | `/api/custom-sources` | Listar custom data sources. |
+| `GET` | `/api/custom-sources/create-capability` | Verificar capacidade de criar custom source. |
+| `POST` | `/api/custom-sources/verify` | Verificar custom source config. |
+| `GET` | `/api/custom-sources/:fullname` | Obter custom source. |
+| `PUT` | `/api/custom-sources/:fullname` | Criar ou atualizar custom source. |
+| `DELETE` | `/api/custom-sources/:fullname` | Eliminar custom source. |
+| `GET` | `/api/custom-sources/:fullname/logs` | Obter custom source logs. |
+| `POST` | `/api/custom-sources/:fullname/test-status` | Verificar status de custom source. |
+| `POST` | `/api/custom-sources/:fullname/restart` | Reiniciar custom source. |
+| `POST` | `/api/custom-sources/:fullname/reset-lag` | Fazer reset do lag de custom source. |
+
+## Faturação
+
+Detalhes: [API de faturação](api-billing.md).
+
+| Method | Endpoint | Purpose |
+| --- | --- | --- |
+| `GET` | `/api/billing/overview` | Obter a visão geral da faturação da conta. |
+| `GET` | `/api/billing/wallet/overview` | Obter a visão geral do saldo e da carteira. |
+| `POST` | `/api/billing/wallet/crypto-topup` | Criar um carregamento de saldo com criptomoeda. |
+| `POST` | `/api/billing/wallet/topup/refresh` | Atualizar o estado de um carregamento. |
+| `POST` | `/api/billing/account-plan/balance-purchase` | Comprar ou atualizar um plano com saldo. |
+| `POST` | `/api/billing/account-plan/checkout` | Criar um checkout para um plano de conta. |
+| `POST` | `/api/billing/account-plan/crypto-checkout` | Criar um checkout direto com criptomoeda para um plano. |
+| `POST` | `/api/billing/project-addon/balance-purchase` | Comprar um add-on de projeto com saldo. |
+| `POST` | `/api/billing/project-addon/checkout` | Criar um checkout para um add-on de projeto. |
+| `POST` | `/api/billing/project-addon/crypto-checkout` | Criar um checkout direto com criptomoeda para um add-on. |
+| `POST` | `/api/billing/coupon/redeem` | Resgatar um cupão. |
+| `POST` | `/api/billing/coupon/gift-purchase` | Comprar um cupão-presente com saldo. |
+| `GET` | `/api/billing/referral/overview` | Obter o resumo do saldo e da ligação de referência. |
+| `POST` | `/api/billing/referral/link/create` | Criar uma ligação de referência. |
+| `POST` | `/api/billing/referral/claim` | Resgatar um código de referência. |
+| `POST` | `/api/billing/subscription/update-renewal` | Atualizar a renovação automática. |
+| `POST` | `/api/billing/crypto-checkout/refresh` | Atualizar o estado de um crypto checkout. |
+| `POST` | `/api/billing/crypto-checkout/cancel` | Cancelar um crypto checkout. |
 
 ## Addresses
 
@@ -232,19 +270,20 @@ Detalhes: [Apps, Actions, Blueprints and Types API](api-builder-registry.md).
 
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
-| `GET` | `/api/v2/apps` | Listar apps. |
-| `GET` | `/api/v2/apps/:fullname` | Obter app. |
-| `PUT` | `/api/v2/apps/:fullname` | Criar ou atualizar app. |
-| `DELETE` | `/api/v2/apps/:fullname` | Eliminar app. |
-| `GET` | `/api/v2/actions` | Listar actions. |
-| `GET` | `/api/v2/actions/:fullname` | Obter action. |
-| `PUT` | `/api/v2/actions/:fullname` | Criar ou atualizar action. |
-| `DELETE` | `/api/v2/actions/:fullname` | Eliminar action. |
-| `GET` | `/api/v2/blueprints` | Listar blueprints. |
-| `GET` | `/api/v2/blueprints/:fullname` | Obter blueprint. |
-| `PUT` | `/api/v2/blueprints/:fullname` | Criar ou atualizar blueprint. |
-| `DELETE` | `/api/v2/blueprints/:fullname` | Eliminar blueprint. |
-| `GET` | `/api/v2/types` | Listar shared types. |
-| `GET` | `/api/v2/types/:fullname` | Obter shared type. |
-| `PUT` | `/api/v2/types/:fullname` | Criar ou atualizar shared type. |
-| `DELETE` | `/api/v2/types/:fullname` | Eliminar shared type. |
+| `GET` | `/api/apps` | Listar apps. |
+| `GET` | `/api/apps/:fullname` | Obter app. |
+| `PUT` | `/api/apps/:fullname` | Criar ou atualizar app. |
+| `DELETE` | `/api/apps/:fullname` | Eliminar app. |
+| `GET` | `/api/actions` | Listar actions. |
+| `GET` | `/api/actions/:fullname` | Obter action. |
+| `PUT` | `/api/actions/:fullname` | Criar ou atualizar action. |
+| `DELETE` | `/api/actions/:fullname` | Eliminar action. |
+| `GET` | `/api/blueprints` | Listar blueprints. |
+| `GET` | `/api/blueprints/:fullname` | Obter blueprint. |
+| `PUT` | `/api/blueprints/:fullname` | Criar ou atualizar blueprint. |
+| `DELETE` | `/api/blueprints/:fullname` | Eliminar blueprint. |
+| `GET` | `/api/types` | Listar shared types. |
+| `GET` | `/api/types/lookup` | Resolver opções dinâmicas de tipos. |
+| `GET` | `/api/types/:fullname` | Obter shared type. |
+| `PUT` | `/api/types/:fullname` | Criar ou atualizar shared type. |
+| `DELETE` | `/api/types/:fullname` | Eliminar shared type. |

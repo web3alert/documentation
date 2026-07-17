@@ -4,7 +4,7 @@ These endpoints describe the builder/registry layer: apps, actions, blueprints, 
 
 ## Apps
 
-### GET /api/v2/apps
+### GET /api/apps
 
 Returns apps.
 
@@ -19,7 +19,7 @@ Payload: none.
 
 Response: [AppView[]](types.md#appview).
 
-### GET /api/v2/apps/:fullname
+### GET /api/apps/:fullname
 
 Returns an app.
 
@@ -29,7 +29,7 @@ Payload: none.
 
 Response: [AppView](types.md#appview).
 
-### PUT /api/v2/apps/:fullname
+### PUT /api/apps/:fullname
 
 Creates or updates an app.
 
@@ -47,7 +47,7 @@ Payload:
 
 Response: [AppView](types.md#appview).
 
-### DELETE /api/v2/apps/:fullname
+### DELETE /api/apps/:fullname
 
 Deletes an app.
 
@@ -59,7 +59,7 @@ Response: [OperationResult](types.md#operationresult).
 
 ## Actions
 
-### GET /api/v2/actions
+### GET /api/actions
 
 Returns actions.
 
@@ -74,7 +74,7 @@ Payload: none.
 
 Response: [ActionView[]](types.md#actionview).
 
-### GET /api/v2/actions/:fullname
+### GET /api/actions/:fullname
 
 Returns an action.
 
@@ -84,7 +84,7 @@ Payload: none.
 
 Response: [ActionView](types.md#actionview).
 
-### PUT /api/v2/actions/:fullname
+### PUT /api/actions/:fullname
 
 Creates or updates an action.
 
@@ -105,7 +105,7 @@ Payload:
 
 Response: [ActionView](types.md#actionview).
 
-### DELETE /api/v2/actions/:fullname
+### DELETE /api/actions/:fullname
 
 Deletes an action.
 
@@ -117,7 +117,7 @@ Response: [OperationResult](types.md#operationresult).
 
 ## Blueprints
 
-### GET /api/v2/blueprints
+### GET /api/blueprints
 
 Returns blueprints.
 
@@ -133,7 +133,7 @@ Payload: none.
 
 Response: [BlueprintView[]](types.md#blueprintview).
 
-### GET /api/v2/blueprints/:fullname
+### GET /api/blueprints/:fullname
 
 Returns a blueprint.
 
@@ -143,7 +143,7 @@ Payload: none.
 
 Response: [BlueprintView](types.md#blueprintview).
 
-### PUT /api/v2/blueprints/:fullname
+### PUT /api/blueprints/:fullname
 
 Creates or updates a blueprint.
 
@@ -165,7 +165,7 @@ Payload:
 
 Response: [BlueprintView](types.md#blueprintview).
 
-### DELETE /api/v2/blueprints/:fullname
+### DELETE /api/blueprints/:fullname
 
 Deletes a blueprint.
 
@@ -177,7 +177,7 @@ Response: [OperationResult](types.md#operationresult).
 
 ## Types
 
-### GET /api/v2/types
+### GET /api/types
 
 Returns shared types.
 
@@ -196,7 +196,27 @@ Payload: none.
 
 Response: [SharedTypeView[]](types.md#sharedtypeview).
 
-### GET /api/v2/types/:fullname
+### GET /api/types/lookup
+
+Resolves dynamic type options for a trigger-scoped catalog.
+
+Arguments:
+
+| Argument | Location | Description |
+| --- | --- | --- |
+| `trigger` | Query | Trigger fullname. |
+| `ref` | Query | Type schema reference to resolve. |
+| `q` | Query | Optional text search. |
+| `value` | Query | Optional exact value. |
+| `limit` | Query | Optional result limit. |
+| Additional fields | Query | Optional dependency values such as `series` or `event`. |
+
+Payload: none.
+
+Response contains `ref`, normalized `items` with `label`, `value`, optional
+`parents`, and an optional `nextCursor`.
+
+### GET /api/types/:fullname
 
 Returns a shared type.
 
@@ -206,7 +226,7 @@ Payload: none.
 
 Response: [SharedTypeView](types.md#sharedtypeview).
 
-### PUT /api/v2/types/:fullname
+### PUT /api/types/:fullname
 
 Creates or updates a shared type.
 
@@ -225,7 +245,7 @@ Payload:
 
 Response: [SharedTypeView](types.md#sharedtypeview).
 
-### DELETE /api/v2/types/:fullname
+### DELETE /api/types/:fullname
 
 Deletes a shared type.
 

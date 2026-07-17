@@ -2,7 +2,7 @@
 
 Data source endpoints 用于管理 custom EVM/Substrate/Solana sources、runtime status 和 logs。
 
-## GET /api/v2/custom-sources
+## GET /api/custom-sources
 
 返回 custom data sources。
 
@@ -16,7 +16,7 @@ Payload: 无。
 
 响应：[CustomSourceListView[]](types.md#customsourcelistview)。
 
-## GET /api/v2/custom-sources/create-capability
+## GET /api/custom-sources/create-capability
 
 检查当前 account/workspace 是否可以创建 custom source。
 
@@ -26,7 +26,7 @@ Payload: 无。
 
 响应：[CustomSourceCreateCapability](types.md#customsourcecreatecapability)。
 
-## POST /api/v2/custom-sources/verify
+## POST /api/custom-sources/verify
 
 保存前验证 custom source config。
 
@@ -45,7 +45,7 @@ Payload:
 
 响应：[CustomSourceVerifyResult](types.md#customsourceverifyresult)。
 
-## GET /api/v2/custom-sources/:fullname
+## GET /api/custom-sources/:fullname
 
 返回 custom source。
 
@@ -59,7 +59,7 @@ Payload: 无。
 
 响应：[CustomSource](types.md#customsource)。
 
-## PUT /api/v2/custom-sources/:fullname
+## PUT /api/custom-sources/:fullname
 
 创建或更新 custom source。
 
@@ -90,7 +90,7 @@ Payload:
 
 响应：[CustomSource](types.md#customsource)。
 
-## DELETE /api/v2/custom-sources/:fullname
+## DELETE /api/custom-sources/:fullname
 
 删除 custom source。
 
@@ -104,7 +104,7 @@ Payload: 无。
 
 响应：[OperationResult](types.md#operationresult)。
 
-## GET /api/v2/custom-sources/:fullname/logs
+## GET /api/custom-sources/:fullname/logs
 
 返回 custom source logs。
 
@@ -122,7 +122,7 @@ Payload: 无。
 
 响应：[CustomSourceLogsResult](types.md#customsourcelogsresult)。
 
-## POST /api/v2/custom-sources/:fullname/test-status
+## POST /api/custom-sources/:fullname/test-status
 
 检查或模拟 custom source status transition。
 
@@ -140,7 +140,7 @@ Payload:
 
 响应：[CustomSourceStatusTestResult](types.md#customsourcestatustestresult)。
 
-## POST /api/v2/custom-sources/:fullname/restart
+## POST /api/custom-sources/:fullname/restart
 
 重启 custom source runtime。
 
@@ -154,7 +154,7 @@ Payload: `{}`。
 
 响应：[CustomSourceRuntimeActionResult](types.md#customsourceruntimeactionresult)。
 
-## POST /api/v2/custom-sources/:fullname/reset-lag
+## POST /api/custom-sources/:fullname/reset-lag
 
 重置 custom source lag。
 

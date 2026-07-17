@@ -8,6 +8,7 @@ on:
     paths:
       - package.json
       - package-lock.json
+      - scripts/**
       - user/**
       - .github/workflows/deploy-github-pages.yml
   workflow_dispatch:
@@ -36,6 +37,9 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Validate public API documentation
+        run: npm run docs:check-api
 
       - name: Build documentation
         run: npm run docs:build

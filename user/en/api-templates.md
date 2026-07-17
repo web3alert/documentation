@@ -2,7 +2,7 @@
 
 Template endpoints manage the project root template, groups, topics, and rules.
 
-## GET /api/v2/projects/:fullname/templates
+## GET /api/projects/:fullname/templates
 
 Returns project templates.
 
@@ -16,7 +16,7 @@ Payload: none.
 
 Response: [ProjectTemplate[]](types.md#projecttemplate).
 
-## GET /api/v2/projects/:fullname/template
+## GET /api/projects/:fullname/template
 
 Returns the project root template.
 
@@ -30,7 +30,7 @@ Payload: none.
 
 Response: [ProjectTemplate](types.md#projecttemplate), or not found.
 
-## POST /api/v2/projects/:fullname/templates
+## POST /api/projects/:fullname/templates
 
 Creates a template/group for the project.
 
@@ -54,7 +54,7 @@ Payload:
 
 Response: [ProjectTemplate](types.md#projecttemplate).
 
-## GET /api/v2/projects/:fullname/templates/:id
+## GET /api/projects/:fullname/templates/:id
 
 Returns a template.
 
@@ -69,7 +69,7 @@ Payload: none.
 
 Response: [ProjectTemplate](types.md#projecttemplate).
 
-## PUT /api/v2/projects/:fullname/templates/:id
+## PUT /api/projects/:fullname/templates/:id
 
 Updates a template.
 
@@ -80,11 +80,11 @@ Arguments:
 | `fullname` | Path | Project fullname. |
 | `id` | Path | Template id. |
 
-Payload: same shape as `POST /api/v2/projects/:fullname/templates`.
+Payload: same shape as `POST /api/projects/:fullname/templates`.
 
 Response: [ProjectTemplate](types.md#projecttemplate).
 
-## DELETE /api/v2/projects/:fullname/templates/:id
+## DELETE /api/projects/:fullname/templates/:id
 
 Deletes a template.
 

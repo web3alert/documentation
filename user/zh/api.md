@@ -8,7 +8,9 @@ Base URL:
 https://web3alert.io
 ```
 
-marketplace 和 builder 功能的主要 API 版本是 `v2`。部分 account/subscription/address book endpoints 目前仍保留在 `v1`。
+Marketplace 和 builder endpoints 使用规范的 `/api/*` 路径。少量 account、
+subscription 和 address book endpoints 在完成规范迁移前仍暂时使用公开的
+`/api/v1/*` 兼容路径。服务间 endpoints 不属于此公开 API 文档。
 
 ## Auth
 
@@ -62,7 +64,7 @@ X-RateLimit-Window: 60000
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
 | `POST` | `/api/v1/token` | auth flow 后创建或获取 API token。 |
-| `GET` | `/api/v1/me` | 获取当前 account、identity、tier 和 memberships。 |
+| `GET` | `/api/me` | 获取当前 account、identity、tier 和 memberships。 |
 | `DELETE` | `/api/v1/me` | 删除当前 account。 |
 | `PUT` | `/api/v1/me/meta` | 更新 account metadata。 |
 | `POST` | `/api/v1/me/avatar` | 上传当前 account avatar。 |
@@ -77,15 +79,15 @@ X-RateLimit-Window: 60000
 
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
-| `GET` | `/api/v2/workspaces` | 当前 account 的 workspaces 列表。 |
-| `GET` | `/api/v2/workspaces/:fullname` | 获取 workspace。 |
-| `PUT` | `/api/v2/workspaces/:fullname` | 创建或更新 workspace。 |
-| `DELETE` | `/api/v2/workspaces/:fullname` | 删除 workspace。 |
-| `POST` | `/api/v2/workspaces/:fullname/avatar` | 上传 workspace avatar。 |
-| `GET` | `/api/v2/workspaces/:workspace/acl` | 获取 workspace members/ACL。 |
-| `POST` | `/api/v2/workspaces/:workspace/acl` | 创建 invite 或 ACL entry。 |
-| `PUT` | `/api/v2/workspaces/:workspace/acl/:entryId` | 修改 member role。 |
-| `DELETE` | `/api/v2/workspaces/:workspace/acl/:entryId` | 删除 member/ACL entry。 |
+| `GET` | `/api/workspaces` | 当前 account 的 workspaces 列表。 |
+| `GET` | `/api/workspaces/:fullname` | 获取 workspace。 |
+| `PUT` | `/api/workspaces/:fullname` | 创建或更新 workspace。 |
+| `DELETE` | `/api/workspaces/:fullname` | 删除 workspace。 |
+| `POST` | `/api/workspaces/:fullname/avatar` | 上传 workspace avatar。 |
+| `GET` | `/api/workspaces/:workspace/acl` | 获取 workspace members/ACL。 |
+| `POST` | `/api/workspaces/:workspace/acl` | 创建 invite 或 ACL entry。 |
+| `PUT` | `/api/workspaces/:workspace/acl/:entryId` | 修改 member role。 |
+| `DELETE` | `/api/workspaces/:workspace/acl/:entryId` | 删除 member/ACL entry。 |
 
 ## Projects
 
@@ -93,15 +95,15 @@ X-RateLimit-Window: 60000
 
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
-| `GET` | `/api/v2/projects` | 可用 projects 列表。 |
-| `GET` | `/api/v2/projects/create-capability` | 检查 project 创建能力。 |
-| `GET` | `/api/v2/projects/:fullname` | 获取 project。 |
-| `PUT` | `/api/v2/projects/:fullname` | 创建或更新 project。 |
-| `DELETE` | `/api/v2/projects/:fullname` | 删除 project。 |
-| `GET` | `/api/v2/projects/by-link/:token` | 通过 access link 打开 private project。 |
-| `POST` | `/api/v2/projects/:fullname/access-links` | 为 project 创建 access link。 |
-| `POST` | `/api/v2/projects/:fullname/assets/images` | 上传 project icon 或 cover。 |
-| `DELETE` | `/api/v2/projects/:fullname/images/:asset` | 删除 uploaded project image。 |
+| `GET` | `/api/projects` | 可用 projects 列表。 |
+| `GET` | `/api/projects/create-capability` | 检查 project 创建能力。 |
+| `GET` | `/api/projects/:fullname` | 获取 project。 |
+| `PUT` | `/api/projects/:fullname` | 创建或更新 project。 |
+| `DELETE` | `/api/projects/:fullname` | 删除 project。 |
+| `GET` | `/api/projects/by-link/:token` | 通过 access link 打开 private project。 |
+| `POST` | `/api/projects/:fullname/access-links` | 为 project 创建 access link。 |
+| `POST` | `/api/projects/:fullname/assets/images` | 上传 project icon 或 cover。 |
+| `DELETE` | `/api/projects/:fullname/images/:asset` | 删除 uploaded project image。 |
 
 ## Project Transfers
 
@@ -109,12 +111,12 @@ X-RateLimit-Window: 60000
 
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
-| `POST` | `/api/v2/projects/:fullname/transfer/plan` | 获取 project transfer plan。 |
-| `POST` | `/api/v2/projects/:fullname/transfer-requests` | 创建 transfer request。 |
-| `GET` | `/api/v2/project-transfer-requests` | incoming/outgoing transfer requests 列表。 |
-| `POST` | `/api/v2/project-transfer-requests/:id/accept` | 接受 transfer request。 |
-| `POST` | `/api/v2/project-transfer-requests/:id/reject` | 拒绝 transfer request。 |
-| `POST` | `/api/v2/project-transfer-requests/:id/cancel` | 取消 outgoing transfer request。 |
+| `POST` | `/api/projects/:fullname/transfer/plan` | 获取 project transfer plan。 |
+| `POST` | `/api/projects/:fullname/transfer-requests` | 创建 transfer request。 |
+| `GET` | `/api/project-transfer-requests` | incoming/outgoing transfer requests 列表。 |
+| `POST` | `/api/project-transfer-requests/:id/accept` | 接受 transfer request。 |
+| `POST` | `/api/project-transfer-requests/:id/reject` | 拒绝 transfer request。 |
+| `POST` | `/api/project-transfer-requests/:id/cancel` | 取消 outgoing transfer request。 |
 
 ## Triggers
 
@@ -122,22 +124,25 @@ X-RateLimit-Window: 60000
 
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
-| `GET` | `/api/v2/triggers` | 带 filters 的 triggers 列表。 |
-| `GET` | `/api/v2/triggers/:fullname` | 获取 trigger。 |
-| `PUT` | `/api/v2/triggers/:fullname` | 创建或完整保存 trigger。 |
-| `PATCH` | `/api/v2/triggers/:fullname` | 部分更新 trigger。 |
-| `DELETE` | `/api/v2/triggers/:fullname` | 删除 trigger。 |
-| `POST` | `/api/v2/triggers/patch` | Bulk patch triggers。 |
-| `POST` | `/api/v2/triggers/remove` | Bulk remove triggers。 |
-| `GET` | `/api/v2/triggers/:fullname/draft` | 获取 trigger draft view。 |
-| `PUT` | `/api/v2/triggers/:fullname/draft` | 保存 trigger draft。 |
-| `POST` | `/api/v2/triggers/:fullname/draft/validate` | 验证 trigger draft。 |
-| `POST` | `/api/v2/triggers/preview` | Preview trigger execution。 |
-| `POST` | `/api/v2/triggers/test` | 在 sample source item 上 test trigger。 |
-| `POST` | `/api/v2/triggers/test-block` | 在指定 block 上 test trigger。 |
-| `POST` | `/api/v2/triggers/providers/test` | Test 单个 provider。 |
-| `GET` | `/api/v2/triggers/runtime-sources` | runtime data sources 列表。 |
-| `POST` | `/api/v2/triggers/find-latest-block` | 为 trigger 查找或准备 test input/block。 |
+| `GET` | `/api/triggers` | 带 filters 的 triggers 列表。 |
+| `GET` | `/api/triggers/:fullname` | 获取 trigger。 |
+| `PUT` | `/api/triggers/:fullname` | 创建或完整保存 trigger。 |
+| `PATCH` | `/api/triggers/:fullname` | 部分更新 trigger。 |
+| `DELETE` | `/api/triggers/:fullname` | 删除 trigger。 |
+| `POST` | `/api/triggers/patch` | Bulk patch triggers。 |
+| `POST` | `/api/triggers/remove` | Bulk remove triggers。 |
+| `GET` | `/api/triggers/:fullname/draft` | 获取 trigger draft view。 |
+| `PUT` | `/api/triggers/:fullname/draft` | 保存 trigger draft。 |
+| `POST` | `/api/triggers/:fullname/draft/validate` | 验证 trigger draft。 |
+| `GET` | `/api/triggers/:fullname/logs` | 获取聚合的 delivery 和 source-pressure 日志。 |
+| `POST` | `/api/triggers/:fullname/reset-test-status` | 重置 trigger 测试状态。 |
+| `POST` | `/api/triggers/preview` | 在 input 上 preview activation 和 transforms。 |
+| `POST` | `/api/triggers/test` | 在 sample source item 上 test trigger。 |
+| `POST` | `/api/triggers/test-block` | 在指定 block 上 test trigger。 |
+| `POST` | `/api/triggers/providers/test` | Test 单个 provider。 |
+| `GET` | `/api/triggers/hypercore/actions` | 获取 builder 可用的 HyperCore actions。 |
+| `GET` | `/api/triggers/runtime-sources` | runtime data sources 列表。 |
+| `POST` | `/api/triggers/find-latest-block` | 为 trigger 查找或准备 test input/block。 |
 
 ## Trigger Import
 
@@ -145,13 +150,16 @@ X-RateLimit-Window: 60000
 
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
-| `POST` | `/api/v2/triggers/import/evm` | 加载 EVM ABI entries。 |
-| `POST` | `/api/v2/triggers/import/evm/abi` | 按 contract address detect/load ABI。 |
-| `POST` | `/api/v2/triggers/import/evm/drafts` | 生成 EVM trigger drafts。 |
-| `POST` | `/api/v2/triggers/import/substrate/drafts` | 生成 Substrate trigger drafts。 |
-| `GET` | `/api/v2/triggers/substrate/source` | 获取 Substrate source info。 |
-| `GET` | `/api/v2/triggers/substrate/pallets` | 获取 Substrate pallets 列表。 |
-| `GET` | `/api/v2/triggers/substrate/pallet` | 获取一个 Substrate pallet 的 metadata。 |
+| `POST` | `/api/triggers/import/evm` | 加载 EVM ABI entries，但不保存 triggers。 |
+| `POST` | `/api/triggers/import/evm/abi` | 按 contract address detect/load ABI。 |
+| `POST` | `/api/triggers/import/evm/drafts` | 生成 EVM trigger drafts。 |
+| `POST` | `/api/triggers/import/hypercore/drafts` | 生成 HyperCore trigger drafts。 |
+| `POST` | `/api/triggers/import/solana/idl` | 加载 Solana IDL metadata。 |
+| `POST` | `/api/triggers/import/solana/drafts` | 生成 Solana trigger drafts。 |
+| `POST` | `/api/triggers/import/substrate/drafts` | 生成 Substrate trigger drafts。 |
+| `GET` | `/api/triggers/substrate/source` | 获取 Substrate source info。 |
+| `GET` | `/api/triggers/substrate/pallets` | 获取 Substrate pallets 列表。 |
+| `GET` | `/api/triggers/substrate/pallet` | 获取一个 Substrate pallet 的 metadata。 |
 
 ## Templates
 
@@ -159,12 +167,12 @@ X-RateLimit-Window: 60000
 
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
-| `GET` | `/api/v2/projects/:fullname/templates` | project templates 列表。 |
-| `GET` | `/api/v2/projects/:fullname/template` | 获取 project root template。 |
-| `POST` | `/api/v2/projects/:fullname/templates` | 创建 template/group。 |
-| `GET` | `/api/v2/projects/:fullname/templates/:id` | 获取 template。 |
-| `PUT` | `/api/v2/projects/:fullname/templates/:id` | 更新 template。 |
-| `DELETE` | `/api/v2/projects/:fullname/templates/:id` | 删除 template。 |
+| `GET` | `/api/projects/:fullname/templates` | project templates 列表。 |
+| `GET` | `/api/projects/:fullname/template` | 获取 project root template。 |
+| `POST` | `/api/projects/:fullname/templates` | 创建 template/group。 |
+| `GET` | `/api/projects/:fullname/templates/:id` | 获取 template。 |
+| `PUT` | `/api/projects/:fullname/templates/:id` | 更新 template。 |
+| `DELETE` | `/api/projects/:fullname/templates/:id` | 删除 template。 |
 
 ## Subscriptions
 
@@ -178,9 +186,9 @@ X-RateLimit-Window: 60000
 | `POST` | `/api/v1/subscriptions/:id` | 更新 subscription。 |
 | `DELETE` | `/api/v1/subscriptions/:id` | 删除 subscription。 |
 | `POST` | `/api/v1/subscriptions/:id/state` | 启用或关闭 subscription。 |
-| `POST` | `/api/v2/subscriptions/test` | Test subscription。 |
-| `GET` | `/api/v2/subscriptions/alerts/history` | Workspace subscription logs。 |
-| `GET` | `/api/v2/subscriptions/:id/alerts/history` | 指定 subscription 的 logs。 |
+| `POST` | `/api/subscriptions/test` | Test subscription。 |
+| `GET` | `/api/subscriptions/alerts/history` | Workspace subscription logs。 |
+| `GET` | `/api/subscriptions/:id/alerts/history` | 指定 subscription 的 logs。 |
 
 ## Resources
 
@@ -198,22 +206,49 @@ X-RateLimit-Window: 60000
 | `GET` | `/api/resources/external/:token` | 通过 token 打开 external resource setup。 |
 | `POST` | `/api/resources/external/:token` | 发送 external resource setup payload。 |
 
+这三个 setup-session routes 仅在服务器启用安全 Telegram destination setup 时可用。
+
 ## Data Sources
 
 详情：[Data Sources API](api-data-sources.md)。
 
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
-| `GET` | `/api/v2/custom-sources` | custom data sources 列表。 |
-| `GET` | `/api/v2/custom-sources/create-capability` | 检查 custom source 创建能力。 |
-| `POST` | `/api/v2/custom-sources/verify` | 验证 custom source config。 |
-| `GET` | `/api/v2/custom-sources/:fullname` | 获取 custom source。 |
-| `PUT` | `/api/v2/custom-sources/:fullname` | 创建或更新 custom source。 |
-| `DELETE` | `/api/v2/custom-sources/:fullname` | 删除 custom source。 |
-| `GET` | `/api/v2/custom-sources/:fullname/logs` | 获取 custom source logs。 |
-| `POST` | `/api/v2/custom-sources/:fullname/test-status` | 检查 custom source status。 |
-| `POST` | `/api/v2/custom-sources/:fullname/restart` | 重启 custom source。 |
-| `POST` | `/api/v2/custom-sources/:fullname/reset-lag` | reset custom source lag。 |
+| `GET` | `/api/custom-sources` | custom data sources 列表。 |
+| `GET` | `/api/custom-sources/create-capability` | 检查 custom source 创建能力。 |
+| `POST` | `/api/custom-sources/verify` | 验证 custom source config。 |
+| `GET` | `/api/custom-sources/:fullname` | 获取 custom source。 |
+| `PUT` | `/api/custom-sources/:fullname` | 创建或更新 custom source。 |
+| `DELETE` | `/api/custom-sources/:fullname` | 删除 custom source。 |
+| `GET` | `/api/custom-sources/:fullname/logs` | 获取 custom source logs。 |
+| `POST` | `/api/custom-sources/:fullname/test-status` | 检查 custom source status。 |
+| `POST` | `/api/custom-sources/:fullname/restart` | 重启 custom source。 |
+| `POST` | `/api/custom-sources/:fullname/reset-lag` | reset custom source lag。 |
+
+## 计费
+
+详情：[计费 API](api-billing.md)。
+
+| Method | Endpoint | Purpose |
+| --- | --- | --- |
+| `GET` | `/api/billing/overview` | 获取当前账号的计费概览。 |
+| `GET` | `/api/billing/wallet/overview` | 获取余额和钱包概览。 |
+| `POST` | `/api/billing/wallet/crypto-topup` | 创建加密货币余额充值。 |
+| `POST` | `/api/billing/wallet/topup/refresh` | 刷新充值状态。 |
+| `POST` | `/api/billing/account-plan/balance-purchase` | 使用余额购买或升级账号套餐。 |
+| `POST` | `/api/billing/account-plan/checkout` | 创建账号套餐 checkout。 |
+| `POST` | `/api/billing/account-plan/crypto-checkout` | 创建账号套餐的直接加密货币 checkout。 |
+| `POST` | `/api/billing/project-addon/balance-purchase` | 使用余额购买项目 add-on。 |
+| `POST` | `/api/billing/project-addon/checkout` | 创建项目 add-on checkout。 |
+| `POST` | `/api/billing/project-addon/crypto-checkout` | 创建项目 add-on 的直接加密货币 checkout。 |
+| `POST` | `/api/billing/coupon/redeem` | 兑换优惠券。 |
+| `POST` | `/api/billing/coupon/gift-purchase` | 使用余额购买礼品优惠券。 |
+| `GET` | `/api/billing/referral/overview` | 获取推荐余额和链接摘要。 |
+| `POST` | `/api/billing/referral/link/create` | 创建推荐链接。 |
+| `POST` | `/api/billing/referral/claim` | 领取推荐码。 |
+| `POST` | `/api/billing/subscription/update-renewal` | 更新自动续费设置。 |
+| `POST` | `/api/billing/crypto-checkout/refresh` | 刷新加密货币 checkout 状态。 |
+| `POST` | `/api/billing/crypto-checkout/cancel` | 取消加密货币 checkout。 |
 
 ## Addresses
 
@@ -232,19 +267,20 @@ X-RateLimit-Window: 60000
 
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
-| `GET` | `/api/v2/apps` | apps 列表。 |
-| `GET` | `/api/v2/apps/:fullname` | 获取 app。 |
-| `PUT` | `/api/v2/apps/:fullname` | 创建或更新 app。 |
-| `DELETE` | `/api/v2/apps/:fullname` | 删除 app。 |
-| `GET` | `/api/v2/actions` | actions 列表。 |
-| `GET` | `/api/v2/actions/:fullname` | 获取 action。 |
-| `PUT` | `/api/v2/actions/:fullname` | 创建或更新 action。 |
-| `DELETE` | `/api/v2/actions/:fullname` | 删除 action。 |
-| `GET` | `/api/v2/blueprints` | blueprints 列表。 |
-| `GET` | `/api/v2/blueprints/:fullname` | 获取 blueprint。 |
-| `PUT` | `/api/v2/blueprints/:fullname` | 创建或更新 blueprint。 |
-| `DELETE` | `/api/v2/blueprints/:fullname` | 删除 blueprint。 |
-| `GET` | `/api/v2/types` | shared types 列表。 |
-| `GET` | `/api/v2/types/:fullname` | 获取 shared type。 |
-| `PUT` | `/api/v2/types/:fullname` | 创建或更新 shared type。 |
-| `DELETE` | `/api/v2/types/:fullname` | 删除 shared type。 |
+| `GET` | `/api/apps` | apps 列表。 |
+| `GET` | `/api/apps/:fullname` | 获取 app。 |
+| `PUT` | `/api/apps/:fullname` | 创建或更新 app。 |
+| `DELETE` | `/api/apps/:fullname` | 删除 app。 |
+| `GET` | `/api/actions` | actions 列表。 |
+| `GET` | `/api/actions/:fullname` | 获取 action。 |
+| `PUT` | `/api/actions/:fullname` | 创建或更新 action。 |
+| `DELETE` | `/api/actions/:fullname` | 删除 action。 |
+| `GET` | `/api/blueprints` | blueprints 列表。 |
+| `GET` | `/api/blueprints/:fullname` | 获取 blueprint。 |
+| `PUT` | `/api/blueprints/:fullname` | 创建或更新 blueprint。 |
+| `DELETE` | `/api/blueprints/:fullname` | 删除 blueprint。 |
+| `GET` | `/api/types` | shared types 列表。 |
+| `GET` | `/api/types/lookup` | 解析动态类型选项。 |
+| `GET` | `/api/types/:fullname` | 获取 shared type。 |
+| `PUT` | `/api/types/:fullname` | 创建或更新 shared type。 |
+| `DELETE` | `/api/types/:fullname` | 删除 shared type。 |

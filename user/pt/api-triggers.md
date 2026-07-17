@@ -2,7 +2,7 @@
 
 Trigger endpoints gerem trigger definitions, drafts, bulk operations e test helpers.
 
-## GET /api/v2/triggers
+## GET /api/triggers
 
 Devolve triggers com optional filters.
 
@@ -17,7 +17,7 @@ Payload: nenhum.
 
 Resposta: [TriggerView[]](types.md#triggerview).
 
-## GET /api/v2/triggers/:fullname
+## GET /api/triggers/:fullname
 
 Devolve trigger.
 
@@ -31,7 +31,7 @@ Payload: nenhum.
 
 Resposta: [TriggerDraftView](types.md#triggerdraftview).
 
-## PUT /api/v2/triggers/:fullname
+## PUT /api/triggers/:fullname
 
 Cria ou guarda trigger completo.
 
@@ -54,7 +54,6 @@ Payload:
 | `meta.title` | Sim | Título visível. |
 | `meta.description` | Não | Descrição. |
 | `defaults` | Não | Notification defaults. |
-| `output` | Não | Legacy output schema. |
 | `triggerSpec` | Não | Source matching spec ou `null`. |
 | `providers` | Não | Array of provider definitions. |
 | `filtersSchema` | Não | Optional filters schema. |
@@ -68,7 +67,7 @@ Payload:
 
 Resposta: [TriggerDraftView](types.md#triggerdraftview).
 
-## PATCH /api/v2/triggers/:fullname
+## PATCH /api/triggers/:fullname
 
 Atualiza trigger parcialmente.
 
@@ -88,7 +87,7 @@ Payload:
 
 Resposta: [TriggerPatchResult](types.md#triggerpatchresult).
 
-## DELETE /api/v2/triggers/:fullname
+## DELETE /api/triggers/:fullname
 
 Elimina trigger.
 
@@ -102,7 +101,7 @@ Payload: nenhum.
 
 Resposta: [OperationResult](types.md#operationresult).
 
-## POST /api/v2/triggers/patch
+## POST /api/triggers/patch
 
 Bulk patch para vários triggers.
 
@@ -117,7 +116,7 @@ Payload:
 
 Resposta: [TriggerBulkPatchResult](types.md#triggerbulkpatchresult).
 
-## POST /api/v2/triggers/remove
+## POST /api/triggers/remove
 
 Bulk remove para vários triggers.
 
@@ -132,7 +131,7 @@ Payload:
 
 Resposta: [TriggerBulkRemoveResult](types.md#triggerbulkremoveresult).
 
-## GET /api/v2/triggers/:fullname/draft
+## GET /api/triggers/:fullname/draft
 
 Devolve draft view de trigger.
 
@@ -146,7 +145,7 @@ Payload: nenhum.
 
 Resposta: [TriggerDraftView](types.md#triggerdraftview).
 
-## PUT /api/v2/triggers/:fullname/draft
+## PUT /api/triggers/:fullname/draft
 
 Guarda trigger draft.
 
@@ -156,11 +155,11 @@ Arguments:
 | --- | --- | --- |
 | `fullname` | Path | Trigger fullname. |
 
-Payload: same shape as `PUT /api/v2/triggers/:fullname`.
+Payload: same shape as `PUT /api/triggers/:fullname`.
 
 Resposta: [TriggerDraftView](types.md#triggerdraftview).
 
-## POST /api/v2/triggers/:fullname/draft/validate
+## POST /api/triggers/:fullname/draft/validate
 
 Valida trigger draft sem guardar definitivamente.
 
@@ -174,9 +173,39 @@ Payload: same shape as trigger save payload.
 
 Resposta: [TriggerValidationResult](types.md#triggervalidationresult).
 
-## POST /api/v2/triggers/preview
+## GET /api/triggers/:fullname/logs
 
-Preview de output de transform/providers sem guardar trigger.
+Devolve falhas de delivery e eventos de source pressure agregados para um trigger.
+
+Argumentos:
+
+| Argumento | Localização | Descrição |
+| --- | --- | --- |
+| `fullname` | Path | Fullname do trigger. |
+| `limit` | Query | Número máximo opcional de entradas. |
+| `status` | Query | Filtro opcional por estado de delivery. |
+| `direction` | Query | Direção de paginação opcional: `before` ou `after`. |
+| `datetime` | Query | Timestamp ISO usado com `direction`. |
+
+Payload: nenhum.
+
+A resposta contém dados do trigger, estatísticas de subscriptions e logs normalizados.
+
+## POST /api/triggers/:fullname/reset-test-status
+
+Repõe o estado de teste do trigger para `not_tested`.
+
+Argumentos: `fullname` no path.
+
+Payload: nenhum.
+
+Resposta: [TriggerPatchResult](types.md#triggerpatchresult).
+
+## POST /api/triggers/preview
+
+Valida as definições de providers, executa a activation opcional e os
+transforms raw/human sobre o input fornecido, e valida o output resultante. Não
+guarda nenhum trigger.
 
 Arguments: nenhum.
 
@@ -185,14 +214,16 @@ Payload:
 | Field | Required | Description |
 | --- | --- | --- |
 | `providers` | Sim | Provider definitions. |
+| `activation` | Não | Condição de activation JavaScript ou `null`. |
 | `transform` | Sim | JavaScript transform object. |
 | `input` | Sim | Source item/input for preview. |
 | `inputs` | Não | Trigger input values. |
-| `outputSchema` | Não | Output schema used for formatting. |
+| `providersData` | Não | Valores de providers já calculados para activation e transforms. |
+| `outputSchema` | Não | Output schema usada para validar o resultado do preview. |
 
 Resposta: [TriggerPreviewResult](types.md#triggerpreviewresult).
 
-## POST /api/v2/triggers/test
+## POST /api/triggers/test
 
 Testa trigger definition em sample source item.
 
@@ -213,7 +244,7 @@ Payload:
 
 Resposta: [TriggerTestResult](types.md#triggertestresult).
 
-## POST /api/v2/triggers/test-block
+## POST /api/triggers/test-block
 
 Testa trigger num block específico.
 
@@ -235,7 +266,7 @@ Payload:
 
 Resposta: [TriggerTestResult](types.md#triggertestresult).
 
-## POST /api/v2/triggers/providers/test
+## POST /api/triggers/providers/test
 
 Testa um provider.
 
@@ -253,7 +284,17 @@ Payload:
 
 Resposta: [ProviderTestResult](types.md#providertestresult).
 
-## GET /api/v2/triggers/runtime-sources
+## GET /api/triggers/hypercore/actions
+
+Devolve o catálogo de actions HyperCore disponível no trigger builder.
+
+Argumentos: nenhum.
+
+Payload: nenhum.
+
+A resposta contém um array `actions`.
+
+## GET /api/triggers/runtime-sources
 
 Devolve runtime data sources disponíveis para trigger builder.
 
@@ -263,7 +304,7 @@ Payload: nenhum.
 
 Resposta: [RuntimeSource[]](types.md#runtimesource).
 
-## POST /api/v2/triggers/find-latest-block
+## POST /api/triggers/find-latest-block
 
 Encontra latest block/test input para trigger testing.
 

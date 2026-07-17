@@ -2,7 +2,7 @@
 
 Endpoints Data Sources управляют custom EVM/Substrate/Solana sources, runtime-статусом и logs.
 
-## GET /api/v2/custom-sources
+## GET /api/custom-sources
 
 Возвращает custom data sources.
 
@@ -16,7 +16,7 @@ Endpoints Data Sources управляют custom EVM/Substrate/Solana sources, r
 
 Ответ: [CustomSourceListView[]](types.md#customsourcelistview).
 
-## GET /api/v2/custom-sources/create-capability
+## GET /api/custom-sources/create-capability
 
 Проверяет, может ли текущий account/workspace создать custom source.
 
@@ -26,7 +26,7 @@ Endpoints Data Sources управляют custom EVM/Substrate/Solana sources, r
 
 Ответ: [CustomSourceCreateCapability](types.md#customsourcecreatecapability).
 
-## POST /api/v2/custom-sources/verify
+## POST /api/custom-sources/verify
 
 Проверяет custom source config перед сохранением.
 
@@ -45,7 +45,7 @@ Endpoints Data Sources управляют custom EVM/Substrate/Solana sources, r
 
 Ответ: [CustomSourceVerifyResult](types.md#customsourceverifyresult).
 
-## GET /api/v2/custom-sources/:fullname
+## GET /api/custom-sources/:fullname
 
 Возвращает custom source.
 
@@ -59,7 +59,7 @@ Endpoints Data Sources управляют custom EVM/Substrate/Solana sources, r
 
 Ответ: [CustomSource](types.md#customsource).
 
-## PUT /api/v2/custom-sources/:fullname
+## PUT /api/custom-sources/:fullname
 
 Создает или обновляет custom source.
 
@@ -90,7 +90,7 @@ Endpoints Data Sources управляют custom EVM/Substrate/Solana sources, r
 
 Ответ: [CustomSource](types.md#customsource).
 
-## DELETE /api/v2/custom-sources/:fullname
+## DELETE /api/custom-sources/:fullname
 
 Удаляет custom source.
 
@@ -104,7 +104,7 @@ Endpoints Data Sources управляют custom EVM/Substrate/Solana sources, r
 
 Ответ: [OperationResult](types.md#operationresult).
 
-## GET /api/v2/custom-sources/:fullname/logs
+## GET /api/custom-sources/:fullname/logs
 
 Возвращает custom source logs.
 
@@ -122,7 +122,7 @@ Endpoints Data Sources управляют custom EVM/Substrate/Solana sources, r
 
 Ответ: [CustomSourceLogsResult](types.md#customsourcelogsresult).
 
-## POST /api/v2/custom-sources/:fullname/test-status
+## POST /api/custom-sources/:fullname/test-status
 
 Проверяет или имитирует изменение статуса custom source.
 
@@ -140,7 +140,7 @@ Endpoints Data Sources управляют custom EVM/Substrate/Solana sources, r
 
 Ответ: [CustomSourceStatusTestResult](types.md#customsourcestatustestresult).
 
-## POST /api/v2/custom-sources/:fullname/restart
+## POST /api/custom-sources/:fullname/restart
 
 Перезапускает custom source runtime.
 
@@ -154,7 +154,7 @@ Endpoints Data Sources управляют custom EVM/Substrate/Solana sources, r
 
 Ответ: [CustomSourceRuntimeActionResult](types.md#customsourceruntimeactionresult).
 
-## POST /api/v2/custom-sources/:fullname/reset-lag
+## POST /api/custom-sources/:fullname/reset-lag
 
 Сбрасывает lag custom source.
 

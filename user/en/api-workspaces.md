@@ -2,7 +2,7 @@
 
 Workspace endpoints manage workspaces, members, and workspace avatar.
 
-## GET /api/v2/workspaces
+## GET /api/workspaces
 
 Returns list of workspaces available to current account.
 
@@ -12,7 +12,7 @@ Payload: none.
 
 Response: [WorkspaceViewShort[]](types.md#workspaceviewshort).
 
-## GET /api/v2/workspaces/:fullname
+## GET /api/workspaces/:fullname
 
 Returns one workspace.
 
@@ -26,7 +26,7 @@ Payload: none.
 
 Response: [WorkspaceView](types.md#workspaceview).
 
-## PUT /api/v2/workspaces/:fullname
+## PUT /api/workspaces/:fullname
 
 Creates a new workspace or updates existing one.
 
@@ -50,7 +50,7 @@ Payload:
 
 Response: [WorkspaceView](types.md#workspaceview).
 
-## DELETE /api/v2/workspaces/:fullname
+## DELETE /api/workspaces/:fullname
 
 Deletes workspace.
 
@@ -64,7 +64,7 @@ Payload: none.
 
 Response: [OperationResult](types.md#operationresult).
 
-## POST /api/v2/workspaces/:fullname/avatar
+## POST /api/workspaces/:fullname/avatar
 
 Uploads workspace avatar.
 
@@ -84,7 +84,7 @@ Payload:
 
 Response: [AvatarUploadResult](types.md#avataruploadresult).
 
-## GET /api/v2/workspaces/:workspace/acl
+## GET /api/workspaces/:workspace/acl
 
 Returns list of workspace members/ACL entries.
 
@@ -98,7 +98,7 @@ Payload: none.
 
 Response: [WorkspaceAclEntry[]](types.md#workspaceaclentry).
 
-## POST /api/v2/workspaces/:workspace/acl
+## POST /api/workspaces/:workspace/acl
 
 Creates invite or ACL entry.
 
@@ -116,7 +116,7 @@ Payload:
 
 Response: [WorkspaceAclEntry](types.md#workspaceaclentry).
 
-## PUT /api/v2/workspaces/:workspace/acl/:entryId
+## PUT /api/workspaces/:workspace/acl/:entryId
 
 Changes member role.
 
@@ -135,7 +135,7 @@ Payload:
 
 Response: [WorkspaceAclEntry](types.md#workspaceaclentry).
 
-## DELETE /api/v2/workspaces/:workspace/acl/:entryId
+## DELETE /api/workspaces/:workspace/acl/:entryId
 
 Deletes member/ACL entry.
 

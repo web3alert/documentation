@@ -5,7 +5,8 @@
   "scripts": {
     "docs:dev": "vitepress dev user",
     "docs:build": "vitepress build user",
-    "docs:preview": "vitepress preview user"
+    "docs:preview": "vitepress preview user",
+    "docs:check-api": "node scripts/verify-public-api-docs.mjs"
   },
   "devDependencies": {
     "vitepress": "^1.6.4",

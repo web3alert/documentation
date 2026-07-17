@@ -2,7 +2,7 @@
 
 Los endpoints Data source gestionan custom EVM/Substrate/Solana sources, runtime status y logs.
 
-## GET /api/v2/custom-sources
+## GET /api/custom-sources
 
 Devuelve custom data sources.
 
@@ -16,7 +16,7 @@ Payload: ninguno.
 
 Respuesta: [CustomSourceListView[]](types.md#customsourcelistview).
 
-## GET /api/v2/custom-sources/create-capability
+## GET /api/custom-sources/create-capability
 
 Comprueba si el account/workspace actual puede crear un custom source.
 
@@ -26,7 +26,7 @@ Payload: ninguno.
 
 Respuesta: [CustomSourceCreateCapability](types.md#customsourcecreatecapability).
 
-## POST /api/v2/custom-sources/verify
+## POST /api/custom-sources/verify
 
 Verifica la configuración de custom source antes de guardarla.
 
@@ -45,7 +45,7 @@ Payload:
 
 Respuesta: [CustomSourceVerifyResult](types.md#customsourceverifyresult).
 
-## GET /api/v2/custom-sources/:fullname
+## GET /api/custom-sources/:fullname
 
 Devuelve un custom source.
 
@@ -59,7 +59,7 @@ Payload: ninguno.
 
 Respuesta: [CustomSource](types.md#customsource).
 
-## PUT /api/v2/custom-sources/:fullname
+## PUT /api/custom-sources/:fullname
 
 Crea o actualiza un custom source.
 
@@ -90,7 +90,7 @@ Payload:
 
 Respuesta: [CustomSource](types.md#customsource).
 
-## DELETE /api/v2/custom-sources/:fullname
+## DELETE /api/custom-sources/:fullname
 
 Elimina un custom source.
 
@@ -104,7 +104,7 @@ Payload: ninguno.
 
 Respuesta: [OperationResult](types.md#operationresult).
 
-## GET /api/v2/custom-sources/:fullname/logs
+## GET /api/custom-sources/:fullname/logs
 
 Devuelve custom source logs.
 
@@ -122,7 +122,7 @@ Payload: ninguno.
 
 Respuesta: [CustomSourceLogsResult](types.md#customsourcelogsresult).
 
-## POST /api/v2/custom-sources/:fullname/test-status
+## POST /api/custom-sources/:fullname/test-status
 
 Comprueba o simula una transición de status del custom source.
 
@@ -140,7 +140,7 @@ Payload:
 
 Respuesta: [CustomSourceStatusTestResult](types.md#customsourcestatustestresult).
 
-## POST /api/v2/custom-sources/:fullname/restart
+## POST /api/custom-sources/:fullname/restart
 
 Reinicia el runtime del custom source.
 
@@ -154,7 +154,7 @@ Payload: `{}`.
 
 Respuesta: [CustomSourceRuntimeActionResult](types.md#customsourceruntimeactionresult).
 
-## POST /api/v2/custom-sources/:fullname/reset-lag
+## POST /api/custom-sources/:fullname/reset-lag
 
 Restablece el lag del custom source.
 

@@ -2,7 +2,7 @@
 
 Endpoints Triggers управляют trigger definitions, drafts, bulk operations и test helpers.
 
-## GET /api/v2/triggers
+## GET /api/triggers
 
 Возвращает triggers с опциональными filters.
 
@@ -17,7 +17,7 @@ Endpoints Triggers управляют trigger definitions, drafts, bulk operatio
 
 Ответ: [TriggerView[]](types.md#triggerview).
 
-## GET /api/v2/triggers/:fullname
+## GET /api/triggers/:fullname
 
 Возвращает trigger.
 
@@ -31,7 +31,7 @@ Endpoints Triggers управляют trigger definitions, drafts, bulk operatio
 
 Ответ: [TriggerDraftView](types.md#triggerdraftview).
 
-## PUT /api/v2/triggers/:fullname
+## PUT /api/triggers/:fullname
 
 Создает или полностью сохраняет trigger.
 
@@ -54,7 +54,6 @@ Endpoints Triggers управляют trigger definitions, drafts, bulk operatio
 | `meta.title` | Да | Видимое название. |
 | `meta.description` | Нет | Описание. |
 | `defaults` | Нет | Notification defaults. |
-| `output` | Нет | Legacy output schema. |
 | `triggerSpec` | Нет | Source matching spec или `null`. |
 | `providers` | Нет | Массив provider definitions. |
 | `filtersSchema` | Нет | Опциональная filters schema. |
@@ -68,7 +67,7 @@ Endpoints Triggers управляют trigger definitions, drafts, bulk operatio
 
 Ответ: [TriggerDraftView](types.md#triggerdraftview).
 
-## PATCH /api/v2/triggers/:fullname
+## PATCH /api/triggers/:fullname
 
 Частично изменяет trigger.
 
@@ -88,7 +87,7 @@ Endpoints Triggers управляют trigger definitions, drafts, bulk operatio
 
 Ответ: [TriggerPatchResult](types.md#triggerpatchresult).
 
-## DELETE /api/v2/triggers/:fullname
+## DELETE /api/triggers/:fullname
 
 Удаляет trigger.
 
@@ -102,7 +101,7 @@ Endpoints Triggers управляют trigger definitions, drafts, bulk operatio
 
 Ответ: [OperationResult](types.md#operationresult).
 
-## POST /api/v2/triggers/patch
+## POST /api/triggers/patch
 
 Массово изменяет несколько triggers.
 
@@ -117,7 +116,7 @@ Endpoints Triggers управляют trigger definitions, drafts, bulk operatio
 
 Ответ: [TriggerBulkPatchResult](types.md#triggerbulkpatchresult).
 
-## POST /api/v2/triggers/remove
+## POST /api/triggers/remove
 
 Массово удаляет несколько triggers.
 
@@ -132,7 +131,7 @@ Endpoints Triggers управляют trigger definitions, drafts, bulk operatio
 
 Ответ: [TriggerBulkRemoveResult](types.md#triggerbulkremoveresult).
 
-## GET /api/v2/triggers/:fullname/draft
+## GET /api/triggers/:fullname/draft
 
 Возвращает draft view trigger.
 
@@ -146,7 +145,7 @@ Endpoints Triggers управляют trigger definitions, drafts, bulk operatio
 
 Ответ: [TriggerDraftView](types.md#triggerdraftview).
 
-## PUT /api/v2/triggers/:fullname/draft
+## PUT /api/triggers/:fullname/draft
 
 Сохраняет draft trigger.
 
@@ -156,11 +155,11 @@ Endpoints Triggers управляют trigger definitions, drafts, bulk operatio
 | --- | --- | --- |
 | `fullname` | Path | Trigger fullname. |
 
-Тело запроса: такая же структура, как в `PUT /api/v2/triggers/:fullname`.
+Тело запроса: такая же структура, как в `PUT /api/triggers/:fullname`.
 
 Ответ: [TriggerDraftView](types.md#triggerdraftview).
 
-## POST /api/v2/triggers/:fullname/draft/validate
+## POST /api/triggers/:fullname/draft/validate
 
 Проверяет draft trigger без финального сохранения.
 
@@ -174,9 +173,39 @@ Endpoints Triggers управляют trigger definitions, drafts, bulk operatio
 
 Ответ: [TriggerValidationResult](types.md#triggervalidationresult).
 
-## POST /api/v2/triggers/preview
+## GET /api/triggers/:fullname/logs
 
-Показывает preview output для transform/providers без сохранения trigger.
+Возвращает агрегированные ошибки delivery и события source pressure для trigger.
+
+Аргументы:
+
+| Аргумент | Где | Описание |
+| --- | --- | --- |
+| `fullname` | Path | Fullname trigger. |
+| `limit` | Query | Опциональное максимальное число записей. |
+| `status` | Query | Опциональный фильтр по статусу delivery. |
+| `direction` | Query | Опциональное направление пагинации: `before` или `after`. |
+| `datetime` | Query | ISO timestamp, используемый вместе с `direction`. |
+
+Тело запроса: нет.
+
+Ответ содержит данные trigger, статистику subscriptions и нормализованные логи.
+
+## POST /api/triggers/:fullname/reset-test-status
+
+Сбрасывает статус тестирования trigger в `not_tested`.
+
+Аргументы: `fullname` в path.
+
+Тело запроса: нет.
+
+Ответ: [TriggerPatchResult](types.md#triggerpatchresult).
+
+## POST /api/triggers/preview
+
+Проверяет definitions providers, выполняет опциональную activation и raw/human
+transforms над переданным input, затем валидирует полученный output. Trigger при
+этом не сохраняется.
 
 Аргументы: нет.
 
@@ -185,14 +214,16 @@ Endpoints Triggers управляют trigger definitions, drafts, bulk operatio
 | Поле | Обязательное | Описание |
 | --- | --- | --- |
 | `providers` | Да | Provider definitions. |
+| `activation` | Нет | JavaScript activation condition или `null`. |
 | `transform` | Да | JavaScript transform object. |
 | `input` | Да | Source item/input для preview. |
 | `inputs` | Нет | Значения trigger inputs. |
-| `outputSchema` | Нет | Output schema, используемая для форматирования. |
+| `providersData` | Нет | Заранее вычисленные provider values для activation и transforms. |
+| `outputSchema` | Нет | Output schema для валидации результата preview. |
 
 Ответ: [TriggerPreviewResult](types.md#triggerpreviewresult).
 
-## POST /api/v2/triggers/test
+## POST /api/triggers/test
 
 Тестирует trigger definition на sample source item.
 
@@ -213,7 +244,7 @@ Endpoints Triggers управляют trigger definitions, drafts, bulk operatio
 
 Ответ: [TriggerTestResult](types.md#triggertestresult).
 
-## POST /api/v2/triggers/test-block
+## POST /api/triggers/test-block
 
 Тестирует trigger на конкретном block.
 
@@ -235,7 +266,7 @@ Endpoints Triggers управляют trigger definitions, drafts, bulk operatio
 
 Ответ: [TriggerTestResult](types.md#triggertestresult).
 
-## POST /api/v2/triggers/providers/test
+## POST /api/triggers/providers/test
 
 Тестирует один provider.
 
@@ -253,7 +284,17 @@ Endpoints Triggers управляют trigger definitions, drafts, bulk operatio
 
 Ответ: [ProviderTestResult](types.md#providertestresult).
 
-## GET /api/v2/triggers/runtime-sources
+## GET /api/triggers/hypercore/actions
+
+Возвращает каталог HyperCore actions, доступный trigger builder.
+
+Аргументы: нет.
+
+Тело запроса: нет.
+
+Ответ содержит массив `actions`.
+
+## GET /api/triggers/runtime-sources
 
 Возвращает runtime data sources, доступные для trigger builder.
 
@@ -263,7 +304,7 @@ Endpoints Triggers управляют trigger definitions, drafts, bulk operatio
 
 Ответ: [RuntimeSource[]](types.md#runtimesource).
 
-## POST /api/v2/triggers/find-latest-block
+## POST /api/triggers/find-latest-block
 
 Находит latest block/test input для trigger testing.
 

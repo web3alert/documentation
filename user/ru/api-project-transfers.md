@@ -2,7 +2,7 @@
 
 Endpoints Project Transfers переносят ownership project между workspaces через request/accept flow.
 
-## POST /api/v2/projects/:fullname/transfer/plan
+## POST /api/projects/:fullname/transfer/plan
 
 Возвращает план переноса project без применения изменений.
 
@@ -21,7 +21,7 @@ Endpoints Project Transfers переносят ownership project между work
 
 Ответ: [ProjectTransferPlan](types.md#projecttransferplan).
 
-## POST /api/v2/projects/:fullname/transfer-requests
+## POST /api/projects/:fullname/transfer-requests
 
 Создает transfer request. Project будет перенесен только после accept со стороны owner целевого workspace.
 
@@ -41,7 +41,7 @@ Endpoints Project Transfers переносят ownership project между work
 
 Ответ: [ProjectTransferRequest](types.md#projecttransferrequest).
 
-## GET /api/v2/project-transfer-requests
+## GET /api/project-transfer-requests
 
 Возвращает incoming/outgoing transfer requests.
 
@@ -57,7 +57,7 @@ Endpoints Project Transfers переносят ownership project между work
 
 Ответ: [ProjectTransferRequest[]](types.md#projecttransferrequest).
 
-## POST /api/v2/project-transfer-requests/:id/accept
+## POST /api/project-transfer-requests/:id/accept
 
 Принимает incoming transfer request и применяет перенос project.
 
@@ -75,7 +75,7 @@ Endpoints Project Transfers переносят ownership project между work
 
 Ответ: [ProjectTransferAcceptResult](types.md#projecttransferacceptresult).
 
-## POST /api/v2/project-transfer-requests/:id/reject
+## POST /api/project-transfer-requests/:id/reject
 
 Отклоняет incoming transfer request.
 
@@ -93,7 +93,7 @@ Endpoints Project Transfers переносят ownership project между work
 
 Ответ: [ProjectTransferRequest](types.md#projecttransferrequest).
 
-## POST /api/v2/project-transfer-requests/:id/cancel
+## POST /api/project-transfer-requests/:id/cancel
 
 Отменяет outgoing transfer request.
 

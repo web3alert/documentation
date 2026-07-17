@@ -4,7 +4,7 @@
 
 ## Apps
 
-### GET /api/v2/apps
+### GET /api/apps
 
 Возвращает apps.
 
@@ -19,7 +19,7 @@
 
 Ответ: [AppView[]](types.md#appview).
 
-### GET /api/v2/apps/:fullname
+### GET /api/apps/:fullname
 
 Возвращает app.
 
@@ -29,7 +29,7 @@
 
 Ответ: [AppView](types.md#appview).
 
-### PUT /api/v2/apps/:fullname
+### PUT /api/apps/:fullname
 
 Создает или обновляет app.
 
@@ -47,7 +47,7 @@
 
 Ответ: [AppView](types.md#appview).
 
-### DELETE /api/v2/apps/:fullname
+### DELETE /api/apps/:fullname
 
 Удаляет app.
 
@@ -59,7 +59,7 @@
 
 ## Actions
 
-### GET /api/v2/actions
+### GET /api/actions
 
 Возвращает actions.
 
@@ -74,7 +74,7 @@
 
 Ответ: [ActionView[]](types.md#actionview).
 
-### GET /api/v2/actions/:fullname
+### GET /api/actions/:fullname
 
 Возвращает action.
 
@@ -84,7 +84,7 @@
 
 Ответ: [ActionView](types.md#actionview).
 
-### PUT /api/v2/actions/:fullname
+### PUT /api/actions/:fullname
 
 Создает или обновляет action.
 
@@ -105,7 +105,7 @@
 
 Ответ: [ActionView](types.md#actionview).
 
-### DELETE /api/v2/actions/:fullname
+### DELETE /api/actions/:fullname
 
 Удаляет action.
 
@@ -117,7 +117,7 @@
 
 ## Blueprints
 
-### GET /api/v2/blueprints
+### GET /api/blueprints
 
 Возвращает blueprints.
 
@@ -133,7 +133,7 @@
 
 Ответ: [BlueprintView[]](types.md#blueprintview).
 
-### GET /api/v2/blueprints/:fullname
+### GET /api/blueprints/:fullname
 
 Возвращает blueprint.
 
@@ -143,7 +143,7 @@
 
 Ответ: [BlueprintView](types.md#blueprintview).
 
-### PUT /api/v2/blueprints/:fullname
+### PUT /api/blueprints/:fullname
 
 Создает или обновляет blueprint.
 
@@ -165,7 +165,7 @@
 
 Ответ: [BlueprintView](types.md#blueprintview).
 
-### DELETE /api/v2/blueprints/:fullname
+### DELETE /api/blueprints/:fullname
 
 Удаляет blueprint.
 
@@ -177,7 +177,7 @@
 
 ## Types
 
-### GET /api/v2/types
+### GET /api/types
 
 Возвращает shared types.
 
@@ -196,7 +196,27 @@
 
 Ответ: [SharedTypeView[]](types.md#sharedtypeview).
 
-### GET /api/v2/types/:fullname
+### GET /api/types/lookup
+
+Возвращает динамические варианты типов из каталога, связанного с trigger.
+
+Аргументы:
+
+| Аргумент | Где | Описание |
+| --- | --- | --- |
+| `trigger` | Query | Fullname trigger. |
+| `ref` | Query | Ссылка на type schema, которую нужно разрешить. |
+| `q` | Query | Опциональный текстовый поиск. |
+| `value` | Query | Опциональное точное значение. |
+| `limit` | Query | Опциональный лимит результатов. |
+| Дополнительные поля | Query | Опциональные зависимости, например `series` или `event`. |
+
+Тело запроса: нет.
+
+Ответ содержит `ref`, нормализованные `items` с `label`, `value` и опциональным
+`parents`, а также опциональный `nextCursor`.
+
+### GET /api/types/:fullname
 
 Возвращает shared type.
 
@@ -206,7 +226,7 @@
 
 Ответ: [SharedTypeView](types.md#sharedtypeview).
 
-### PUT /api/v2/types/:fullname
+### PUT /api/types/:fullname
 
 Создает или обновляет shared type.
 
@@ -225,7 +245,7 @@
 
 Ответ: [SharedTypeView](types.md#sharedtypeview).
 
-### DELETE /api/v2/types/:fullname
+### DELETE /api/types/:fullname
 
 Удаляет shared type.
 

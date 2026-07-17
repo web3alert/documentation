@@ -2,7 +2,7 @@
 
 Workspace endpoints 用于管理 workspaces、members 和 workspace avatar。
 
-## GET /api/v2/workspaces
+## GET /api/workspaces
 
 返回当前 account 可访问的 workspaces 列表。
 
@@ -12,7 +12,7 @@ Payload: 无。
 
 响应：[WorkspaceViewShort[]](types.md#workspaceviewshort)。
 
-## GET /api/v2/workspaces/:fullname
+## GET /api/workspaces/:fullname
 
 返回一个 workspace。
 
@@ -26,7 +26,7 @@ Payload: 无。
 
 响应：[WorkspaceView](types.md#workspaceview)。
 
-## PUT /api/v2/workspaces/:fullname
+## PUT /api/workspaces/:fullname
 
 创建新 workspace 或更新已有 workspace。
 
@@ -50,7 +50,7 @@ Payload:
 
 响应：[WorkspaceView](types.md#workspaceview)。
 
-## DELETE /api/v2/workspaces/:fullname
+## DELETE /api/workspaces/:fullname
 
 删除 workspace。
 
@@ -64,7 +64,7 @@ Payload: 无。
 
 响应：[OperationResult](types.md#operationresult)。
 
-## POST /api/v2/workspaces/:fullname/avatar
+## POST /api/workspaces/:fullname/avatar
 
 上传 workspace avatar。
 
@@ -84,7 +84,7 @@ Payload:
 
 响应：[AvatarUploadResult](types.md#avataruploadresult)。
 
-## GET /api/v2/workspaces/:workspace/acl
+## GET /api/workspaces/:workspace/acl
 
 返回 workspace members/ACL entries 列表。
 
@@ -98,7 +98,7 @@ Payload: 无。
 
 响应：[WorkspaceAclEntry[]](types.md#workspaceaclentry)。
 
-## POST /api/v2/workspaces/:workspace/acl
+## POST /api/workspaces/:workspace/acl
 
 创建 invite 或 ACL entry。
 
@@ -116,7 +116,7 @@ Payload:
 
 响应：[WorkspaceAclEntry](types.md#workspaceaclentry)。
 
-## PUT /api/v2/workspaces/:workspace/acl/:entryId
+## PUT /api/workspaces/:workspace/acl/:entryId
 
 修改 member role。
 
@@ -135,7 +135,7 @@ Payload:
 
 响应：[WorkspaceAclEntry](types.md#workspaceaclentry)。
 
-## DELETE /api/v2/workspaces/:workspace/acl/:entryId
+## DELETE /api/workspaces/:workspace/acl/:entryId
 
 删除 member/ACL entry。
 

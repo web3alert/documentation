@@ -2,7 +2,7 @@
 
 Endpoints Trigger Import помогают сгенерировать trigger drafts из внешних описаний: EVM ABI, Substrate metadata/pallets, Solana IDL и source metadata.
 
-## POST /api/v2/triggers/import/evm
+## POST /api/triggers/import/evm
 
 Загружает и нормализует EVM ABI entries.
 
@@ -19,7 +19,10 @@ Endpoints Trigger Import помогают сгенерировать trigger dra
 
 Ответ: [EvmAbiImportResult](types.md#evmabiimportresult).
 
-## POST /api/v2/triggers/import/evm/abi
+Этот endpoint только возвращает ABI import entries и не сохраняет triggers.
+Выбранные drafts сохраняются отдельно через `PUT /api/triggers/:fullname`.
+
+## POST /api/triggers/import/evm/abi
 
 Пытается загрузить ABI по адресу contract.
 
@@ -34,7 +37,7 @@ Endpoints Trigger Import помогают сгенерировать trigger dra
 
 Ответ: [EvmAbiResult](types.md#evmabiresult).
 
-## POST /api/v2/triggers/import/evm/drafts
+## POST /api/triggers/import/evm/drafts
 
 Генерирует EVM trigger drafts из ABI.
 
@@ -57,7 +60,23 @@ Endpoints Trigger Import помогают сгенерировать trigger dra
 
 Ответ: [TriggerImportDraftsResult](types.md#triggerimportdraftsresult).
 
-## POST /api/v2/triggers/import/solana/idl
+## POST /api/triggers/import/hypercore/drafts
+
+Генерирует HyperCore trigger drafts из выбранных runtime source и actions.
+
+Аргументы: нет.
+
+Тело запроса:
+
+| Поле | Обязательное | Описание |
+| --- | --- | --- |
+| `project` | Да | Fullname project. |
+| `source` | Да | HyperCore runtime source. |
+| `actionTypes` | Нет | Типы action, которые нужно включить. |
+
+Ответ содержит массив `drafts`.
+
+## POST /api/triggers/import/solana/idl
 
 Пытается загрузить Solana IDL по Program ID.
 
@@ -72,7 +91,7 @@ Endpoints Trigger Import помогают сгенерировать trigger dra
 
 Ответ: Solana IDL metadata object с `source`, `programId`, адресом IDL/metadata account и `idl`.
 
-## POST /api/v2/triggers/import/solana/drafts
+## POST /api/triggers/import/solana/drafts
 
 Генерирует Solana trigger drafts из IDL.
 
@@ -92,7 +111,7 @@ Endpoints Trigger Import помогают сгенерировать trigger dra
 
 Ответ: [TriggerImportDraftsResult](types.md#triggerimportdraftsresult).
 
-## POST /api/v2/triggers/import/substrate/drafts
+## POST /api/triggers/import/substrate/drafts
 
 Генерирует Substrate trigger drafts из metadata/pallet selection.
 
@@ -117,7 +136,7 @@ Endpoints Trigger Import помогают сгенерировать trigger dra
 
 Ответ: [TriggerImportDraftsResult](types.md#triggerimportdraftsresult).
 
-## GET /api/v2/triggers/substrate/source
+## GET /api/triggers/substrate/source
 
 Возвращает Substrate source info, которое использует import wizard.
 
@@ -131,7 +150,7 @@ Endpoints Trigger Import помогают сгенерировать trigger dra
 
 Ответ: [SubstrateSourceInfo](types.md#substratesourceinfo).
 
-## GET /api/v2/triggers/substrate/pallets
+## GET /api/triggers/substrate/pallets
 
 Возвращает список Substrate pallets для выбранного source.
 
@@ -145,7 +164,7 @@ Endpoints Trigger Import помогают сгенерировать trigger dra
 
 Ответ: [SubstratePalletSummary[]](types.md#substratepalletsummary).
 
-## GET /api/v2/triggers/substrate/pallet
+## GET /api/triggers/substrate/pallet
 
 Возвращает metadata конкретного Substrate pallet.
 

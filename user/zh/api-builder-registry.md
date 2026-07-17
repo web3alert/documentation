@@ -4,7 +4,7 @@
 
 ## Apps
 
-### GET /api/v2/apps
+### GET /api/apps
 
 返回 apps。
 
@@ -19,7 +19,7 @@ Payload: 无。
 
 响应：[AppView[]](types.md#appview)。
 
-### GET /api/v2/apps/:fullname
+### GET /api/apps/:fullname
 
 返回 app。
 
@@ -29,7 +29,7 @@ Payload: 无。
 
 响应：[AppView](types.md#appview)。
 
-### PUT /api/v2/apps/:fullname
+### PUT /api/apps/:fullname
 
 创建或更新 app。
 
@@ -47,7 +47,7 @@ Payload:
 
 响应：[AppView](types.md#appview)。
 
-### DELETE /api/v2/apps/:fullname
+### DELETE /api/apps/:fullname
 
 删除 app。
 
@@ -59,7 +59,7 @@ Payload: 无。
 
 ## Actions
 
-### GET /api/v2/actions
+### GET /api/actions
 
 返回 actions。
 
@@ -74,7 +74,7 @@ Payload: 无。
 
 响应：[ActionView[]](types.md#actionview)。
 
-### GET /api/v2/actions/:fullname
+### GET /api/actions/:fullname
 
 返回 action。
 
@@ -84,7 +84,7 @@ Payload: 无。
 
 响应：[ActionView](types.md#actionview)。
 
-### PUT /api/v2/actions/:fullname
+### PUT /api/actions/:fullname
 
 创建或更新 action。
 
@@ -105,7 +105,7 @@ Payload:
 
 响应：[ActionView](types.md#actionview)。
 
-### DELETE /api/v2/actions/:fullname
+### DELETE /api/actions/:fullname
 
 删除 action。
 
@@ -117,7 +117,7 @@ Payload: 无。
 
 ## Blueprints
 
-### GET /api/v2/blueprints
+### GET /api/blueprints
 
 返回 blueprints。
 
@@ -133,7 +133,7 @@ Payload: 无。
 
 响应：[BlueprintView[]](types.md#blueprintview)。
 
-### GET /api/v2/blueprints/:fullname
+### GET /api/blueprints/:fullname
 
 返回 blueprint。
 
@@ -143,7 +143,7 @@ Payload: 无。
 
 响应：[BlueprintView](types.md#blueprintview)。
 
-### PUT /api/v2/blueprints/:fullname
+### PUT /api/blueprints/:fullname
 
 创建或更新 blueprint。
 
@@ -165,7 +165,7 @@ Payload:
 
 响应：[BlueprintView](types.md#blueprintview)。
 
-### DELETE /api/v2/blueprints/:fullname
+### DELETE /api/blueprints/:fullname
 
 删除 blueprint。
 
@@ -177,7 +177,7 @@ Payload: 无。
 
 ## Types
 
-### GET /api/v2/types
+### GET /api/types
 
 返回 shared types。
 
@@ -196,7 +196,26 @@ Payload: 无。
 
 响应：[SharedTypeView[]](types.md#sharedtypeview)。
 
-### GET /api/v2/types/:fullname
+### GET /api/types/lookup
+
+解析 trigger 关联目录中的动态类型选项。
+
+参数：
+
+| 参数 | 位置 | 说明 |
+| --- | --- | --- |
+| `trigger` | Query | Trigger fullname。 |
+| `ref` | Query | 要解析的 type schema 引用。 |
+| `q` | Query | 可选文本搜索。 |
+| `value` | Query | 可选精确值。 |
+| `limit` | Query | 可选结果数量限制。 |
+| 其他字段 | Query | 可选依赖值，例如 `series` 或 `event`。 |
+
+Payload: 无。
+
+响应包含 `ref`、带 `label`、`value` 和可选 `parents` 的规范化 `items`，以及可选的 `nextCursor`。
+
+### GET /api/types/:fullname
 
 返回 shared type。
 
@@ -206,7 +225,7 @@ Payload: 无。
 
 响应：[SharedTypeView](types.md#sharedtypeview)。
 
-### PUT /api/v2/types/:fullname
+### PUT /api/types/:fullname
 
 创建或更新 shared type。
 
@@ -225,7 +244,7 @@ Payload:
 
 响应：[SharedTypeView](types.md#sharedtypeview)。
 
-### DELETE /api/v2/types/:fullname
+### DELETE /api/types/:fullname
 
 删除 shared type。
 

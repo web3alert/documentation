@@ -2,7 +2,7 @@
 
 Project endpoints manage marketplace integrations: metadata, visibility/access level, links, and uploaded icon/cover images.
 
-## GET /api/v2/projects
+## GET /api/projects
 
 Returns list of projects available to current account.
 
@@ -17,7 +17,7 @@ Payload: none.
 
 Response: [ProjectView[]](types.md#projectview).
 
-## GET /api/v2/projects/create-capability
+## GET /api/projects/create-capability
 
 Checks whether current account/workspace can create project.
 
@@ -27,7 +27,7 @@ Payload: none.
 
 Response: [ProjectCreateCapability](types.md#projectcreatecapability).
 
-## GET /api/v2/projects/:fullname
+## GET /api/projects/:fullname
 
 Returns project by fullname.
 
@@ -41,7 +41,7 @@ Payload: none.
 
 Response: [ProjectView](types.md#projectview).
 
-## PUT /api/v2/projects/:fullname
+## PUT /api/projects/:fullname
 
 Creates or updates project.
 
@@ -73,7 +73,7 @@ Payload:
 
 Response: [ProjectView](types.md#projectview).
 
-## DELETE /api/v2/projects/:fullname
+## DELETE /api/projects/:fullname
 
 Deletes project.
 
@@ -87,7 +87,7 @@ Payload: none.
 
 Response: [OperationResult](types.md#operationresult).
 
-## GET /api/v2/projects/by-link/:token
+## GET /api/projects/by-link/:token
 
 Opens private project by access link.
 
@@ -101,7 +101,7 @@ Payload: none.
 
 Response: [ProjectView](types.md#projectview).
 
-## POST /api/v2/projects/:fullname/access-links
+## POST /api/projects/:fullname/access-links
 
 Creates access link for private project.
 
@@ -120,7 +120,7 @@ Payload:
 
 Response: [ProjectAccessLink](types.md#projectaccesslink).
 
-## POST /api/v2/projects/:fullname/assets/images
+## POST /api/projects/:fullname/assets/images
 
 Uploads project image for `icon` or `cover`.
 
@@ -141,7 +141,7 @@ Payload:
 
 Response: [ProjectImageUploadResult](types.md#projectimageuploadresult). This URL is then passed to `meta.icon` or `meta.cover` when saving project.
 
-## DELETE /api/v2/projects/:fullname/images/:asset
+## DELETE /api/projects/:fullname/images/:asset
 
 Deletes uploaded project image.
 

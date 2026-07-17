@@ -37,5 +37,6 @@
 * [Subscriptions API](api-subscriptions.md)
 * [Resources API](api-resources.md)
 * [Data Sources API](api-data-sources.md)
+* [API de facturación](api-billing.md)
 * [Addresses API](api-addresses.md)
 * [Apps, Actions, Blueprints and Types API](api-builder-registry.md)

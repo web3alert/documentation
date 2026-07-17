@@ -106,7 +106,7 @@ Payload:
 
 Resposta: [SubscriptionView](types.md#subscriptionview).
 
-## POST /api/v2/subscriptions/test
+## POST /api/subscriptions/test
 
 Testa uma subscription existente ou uma draft subscription.
 
@@ -128,7 +128,7 @@ Payload:
 
 Resposta: [SubscriptionTestResult](types.md#subscriptiontestresult).
 
-## GET /api/v2/subscriptions/alerts/history
+## GET /api/subscriptions/alerts/history
 
 Devolve subscription logs do workspace atual.
 
@@ -145,7 +145,7 @@ Payload: nenhum.
 
 Resposta: [SubscriptionAlertLog[]](types.md#subscriptionalertlog).
 
-## GET /api/v2/subscriptions/:id/alerts/history
+## GET /api/subscriptions/:id/alerts/history
 
 Devolve logs de uma subscription específica.
 

@@ -106,7 +106,7 @@ Endpoints Subscriptions управляют subscriptions workspace, их сос�
 
 Ответ: [SubscriptionView](types.md#subscriptionview).
 
-## POST /api/v2/subscriptions/test
+## POST /api/subscriptions/test
 
 Тестирует существующую subscription или draft subscription.
 
@@ -128,7 +128,7 @@ Endpoints Subscriptions управляют subscriptions workspace, их сос�
 
 Ответ: [SubscriptionTestResult](types.md#subscriptiontestresult).
 
-## GET /api/v2/subscriptions/alerts/history
+## GET /api/subscriptions/alerts/history
 
 Возвращает subscriptions logs текущего workspace.
 
@@ -145,7 +145,7 @@ Endpoints Subscriptions управляют subscriptions workspace, их сос�
 
 Ответ: [SubscriptionAlertLog[]](types.md#subscriptionalertlog).
 
-## GET /api/v2/subscriptions/:id/alerts/history
+## GET /api/subscriptions/:id/alerts/history
 
 Возвращает logs конкретной subscription.
 

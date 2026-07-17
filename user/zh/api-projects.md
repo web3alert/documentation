@@ -2,7 +2,7 @@
 
 Project endpoints 用于管理 marketplace integrations：metadata、visibility/access level、links，以及 uploaded icon/cover images。
 
-## GET /api/v2/projects
+## GET /api/projects
 
 返回当前 account 可访问的 projects 列表。
 
@@ -17,7 +17,7 @@ Payload: 无。
 
 响应：[ProjectView[]](types.md#projectview)。
 
-## GET /api/v2/projects/create-capability
+## GET /api/projects/create-capability
 
 检查当前 account/workspace 是否可以创建 project。
 
@@ -27,7 +27,7 @@ Payload: 无。
 
 响应：[ProjectCreateCapability](types.md#projectcreatecapability)。
 
-## GET /api/v2/projects/:fullname
+## GET /api/projects/:fullname
 
 按 fullname 返回 project。
 
@@ -41,7 +41,7 @@ Payload: 无。
 
 响应：[ProjectView](types.md#projectview)。
 
-## PUT /api/v2/projects/:fullname
+## PUT /api/projects/:fullname
 
 创建或更新 project。
 
@@ -73,7 +73,7 @@ Payload:
 
 响应：[ProjectView](types.md#projectview)。
 
-## DELETE /api/v2/projects/:fullname
+## DELETE /api/projects/:fullname
 
 删除 project。
 
@@ -87,7 +87,7 @@ Payload: 无。
 
 响应：[OperationResult](types.md#operationresult)。
 
-## GET /api/v2/projects/by-link/:token
+## GET /api/projects/by-link/:token
 
 通过 access link 打开 private project。
 
@@ -101,7 +101,7 @@ Payload: 无。
 
 响应：[ProjectView](types.md#projectview)。
 
-## POST /api/v2/projects/:fullname/access-links
+## POST /api/projects/:fullname/access-links
 
 为 private project 创建 access link。
 
@@ -120,7 +120,7 @@ Payload:
 
 响应：[ProjectAccessLink](types.md#projectaccesslink)。
 
-## POST /api/v2/projects/:fullname/assets/images
+## POST /api/projects/:fullname/assets/images
 
 为 `icon` 或 `cover` 上传 project image。
 
@@ -141,7 +141,7 @@ Payload:
 
 响应：[ProjectImageUploadResult](types.md#projectimageuploadresult)。 保存 project 时，这个 URL 会传入 `meta.icon` 或 `meta.cover`。
 
-## DELETE /api/v2/projects/:fullname/images/:asset
+## DELETE /api/projects/:fullname/images/:asset
 
 删除 uploaded project image。
 

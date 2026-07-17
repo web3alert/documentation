@@ -2,7 +2,7 @@
 
 Endpoints Templates управляют root template project, groups, topics и rules.
 
-## GET /api/v2/projects/:fullname/templates
+## GET /api/projects/:fullname/templates
 
 Возвращает templates project.
 
@@ -16,7 +16,7 @@ Endpoints Templates управляют root template project, groups, topics и 
 
 Ответ: [ProjectTemplate[]](types.md#projecttemplate).
 
-## GET /api/v2/projects/:fullname/template
+## GET /api/projects/:fullname/template
 
 Возвращает root template project.
 
@@ -30,7 +30,7 @@ Endpoints Templates управляют root template project, groups, topics и 
 
 Ответ: [ProjectTemplate](types.md#projecttemplate) или not found.
 
-## POST /api/v2/projects/:fullname/templates
+## POST /api/projects/:fullname/templates
 
 Создает template/group для project.
 
@@ -54,7 +54,7 @@ Endpoints Templates управляют root template project, groups, topics и 
 
 Ответ: [ProjectTemplate](types.md#projecttemplate).
 
-## GET /api/v2/projects/:fullname/templates/:id
+## GET /api/projects/:fullname/templates/:id
 
 Возвращает template.
 
@@ -69,7 +69,7 @@ Endpoints Templates управляют root template project, groups, topics и 
 
 Ответ: [ProjectTemplate](types.md#projecttemplate).
 
-## PUT /api/v2/projects/:fullname/templates/:id
+## PUT /api/projects/:fullname/templates/:id
 
 Обновляет template.
 
@@ -80,11 +80,11 @@ Endpoints Templates управляют root template project, groups, topics и 
 | `fullname` | Path | Project fullname. |
 | `id` | Path | Template id. |
 
-Тело запроса: такая же структура, как в `POST /api/v2/projects/:fullname/templates`.
+Тело запроса: такая же структура, как в `POST /api/projects/:fullname/templates`.
 
 Ответ: [ProjectTemplate](types.md#projecttemplate).
 
-## DELETE /api/v2/projects/:fullname/templates/:id
+## DELETE /api/projects/:fullname/templates/:id
 
 Удаляет template.
 

@@ -45,6 +45,7 @@ type LocaleMeta = {
     subscriptionsApi: string;
     resourcesApi: string;
     dataSourcesApi: string;
+    billingApi: string;
     addressesApi: string;
     builderRegistryApi: string;
   };
@@ -94,6 +95,7 @@ const locales: Record<LocaleKey, LocaleMeta> = {
       subscriptionsApi: 'Subscriptions API',
       resourcesApi: 'Resources API',
       dataSourcesApi: 'Data Sources API',
+      billingApi: 'Billing API',
       addressesApi: 'Addresses API',
       builderRegistryApi: 'Apps, Actions, Blueprints and Types API',
     },
@@ -141,6 +143,7 @@ const locales: Record<LocaleKey, LocaleMeta> = {
       subscriptionsApi: 'Subscriptions API',
       resourcesApi: 'Resources API',
       dataSourcesApi: 'Data Sources API',
+      billingApi: 'API биллинга',
       addressesApi: 'Addresses API',
       builderRegistryApi: 'Apps, Actions, Blueprints и Types API',
     },
@@ -188,6 +191,7 @@ const locales: Record<LocaleKey, LocaleMeta> = {
       subscriptionsApi: 'Subscriptions API',
       resourcesApi: 'Resources API',
       dataSourcesApi: 'Data Sources API',
+      billingApi: 'Billing API',
       addressesApi: 'Addresses API',
       builderRegistryApi: 'Apps, Actions, Blueprints and Types API',
     },
@@ -235,6 +239,7 @@ const locales: Record<LocaleKey, LocaleMeta> = {
       subscriptionsApi: 'Subscriptions API',
       resourcesApi: 'Resources API',
       dataSourcesApi: 'Data Sources API',
+      billingApi: 'API de facturación',
       addressesApi: 'Addresses API',
       builderRegistryApi: 'Apps, Actions, Blueprints and Types API',
     },
@@ -282,6 +287,7 @@ const locales: Record<LocaleKey, LocaleMeta> = {
       subscriptionsApi: 'Subscriptions API',
       resourcesApi: 'Resources API',
       dataSourcesApi: 'Data Sources API',
+      billingApi: 'API de faturação',
       addressesApi: 'Addresses API',
       builderRegistryApi: 'Apps, Actions, Blueprints and Types API',
     },
@@ -329,6 +335,7 @@ const locales: Record<LocaleKey, LocaleMeta> = {
       subscriptionsApi: 'Subscriptions API',
       resourcesApi: 'Resources API',
       dataSourcesApi: 'Data Sources API',
+      billingApi: '计费 API',
       addressesApi: 'Addresses API',
       builderRegistryApi: 'Apps, Actions, Blueprints and Types API',
     },
@@ -407,6 +414,7 @@ const createThemeConfig = (locale: LocaleMeta) => {
       { text: locale.sections.subscriptionsApi, link: linkFor(locale, '/api-subscriptions') },
       { text: locale.sections.resourcesApi, link: linkFor(locale, '/api-resources') },
       { text: locale.sections.dataSourcesApi, link: linkFor(locale, '/api-data-sources') },
+      { text: locale.sections.billingApi, link: linkFor(locale, '/api-billing') },
       { text: locale.sections.addressesApi, link: linkFor(locale, '/api-addresses') },
       { text: locale.sections.builderRegistryApi, link: linkFor(locale, '/api-builder-registry') },
     ],

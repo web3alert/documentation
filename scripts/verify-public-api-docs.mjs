@@ -1,0 +1,409 @@
+import { readdir, readFile } from 'node:fs/promises';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const userRoot = path.join(repositoryRoot, 'user');
+const locales = ['en', 'es', 'pt', 'ru', 'zh'];
+
+async function listMarkdownFiles(directory) {
+  const entries = await readdir(directory, { withFileTypes: true });
+  const files = [];
+
+  for (const entry of entries) {
+    const entryPath = path.join(directory, entry.name);
+    if (entry.isDirectory()) {
+      files.push(...await listMarkdownFiles(entryPath));
+    } else if (entry.isFile() && entry.name.endsWith('.md')) {
+      files.push(entryPath);
+    }
+  }
+
+  return files.sort();
+}
+
+const allowedCompatibilityFiles = new Map([
+  ['account', new Set(['api.md', 'api-account.md'])],
+  ['subscription', new Set(['api.md', 'api-subscriptions.md'])],
+  ['addressbook', new Set(['api.md', 'api-addresses.md'])],
+  ['overview', new Set(['api.md'])],
+]);
+
+const allowedCompatibilityRoutes = new Set([
+  'POST /api/v1/token',
+  'DELETE /api/v1/me',
+  'PUT /api/v1/me/meta',
+  'POST /api/v1/me/avatar',
+  'GET /api/v1/me/workspace',
+  'POST /api/v1/me/workspace',
+  'GET /api/v1/account/settings',
+  'POST /api/v1/account/settings',
+  'GET /api/v1/subscriptions',
+  'POST /api/v1/subscriptions',
+  'GET /api/v1/subscriptions/:id',
+  'POST /api/v1/subscriptions/:id',
+  'DELETE /api/v1/subscriptions/:id',
+  'POST /api/v1/subscriptions/:id/state',
+  'GET /api/v1/addressbook',
+  'POST /api/v1/addressbook',
+  'POST /api/v1/addressbook/:id',
+  'DELETE /api/v1/addressbook/:id',
+]);
+
+const expectedApiFiles = [
+  'api-account.md',
+  'api-addresses.md',
+  'api-billing.md',
+  'api-builder-registry.md',
+  'api-data-sources.md',
+  'api-project-transfers.md',
+  'api-projects.md',
+  'api-resources.md',
+  'api-subscriptions.md',
+  'api-templates.md',
+  'api-trigger-import.md',
+  'api-triggers.md',
+  'api-workspaces.md',
+  'api.md',
+].sort();
+
+// Audited client-facing projection of createCanonicalApiRoutePlan(true).
+// Any runtime route addition must be explicitly classified before it becomes
+// part of the public documentation contract.
+const publicCanonicalRoutes = [
+  'GET /api/me',
+  'GET /api/workspaces',
+  'GET /api/workspaces/:fullname',
+  'PUT /api/workspaces/:fullname',
+  'DELETE /api/workspaces/:fullname',
+  'POST /api/workspaces/:fullname/avatar',
+  'GET /api/workspaces/:workspace/acl',
+  'POST /api/workspaces/:workspace/acl',
+  'PUT /api/workspaces/:workspace/acl/:entryId',
+  'DELETE /api/workspaces/:workspace/acl/:entryId',
+  'GET /api/projects',
+  'GET /api/projects/create-capability',
+  'GET /api/projects/by-link/:token',
+  'GET /api/projects/:fullname',
+  'PUT /api/projects/:fullname',
+  'DELETE /api/projects/:fullname',
+  'POST /api/projects/:fullname/access-links',
+  'POST /api/projects/:fullname/assets/images',
+  'DELETE /api/projects/:fullname/images/:asset',
+  'POST /api/projects/:fullname/transfer/plan',
+  'POST /api/projects/:fullname/transfer-requests',
+  'GET /api/project-transfer-requests',
+  'POST /api/project-transfer-requests/:id/accept',
+  'POST /api/project-transfer-requests/:id/reject',
+  'POST /api/project-transfer-requests/:id/cancel',
+  'GET /api/projects/:fullname/templates',
+  'POST /api/projects/:fullname/templates',
+  'GET /api/projects/:fullname/templates/:id',
+  'PUT /api/projects/:fullname/templates/:id',
+  'DELETE /api/projects/:fullname/templates/:id',
+  'GET /api/projects/:fullname/template',
+  'GET /api/triggers',
+  'GET /api/triggers/:fullname',
+  'PUT /api/triggers/:fullname',
+  'PATCH /api/triggers/:fullname',
+  'DELETE /api/triggers/:fullname',
+  'GET /api/triggers/:fullname/draft',
+  'PUT /api/triggers/:fullname/draft',
+  'POST /api/triggers/:fullname/draft/validate',
+  'GET /api/triggers/:fullname/logs',
+  'POST /api/triggers/:fullname/reset-test-status',
+  'POST /api/triggers/patch',
+  'POST /api/triggers/remove',
+  'POST /api/triggers/test',
+  'POST /api/triggers/test-block',
+  'POST /api/triggers/providers/test',
+  'POST /api/triggers/find-latest-block',
+  'GET /api/triggers/hypercore/actions',
+  'GET /api/triggers/runtime-sources',
+  'POST /api/triggers/preview',
+  'POST /api/triggers/import/evm',
+  'POST /api/triggers/import/evm/drafts',
+  'POST /api/triggers/import/evm/abi',
+  'POST /api/triggers/import/hypercore/drafts',
+  'POST /api/triggers/import/solana/drafts',
+  'POST /api/triggers/import/solana/idl',
+  'POST /api/triggers/import/substrate/drafts',
+  'GET /api/triggers/substrate/source',
+  'GET /api/triggers/substrate/pallets',
+  'GET /api/triggers/substrate/pallet',
+  'POST /api/subscriptions/test',
+  'GET /api/subscriptions/:id/alerts/history',
+  'GET /api/subscriptions/alerts/history',
+  'GET /api/resources',
+  'GET /api/resources/:fullname',
+  'PUT /api/resources/:fullname',
+  'DELETE /api/resources/:fullname',
+  'POST /api/resources/:fullname/setup-sessions',
+  'GET /api/resources/:fullname/setup-sessions/:id',
+  'DELETE /api/resources/:fullname/setup-sessions/:id',
+  'GET /api/resources/external/:token',
+  'POST /api/resources/external/:token',
+  'GET /api/actions',
+  'GET /api/actions/:fullname',
+  'PUT /api/actions/:fullname',
+  'DELETE /api/actions/:fullname',
+  'GET /api/blueprints',
+  'GET /api/blueprints/:fullname',
+  'PUT /api/blueprints/:fullname',
+  'DELETE /api/blueprints/:fullname',
+  'GET /api/apps',
+  'GET /api/apps/:fullname',
+  'PUT /api/apps/:fullname',
+  'DELETE /api/apps/:fullname',
+  'GET /api/types',
+  'GET /api/types/lookup',
+  'GET /api/types/:fullname',
+  'PUT /api/types/:fullname',
+  'DELETE /api/types/:fullname',
+  'GET /api/custom-sources',
+  'GET /api/custom-sources/create-capability',
+  'POST /api/custom-sources/verify',
+  'GET /api/custom-sources/:fullname',
+  'PUT /api/custom-sources/:fullname',
+  'DELETE /api/custom-sources/:fullname',
+  'GET /api/custom-sources/:fullname/logs',
+  'POST /api/custom-sources/:fullname/restart',
+  'POST /api/custom-sources/:fullname/reset-lag',
+  'POST /api/custom-sources/:fullname/test-status',
+  'GET /api/billing/overview',
+  'GET /api/billing/wallet/overview',
+  'POST /api/billing/wallet/crypto-topup',
+  'POST /api/billing/wallet/topup/refresh',
+  'POST /api/billing/account-plan/balance-purchase',
+  'POST /api/billing/account-plan/checkout',
+  'POST /api/billing/account-plan/crypto-checkout',
+  'POST /api/billing/project-addon/balance-purchase',
+  'POST /api/billing/project-addon/checkout',
+  'POST /api/billing/project-addon/crypto-checkout',
+  'POST /api/billing/coupon/redeem',
+  'POST /api/billing/coupon/gift-purchase',
+  'GET /api/billing/referral/overview',
+  'POST /api/billing/referral/link/create',
+  'POST /api/billing/referral/claim',
+  'POST /api/billing/subscription/update-renewal',
+  'POST /api/billing/crypto-checkout/refresh',
+  'POST /api/billing/crypto-checkout/cancel',
+];
+
+const excludedCanonicalRoutes = new Map([
+  ['POST /api/projects/:fullname/transfer', 'platform-owner direct project transfer'],
+  [
+    'GET /api/project-transfer-requests/admin/projects',
+    'platform-owner project inventory',
+  ],
+  [
+    'GET /api/project-transfer-requests/admin/workspaces',
+    'platform-owner workspace inventory',
+  ],
+  ['POST /api/billing/paynow/crypto/webhook', 'signed billing-provider callback'],
+  ['POST /api/billing/xmoney/crypto/webhook', 'signed billing-provider callback'],
+  [
+    'POST /api/billing/workspace-coupon/overview',
+    'common-workspace coupon administration',
+  ],
+  [
+    'POST /api/billing/workspace-coupon/generate',
+    'common-workspace coupon administration',
+  ],
+  [
+    'POST /api/billing/workspace-coupon/remove',
+    'common-workspace coupon administration',
+  ],
+]);
+
+function classifyAllowedV1Path(apiPath) {
+  if (apiPath == '/api/v1/*') return 'overview';
+  if (/^\/api\/v1\/(?:token|me|me\/(?:meta|avatar|workspace)|account\/settings)$/.test(apiPath)) {
+    return 'account';
+  }
+  if (/^\/api\/v1\/subscriptions(?:\/:id(?:\/state)?)?$/.test(apiPath)) {
+    return 'subscription';
+  }
+  if (/^\/api\/v1\/addressbook(?:\/:id)?$/.test(apiPath)) {
+    return 'addressbook';
+  }
+  return undefined;
+}
+
+function documentedRoutes(markdown) {
+  return [...markdown.matchAll(/^#{2,6} (GET|POST|PUT|PATCH|DELETE) (\/api\/\S+)$/gm)]
+    .map(([, method, apiPath]) => `${method} ${apiPath}`)
+    .sort();
+}
+
+function overviewRoutes(markdown) {
+  return [...markdown.matchAll(
+    /^\| `(GET|POST|PUT|PATCH|DELETE)` \| `(\/api\/[^`]+)` \|/gm,
+  )]
+    .map(([, method, apiPath]) => `${method} ${apiPath}`)
+    .sort();
+}
+
+function unique(values) {
+  return [...new Set(values)].sort();
+}
+
+function duplicates(values) {
+  const seen = new Set();
+  const repeated = new Set();
+  for (const value of values) {
+    if (seen.has(value)) {
+      repeated.add(value);
+    }
+    seen.add(value);
+  }
+  return [...repeated].sort();
+}
+
+function escapeRegex(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function routePath(route) {
+  return route.slice(route.indexOf(' ') + 1);
+}
+
+function compareRouteSets(actual, expected, context) {
+  const actualSet = new Set(actual);
+  const expectedSet = new Set(expected);
+  const missing = expected.filter(route => !actualSet.has(route));
+  const extra = actual.filter(route => !expectedSet.has(route));
+
+  if (missing.length > 0) {
+    issues.push(`${context}: missing routes: ${missing.join(', ')}`);
+  }
+  if (extra.length > 0) {
+    issues.push(`${context}: unexpected routes: ${extra.join(', ')}`);
+  }
+}
+
+const issues = [];
+const files = await listMarkdownFiles(userRoot);
+const expectedPublicAndCompatibilityRoutes = unique([
+  ...publicCanonicalRoutes,
+  ...allowedCompatibilityRoutes,
+]);
+
+if (publicCanonicalRoutes.length != 117) {
+  issues.push(`public canonical manifest must contain 117 routes, found ${publicCanonicalRoutes.length}`);
+}
+if (new Set(publicCanonicalRoutes).size != publicCanonicalRoutes.length) {
+  issues.push(`public canonical manifest contains duplicates: ${duplicates(publicCanonicalRoutes).join(', ')}`);
+}
+if (allowedCompatibilityRoutes.size != 18) {
+  issues.push(`compatibility manifest must contain 18 routes, found ${allowedCompatibilityRoutes.size}`);
+}
+if (excludedCanonicalRoutes.size != 8) {
+  issues.push(`canonical exclusion manifest must contain 8 routes, found ${excludedCanonicalRoutes.size}`);
+}
+if (expectedPublicAndCompatibilityRoutes.length != 135) {
+  issues.push(
+    `combined public manifest must contain 135 routes, found ${expectedPublicAndCompatibilityRoutes.length}`,
+  );
+}
+for (const [excludedRoute, reason] of excludedCanonicalRoutes) {
+  if (publicCanonicalRoutes.includes(excludedRoute)) {
+    issues.push(`excluded route is also public: ${excludedRoute} (${reason})`);
+  }
+}
+
+for (const file of files) {
+  const relativePath = path.relative(userRoot, file);
+  const basename = path.basename(file);
+  const markdown = await readFile(file, 'utf8');
+  const lines = markdown.split('\n');
+
+  for (const [index, line] of lines.entries()) {
+    if (/\/internal(?:\/|\b)/.test(line)) {
+      issues.push(`${relativePath}:${index + 1}: service-only API namespace is not public`);
+    }
+    for (const [excludedRoute, reason] of excludedCanonicalRoutes) {
+      const excludedPath = routePath(excludedRoute);
+      const exactPathPattern = new RegExp(
+        `${escapeRegex(excludedPath)}(?![A-Za-z0-9_:/-])`,
+      );
+      if (exactPathPattern.test(line)) {
+        issues.push(
+          `${relativePath}:${index + 1}: excluded route must not be public: ${excludedRoute} (${reason})`,
+        );
+      }
+    }
+    for (const match of line.matchAll(/\/api\/v\d+(?:\/(?:[A-Za-z0-9_:/-]+|\*))?/g)) {
+      const apiPath = match[0];
+      if (!apiPath.startsWith('/api/v1/')) {
+        issues.push(`${relativePath}:${index + 1}: use a canonical /api path instead of ${apiPath}`);
+        continue;
+      }
+      const group = classifyAllowedV1Path(apiPath);
+      if (!group || !allowedCompatibilityFiles.get(group)?.has(basename)) {
+        issues.push(`${relativePath}:${index + 1}: unexpected compatibility path ${apiPath}`);
+      }
+    }
+
+    for (const match of line.matchAll(
+      /\b(GET|POST|PUT|PATCH|DELETE)\b[`\s|]{1,12}(\/api\/v1\/(?:[A-Za-z0-9_:/-]+|\*))/g,
+    )) {
+      const route = `${match[1]} ${match[2]}`;
+      if (!allowedCompatibilityRoutes.has(route)) {
+        issues.push(`${relativePath}:${index + 1}: unexpected compatibility route ${route}`);
+      }
+    }
+  }
+}
+
+for (const locale of locales) {
+  const localeFiles = (await listMarkdownFiles(path.join(userRoot, locale)))
+    .filter(file => /^api(?:-|\.md$)/.test(path.basename(file)));
+  const apiFiles = localeFiles.map(file => path.basename(file)).sort();
+  compareRouteSets(apiFiles, expectedApiFiles, `${locale}: API files`);
+
+  const detailedRoutesRaw = [];
+  for (const file of localeFiles.filter(file => path.basename(file) != 'api.md')) {
+    detailedRoutesRaw.push(...documentedRoutes(await readFile(file, 'utf8')));
+  }
+
+  const overview = await readFile(path.join(userRoot, locale, 'api.md'), 'utf8');
+  const overviewRoutesRaw = overviewRoutes(overview);
+  const repeatedDetailedRoutes = duplicates(detailedRoutesRaw);
+  const repeatedOverviewRoutes = duplicates(overviewRoutesRaw);
+  if (repeatedDetailedRoutes.length > 0) {
+    issues.push(`${locale}: duplicate detailed API routes: ${repeatedDetailedRoutes.join(', ')}`);
+  }
+  if (repeatedOverviewRoutes.length > 0) {
+    issues.push(`${locale}: duplicate API overview routes: ${repeatedOverviewRoutes.join(', ')}`);
+  }
+
+  const detailedRoutes = unique(detailedRoutesRaw);
+  const routesFromOverview = unique(overviewRoutesRaw);
+  compareRouteSets(
+    detailedRoutes,
+    expectedPublicAndCompatibilityRoutes,
+    `${locale}: detailed routes compared with audited public and compatibility manifests`,
+  );
+  compareRouteSets(
+    routesFromOverview,
+    expectedPublicAndCompatibilityRoutes,
+    `${locale}: overview routes compared with audited public and compatibility manifests`,
+  );
+  compareRouteSets(
+    routesFromOverview,
+    detailedRoutes,
+    `${locale}: overview compared with detailed API pages`,
+  );
+}
+
+if (issues.length > 0) {
+  console.error(issues.join('\n'));
+  process.exit(1);
+}
+
+console.log(
+  `Verified ${files.length} public Markdown files, ${publicCanonicalRoutes.length} canonical routes, `
+  + `${allowedCompatibilityRoutes.size} compatibility routes, and ${expectedApiFiles.length} API files `
+  + `across ${locales.length} locales`,
+);
