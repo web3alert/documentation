@@ -303,6 +303,16 @@ Payload: 无。
 
 响应：[RuntimeSource[]](types.md#runtimesource)。
 
+## GET /api/template-helpers
+
+返回 trigger defaults 和订阅 action 模板可用的公开 Handlebars helper 元数据。无需身份验证。
+
+参数：无。
+
+请求体：无。
+
+响应包含 `handlebars.helpers` 数组。每个 helper 都有唯一的 `name` 和 `description`；块 helper 还包含 `block: true`，带命名选项的 helper 则包含由 `name` 和 `type` 组成的 `params` 数组。
+
 ## POST /api/triggers/find-latest-block
 
 为 trigger testing 查找 latest block/test input。

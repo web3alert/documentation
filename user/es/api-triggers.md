@@ -304,6 +304,16 @@ Payload: ninguno.
 
 Respuesta: [RuntimeSource[]](types.md#runtimesource).
 
+## GET /api/template-helpers
+
+Devuelve metadatos públicos de los helpers de Handlebars disponibles en los valores predeterminados de triggers y en las plantillas de actions de suscripciones. No requiere autenticación.
+
+Argumentos: ninguno.
+
+Payload: ninguno.
+
+La respuesta contiene un array `handlebars.helpers`. Cada helper tiene un `name` único y una `description`; los helpers de bloque también tienen `block: true`, y los helpers con opciones con nombre incluyen un array `params` con `name` y `type`.
+
 ## POST /api/triggers/find-latest-block
 
 Encuentra latest block/test input para trigger testing.

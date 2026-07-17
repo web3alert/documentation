@@ -141,6 +141,7 @@ Detalhes: [Triggers API](api-triggers.md).
 | `POST` | `/api/triggers/providers/test` | Testar um provider. |
 | `GET` | `/api/triggers/hypercore/actions` | Listar actions HyperCore disponíveis no builder. |
 | `GET` | `/api/triggers/runtime-sources` | Listar runtime data sources. |
+| `GET` | `/api/template-helpers` | Listar metadados públicos dos helpers Handlebars para templates de triggers e actions. |
 | `POST` | `/api/triggers/find-latest-block` | Encontrar ou preparar test input/block para trigger. |
 
 ## Trigger Import

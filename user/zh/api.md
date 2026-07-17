@@ -141,6 +141,7 @@ X-RateLimit-Window: 60000
 | `POST` | `/api/triggers/providers/test` | Test 单个 provider。 |
 | `GET` | `/api/triggers/hypercore/actions` | 获取 builder 可用的 HyperCore actions。 |
 | `GET` | `/api/triggers/runtime-sources` | runtime data sources 列表。 |
+| `GET` | `/api/template-helpers` | 获取用于 trigger 和 action 模板的公开 Handlebars helper 元数据。 |
 | `POST` | `/api/triggers/find-latest-block` | 为 trigger 查找或准备 test input/block。 |
 
 ## Trigger Import

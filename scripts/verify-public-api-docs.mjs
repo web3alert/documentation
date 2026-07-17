@@ -100,6 +100,7 @@ const publicCanonicalRoutes = [
   'POST /api/triggers/find-latest-block',
   'GET /api/triggers/hypercore/actions',
   'GET /api/triggers/runtime-sources',
+  'GET /api/template-helpers',
   'POST /api/triggers/preview',
   'POST /api/triggers/import/evm',
   'POST /api/triggers/import/evm/drafts',
@@ -262,8 +263,8 @@ const issues = [];
 const files = await listMarkdownFiles(userRoot);
 const expectedPublicRoutes = unique(publicCanonicalRoutes);
 
-if (publicCanonicalRoutes.length != 135) {
-  issues.push(`public canonical manifest must contain 135 routes, found ${publicCanonicalRoutes.length}`);
+if (publicCanonicalRoutes.length != 136) {
+  issues.push(`public canonical manifest must contain 136 routes, found ${publicCanonicalRoutes.length}`);
 }
 if (new Set(publicCanonicalRoutes).size != publicCanonicalRoutes.length) {
   issues.push(`public canonical manifest contains duplicates: ${duplicates(publicCanonicalRoutes).join(', ')}`);
@@ -271,8 +272,8 @@ if (new Set(publicCanonicalRoutes).size != publicCanonicalRoutes.length) {
 if (excludedCanonicalRoutes.size != 8) {
   issues.push(`canonical exclusion manifest must contain 8 routes, found ${excludedCanonicalRoutes.size}`);
 }
-if (expectedPublicRoutes.length != 135) {
-  issues.push(`public route manifest must contain 135 routes, found ${expectedPublicRoutes.length}`);
+if (expectedPublicRoutes.length != 136) {
+  issues.push(`public route manifest must contain 136 routes, found ${expectedPublicRoutes.length}`);
 }
 for (const [excludedRoute, reason] of excludedCanonicalRoutes) {
   if (publicCanonicalRoutes.includes(excludedRoute)) {

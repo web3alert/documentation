@@ -141,6 +141,7 @@ X-RateLimit-Window: 60000
 | `POST` | `/api/triggers/providers/test` | Тест одного provider. |
 | `GET` | `/api/triggers/hypercore/actions` | Получить HyperCore actions для builder. |
 | `GET` | `/api/triggers/runtime-sources` | Список runtime data sources. |
+| `GET` | `/api/template-helpers` | Получить публичные метаданные helper-функций Handlebars для шаблонов triggers и actions. |
 | `POST` | `/api/triggers/find-latest-block` | Найти или подготовить test input/block для trigger. |
 
 ## Trigger Import

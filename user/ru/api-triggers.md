@@ -304,6 +304,16 @@ transforms над переданным input, затем валидирует п
 
 Ответ: [RuntimeSource[]](types.md#runtimesource).
 
+## GET /api/template-helpers
+
+Возвращает публичные метаданные helper-функций Handlebars, доступных в defaults trigger и шаблонах actions подписки. Аутентификация не требуется.
+
+Аргументы: нет.
+
+Тело запроса: нет.
+
+Ответ содержит массив `handlebars.helpers`. У каждой helper-функции есть уникальный `name` и `description`; у блочных helpers также указано `block: true`, а helpers с именованными параметрами содержат массив `params` с полями `name` и `type`.
+
 ## POST /api/triggers/find-latest-block
 
 Находит latest block/test input для trigger testing.
