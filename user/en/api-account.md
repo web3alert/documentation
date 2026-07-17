@@ -2,11 +2,15 @@
 
 Account endpoints work with current user, metadata, avatar, and selected workspace.
 
-All endpoints require `Authorization: Bearer <token>`, except cases when token is created after an external auth flow.
+All Account endpoints except `POST /api/token` require `Authorization: Bearer <token>`.
 
 ## POST /api/token
 
-Creates or returns API token for authenticated identity.
+`POST /api/token` does not require an existing `Authorization: Bearer <token>` header. The provider-specific `credentials` authenticate the identity through the selected `app`.
+
+Every successful request creates a fresh persistent Bearer token; it does not reuse or return an earlier token. On the first successful login for an identity, the service may also create an account and workspace.
+
+<!-- api-contract: auth=provider-credentials; existing-bearer=not-required; token=fresh-persistent; first-login=may-provision-account-workspace -->
 
 Arguments: no path/query arguments.
 
@@ -18,6 +22,30 @@ Payload:
 | `credentials` | Yes | Provider-specific credentials object. |
 
 Response: [TokenResponse](types.md#tokenresponse).
+
+Example request (the missing `Authorization` header is intentional):
+
+```http
+POST /api/token
+Content-Type: application/json
+
+{
+  "app": "google",
+  "credentials": {
+    "credential": "<provider-issued-credential>"
+  }
+}
+```
+
+Example response:
+
+```json
+{
+  "token": "<new-bearer-token>"
+}
+```
+
+Provider credentials and the returned token are secrets. Send them only over HTTPS; never log, publish, or commit them.
 
 ## GET /api/me
 

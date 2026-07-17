@@ -2,11 +2,15 @@
 
 Account endpoints 用于处理当前用户、metadata、avatar 和选中的 workspace。
 
-除 token 在 external auth flow 后创建的情况外，所有 endpoints 都需要 `Authorization: Bearer <token>`。
+除 `POST /api/token` 外，所有 Account endpoints 都需要 `Authorization: Bearer <token>`。
 
 ## POST /api/token
 
-为已认证的 identity 创建或返回 API token。
+`POST /api/token` 无需现有的 `Authorization: Bearer <token>` header。所选 `app` 对应的 provider-specific `credentials` 用于验证 identity。
+
+每次成功请求都会创建一个新的持久化 Bearer token；不会复用或返回之前签发的 token。identity 首次成功登录时，服务还可能创建 account 和 workspace。
+
+<!-- api-contract: auth=provider-credentials; existing-bearer=not-required; token=fresh-persistent; first-login=may-provision-account-workspace -->
 
 参数：无 path/query 参数。
 
@@ -18,6 +22,30 @@ Payload:
 | `credentials` | 是 | Provider 专用 credentials 对象。 |
 
 响应：[TokenResponse](types.md#tokenresponse)。
+
+请求示例（特意不包含 `Authorization` header）：
+
+```http
+POST /api/token
+Content-Type: application/json
+
+{
+  "app": "google",
+  "credentials": {
+    "credential": "<provider-issued-credential>"
+  }
+}
+```
+
+响应示例：
+
+```json
+{
+  "token": "<new-bearer-token>"
+}
+```
+
+Provider credentials 和返回的 token 都是敏感信息。仅通过 HTTPS 发送，切勿记录到日志、公开或提交到代码仓库。
 
 ## GET /api/me
 

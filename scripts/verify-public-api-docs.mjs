@@ -444,6 +444,89 @@ function validateMeMetaContract(section, requirementTokens) {
   return errors;
 }
 
+function validateTokenContract(section, requirementTokens, contractMarker) {
+  if (section == null) {
+    return ['token route section is missing'];
+  }
+
+  const errors = [];
+  const contractMarkers = section
+    .split('\n')
+    .map(line => line.trim())
+    .filter(line => line.startsWith('<!-- api-contract:'));
+  if (contractMarkers.length != 1 || contractMarkers[0] != contractMarker) {
+    errors.push('token route must carry the exact authentication and issuance contract marker');
+  }
+
+  const payloadTables = markdownTables(section)
+    .filter(table => table.rows.some(row => tableField(row) == 'credentials'));
+  if (payloadTables.length != 1) {
+    errors.push(`token payload must contain one contract table, found ${payloadTables.length}`);
+  } else {
+    const [payload] = payloadTables;
+    const payloadFields = payload.rows.map(tableField);
+    if (payload.header.length != 3 || !exactValues(payloadFields, ['app', 'credentials'])) {
+      errors.push('token payload table must contain exactly app and credentials');
+    }
+    for (const field of ['app', 'credentials']) {
+      if (payload.rows.find(row => tableField(row) == field)?.[1] != requirementTokens.required) {
+        errors.push(`token payload ${field} field must be required`);
+      }
+    }
+  }
+
+  const tokenResponseLinks = section.match(
+    /\[TokenResponse\]\(types\.md#tokenresponse\)/g,
+  ) ?? [];
+  if (tokenResponseLinks.length != 1) {
+    errors.push('token route must reference TokenResponse exactly once');
+  }
+
+  const requestBlocks = [...section.matchAll(/```http\s*\n([\s\S]*?)\n```/g)]
+    .map(([, request]) => request);
+  if (requestBlocks.length != 1) {
+    errors.push(`token route must contain one HTTP request example, found ${requestBlocks.length}`);
+  } else {
+    const [request] = requestBlocks;
+    if (!request.startsWith('POST /api/token\n')) {
+      errors.push('token request example must use canonical POST /api/token');
+    }
+    if (/^Authorization\s*:/im.test(request)) {
+      errors.push('token request example must not send an Authorization header');
+    }
+    if (!request.includes('"credential": "<provider-issued-credential>"')) {
+      errors.push('token request example must use the safe provider credential placeholder');
+    }
+  }
+
+  if (!section.includes('"token": "<new-bearer-token>"')) {
+    errors.push('token response example must use the safe new Bearer token placeholder');
+  }
+  if (!section.includes('HTTPS')) {
+    errors.push('token route must document HTTPS handling for credentials and returned token');
+  }
+
+  return errors;
+}
+
+function validateTokenSummaryContract(markdown, contractMarker) {
+  const row = markdown
+    .split('\n')
+    .find(line => line.startsWith('| `POST` | `/api/token` |'));
+  if (row == null) {
+    return ['token overview row is missing'];
+  }
+
+  const errors = [];
+  if (!row.includes(contractMarker)) {
+    errors.push('token overview row must carry the exact authentication and issuance marker');
+  }
+  if (!inlineCodeTokens(row).includes('credentials')) {
+    errors.push('token overview row must identify provider credentials');
+  }
+  return errors;
+}
+
 function validateWorkspaceAvatarContract(
   section,
   requirementTokens,
@@ -599,6 +682,8 @@ const issues = [];
 const files = await listMarkdownFiles(userRoot);
 const expectedPublicRoutes = unique(publicCanonicalRoutes);
 const empty204ContractMarker = '<!-- api-contract: response=204; body=empty -->';
+const tokenContractMarker = '<!-- api-contract: auth=provider-credentials; existing-bearer=not-required; token=fresh-persistent; first-login=may-provision-account-workspace -->';
+const tokenSummaryContractMarker = '<!-- api-contract: auth=provider-credentials; existing-bearer=not-required; token=fresh-persistent -->';
 const expectedAddressTypes = ['plain', 'ss58', 'evm', 'solana', 'bitcoin', 'cosmos'];
 const expectedWorkspaceAvatarResponseFields = [
   'url',
@@ -1077,6 +1162,19 @@ for (const locale of locales) {
     path.join(userRoot, locale, 'api-account.md'),
     'utf8',
   );
+  for (const error of validateTokenContract(
+    routeSection(account, 'POST /api/token'),
+    requirementTokens,
+    tokenContractMarker,
+  )) {
+    issues.push(`${locale}: ${error}`);
+  }
+  for (const error of validateTokenSummaryContract(
+    overview,
+    tokenSummaryContractMarker,
+  )) {
+    issues.push(`${locale}: ${error}`);
+  }
   for (const error of validateMeMetaContract(
     routeSection(account, 'PUT /api/me/meta'),
     requirementTokens,

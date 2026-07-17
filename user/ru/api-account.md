@@ -2,11 +2,15 @@
 
 Endpoints Account работают с текущим пользователем, его метаданными, аватаром и выбранным workspace.
 
-Все endpoints требуют `Authorization: Bearer <token>`, кроме случаев, когда токен создается после внешнего процесса авторизации.
+Все endpoints Account, кроме `POST /api/token`, требуют `Authorization: Bearer <token>`.
 
 ## POST /api/token
 
-Создает или возвращает API-токен для авторизованной identity.
+`POST /api/token` не требует существующего header `Authorization: Bearer <token>`. Учетные данные provider в `credentials` подтверждают identity через выбранный `app`.
+
+Каждый успешный запрос создает новый постоянный Bearer-токен; ранее выданный токен не переиспользуется и не возвращается. При первом успешном входе для identity сервис также может создать account и workspace.
+
+<!-- api-contract: auth=provider-credentials; existing-bearer=not-required; token=fresh-persistent; first-login=may-provision-account-workspace -->
 
 Аргументы: path/query аргументов нет.
 
@@ -18,6 +22,30 @@ Endpoints Account работают с текущим пользователем,
 | `credentials` | Да | Учетные данные выбранного provider. |
 
 Ответ: [TokenResponse](types.md#tokenresponse).
+
+Пример запроса (header `Authorization` намеренно отсутствует):
+
+```http
+POST /api/token
+Content-Type: application/json
+
+{
+  "app": "google",
+  "credentials": {
+    "credential": "<provider-issued-credential>"
+  }
+}
+```
+
+Пример ответа:
+
+```json
+{
+  "token": "<new-bearer-token>"
+}
+```
+
+Учетные данные provider и возвращенный токен — секреты. Отправляйте их только по HTTPS; не записывайте в логи, не публикуйте и не добавляйте в commits.
 
 ## GET /api/me
 

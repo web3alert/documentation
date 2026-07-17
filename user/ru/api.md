@@ -62,7 +62,7 @@ X-RateLimit-Window: 60000
 
 | Метод | Endpoint | Назначение |
 | --- | --- | --- |
-| `POST` | `/api/token` | Создать или получить API-токен после процесса авторизации. |
+| `POST` | `/api/token` | Подтвердить identity через `credentials` provider и создать новый постоянный Bearer-токен; существующий Bearer-токен не нужен. <!-- api-contract: auth=provider-credentials; existing-bearer=not-required; token=fresh-persistent --> |
 | `GET` | `/api/me` | Получить текущий account, identity, tier и memberships. |
 | `DELETE` | `/api/me` | Удалить текущий account. |
 | `PUT` | `/api/me/meta` | Обновить метаданные account. |
