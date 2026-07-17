@@ -82,7 +82,15 @@ Payload:
 | `contentType` | Sí | MIME type de la imagen. |
 | `data` | Sí | Datos de imagen en Base64. |
 
-Respuesta: [AvatarUploadResult](types.md#avataruploadresult).
+Respuesta: HTTP 200 OK.
+
+| Campo | Obligatorio | Descripción |
+| --- | --- | --- |
+| `url` | Sí | URL del avatar cargado. El mismo valor se guarda en `workspace.meta.avatar`. |
+| `fileName` | Sí | Nombre del archivo guardado. |
+| `extension` | Sí | Extensión del archivo. |
+| `size` | Sí | Tamaño del archivo en bytes. |
+| `workspace` | Sí | [WorkspaceView](types.md#workspaceview) actualizado, incluida la nueva metadata del avatar. |
 
 ## GET /api/workspaces/:workspace/acl
 
@@ -114,7 +122,8 @@ Payload:
 | --- | --- | --- |
 | `invite` | Sí | Invite id/token. |
 
-Respuesta: [WorkspaceAclEntry](types.md#workspaceaclentry).
+Respuesta: HTTP 204 No Content con un cuerpo vacío.
+<!-- api-contract: response=204; body=empty -->
 
 ## PUT /api/workspaces/:workspace/acl/:entryId
 
@@ -133,7 +142,8 @@ Payload:
 | --- | --- | --- |
 | `level` | Sí | Uno de `owner`, `admin`, `developer`, `user`. |
 
-Respuesta: [WorkspaceAclEntry](types.md#workspaceaclentry).
+Respuesta: HTTP 204 No Content con un cuerpo vacío.
+<!-- api-contract: response=204; body=empty -->
 
 ## DELETE /api/workspaces/:workspace/acl/:entryId
 

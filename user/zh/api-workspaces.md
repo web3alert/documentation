@@ -82,7 +82,15 @@ Payload:
 | `contentType` | 是 | 图片 MIME type。 |
 | `data` | 是 | Base64 图片数据。 |
 
-响应：[AvatarUploadResult](types.md#avataruploadresult)。
+响应：HTTP 200 OK。
+
+| 字段 | 必填 | 说明 |
+| --- | --- | --- |
+| `url` | 是 | 已上传 avatar 的 URL。相同值会保存到 `workspace.meta.avatar`。 |
+| `fileName` | 是 | 保存后的文件名。 |
+| `extension` | 是 | 文件扩展名。 |
+| `size` | 是 | 文件大小，单位为字节。 |
+| `workspace` | 是 | 更新后的 [WorkspaceView](types.md#workspaceview)，包含新的 avatar metadata。 |
 
 ## GET /api/workspaces/:workspace/acl
 
@@ -114,7 +122,8 @@ Payload:
 | --- | --- | --- |
 | `invite` | 是 | Invite id/token. |
 
-响应：[WorkspaceAclEntry](types.md#workspaceaclentry)。
+响应：HTTP 204 No Content，响应体为空。
+<!-- api-contract: response=204; body=empty -->
 
 ## PUT /api/workspaces/:workspace/acl/:entryId
 
@@ -133,7 +142,8 @@ Payload:
 | --- | --- | --- |
 | `level` | 是 | `owner`、`admin`、`developer`、`user` 之一。 |
 
-响应：[WorkspaceAclEntry](types.md#workspaceaclentry)。
+响应：HTTP 204 No Content，响应体为空。
+<!-- api-contract: response=204; body=empty -->
 
 ## DELETE /api/workspaces/:workspace/acl/:entryId
 

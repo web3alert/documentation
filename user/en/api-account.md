@@ -49,9 +49,13 @@ Payload:
 
 | Field | Required | Description |
 | --- | --- | --- |
-| `nickname` | No | User display name, 2-80 characters. |
+| `nickname` | Yes | User display name, 2-80 characters. Leading and trailing whitespace is trimmed before the value is saved and returned. |
 
-Response: [Me](types.md#me).
+Response: HTTP 200 OK.
+
+| Field | Required | Description |
+| --- | --- | --- |
+| `nickname` | Yes | Trimmed nickname that was saved. |
 
 ## POST /api/me/avatar
 

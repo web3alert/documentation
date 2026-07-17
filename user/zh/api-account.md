@@ -49,9 +49,13 @@ Payload:
 
 | 字段 | 必填 | 说明 |
 | --- | --- | --- |
-| `nickname` | 否 | 用户 display name，2-80 个字符。 |
+| `nickname` | 是 | 用户 display name，2-80 个字符。保存并返回前会去除首尾空白。 |
 
-响应：[Me](types.md#me)。
+响应：HTTP 200 OK。
+
+| 字段 | 必填 | 说明 |
+| --- | --- | --- |
+| `nickname` | 是 | 已保存的去除首尾空白后的 nickname。 |
 
 ## POST /api/me/avatar
 

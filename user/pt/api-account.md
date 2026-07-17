@@ -49,9 +49,13 @@ Payload:
 
 | Campo | Obrigatório | Descrição |
 | --- | --- | --- |
-| `nickname` | Não | Display name do utilizador, 2-80 caracteres. |
+| `nickname` | Sim | Display name do utilizador, 2-80 caracteres. O whitespace inicial e final é removido antes de guardar e devolver o valor. |
 
-Resposta: [Me](types.md#me).
+Resposta: HTTP 200 OK.
+
+| Campo | Obrigatório | Descrição |
+| --- | --- | --- |
+| `nickname` | Sim | Nickname normalizado que foi guardado. |
 
 ## POST /api/me/avatar
 

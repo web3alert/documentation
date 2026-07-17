@@ -398,9 +398,109 @@ function validateStateSwitchContract(section, requirementTokens) {
   return errors;
 }
 
-function validateEmptyDeleteContract(section, contractMarker, subject) {
+function validateMeMetaContract(section, requirementTokens) {
   if (section == null) {
-    return [`${subject} delete route section is missing`];
+    return ['account metadata route section is missing'];
+  }
+
+  const contractTables = markdownTables(section)
+    .filter(table => table.rows.some(row => tableField(row) == 'nickname'));
+  if (contractTables.length != 2) {
+    return [
+      `account metadata contract must contain request and response nickname tables, found ${contractTables.length}`,
+    ];
+  }
+
+  const [request, response] = contractTables;
+  const requestFields = request.rows.map(tableField);
+  const responseFields = response.rows.map(tableField);
+  const requestNickname = request.rows.find(row => tableField(row) == 'nickname');
+  const responseNickname = response.rows.find(row => tableField(row) == 'nickname');
+  const errors = [];
+
+  if (request.header.length != 3 || !exactValues(requestFields, ['nickname'])) {
+    errors.push('account metadata request table must contain exactly the nickname field');
+  }
+  if (requestNickname?.[1] != requirementTokens.required) {
+    errors.push('account metadata request nickname field must be required');
+  }
+  if (!/2(?:-|–)80/.test(requestNickname?.[2] ?? '')) {
+    errors.push('account metadata request nickname must document the 2-80 character range');
+  }
+
+  if (response.header.length != 3 || !exactValues(responseFields, ['nickname'])) {
+    errors.push('account metadata response table must contain exactly the nickname field');
+  }
+  if (responseNickname?.[1] != requirementTokens.required) {
+    errors.push('account metadata response nickname field must be required');
+  }
+  if (!section.includes('HTTP 200 OK')) {
+    errors.push('account metadata response must be HTTP 200 OK');
+  }
+  if (/types\.md#me\b/i.test(section)) {
+    errors.push('account metadata response must not reference the full Me type');
+  }
+
+  return errors;
+}
+
+function validateWorkspaceAvatarContract(
+  section,
+  requirementTokens,
+  expectedResponseFields,
+) {
+  if (section == null) {
+    return ['workspace avatar route section is missing'];
+  }
+
+  const responseTables = markdownTables(section)
+    .filter(table => table.rows.some(row => tableField(row) == 'workspace'));
+  if (responseTables.length != 1) {
+    return [
+      `workspace avatar contract must contain one response table, found ${responseTables.length}`,
+    ];
+  }
+
+  const [response] = responseTables;
+  const responseFields = response.rows.map(tableField);
+  const workspace = response.rows.find(row => tableField(row) == 'workspace');
+  const errors = [];
+
+  if (
+    response.header.length != 3
+    || !exactValues(responseFields, expectedResponseFields)
+  ) {
+    errors.push(
+      `workspace avatar response table must contain exactly ${expectedResponseFields.join(', ')}`,
+    );
+  }
+  for (const field of expectedResponseFields) {
+    const row = response.rows.find(item => tableField(item) == field);
+    if (row?.[1] != requirementTokens.required) {
+      errors.push(`workspace avatar response ${field} field must be required`);
+    }
+  }
+  if (!section.includes('HTTP 200 OK')) {
+    errors.push('workspace avatar response must be HTTP 200 OK');
+  }
+  if (!/types\.md#workspaceview\b/i.test(workspace?.[2] ?? '')) {
+    errors.push('workspace avatar response workspace field must reference WorkspaceView');
+  }
+  if (/avataruploadresult/i.test(section)) {
+    errors.push('workspace avatar response must not reference account AvatarUploadResult');
+  }
+
+  return errors;
+}
+
+function validateEmpty204Contract(
+  section,
+  contractMarker,
+  subject,
+  forbiddenReferences = ['OperationResult'],
+) {
+  if (section == null) {
+    return [`${subject} route section is missing`];
   }
 
   const errors = [];
@@ -409,13 +509,15 @@ function validateEmptyDeleteContract(section, contractMarker, subject) {
     .map(line => line.trim())
     .filter(line => line.startsWith('<!-- api-contract:'));
   if (contractMarkers.length != 1 || contractMarkers[0] != contractMarker) {
-    errors.push(`${subject} delete response must carry the exact 204/empty contract marker`);
+    errors.push(`${subject} response must carry the exact 204/empty contract marker`);
   }
   if (!section.includes('HTTP 204 No Content')) {
-    errors.push(`${subject} delete response must be HTTP 204 No Content`);
+    errors.push(`${subject} response must be HTTP 204 No Content`);
   }
-  if (/operationresult/i.test(section)) {
-    errors.push(`${subject} delete response must not reference OperationResult`);
+  for (const reference of forbiddenReferences) {
+    if (section.toLowerCase().includes(reference.toLowerCase())) {
+      errors.push(`${subject} response must not reference ${reference}`);
+    }
   }
   return errors;
 }
@@ -496,8 +598,15 @@ function compareRouteSets(actual, expected, context) {
 const issues = [];
 const files = await listMarkdownFiles(userRoot);
 const expectedPublicRoutes = unique(publicCanonicalRoutes);
-const emptyDeleteContractMarker = '<!-- api-contract: response=204; body=empty -->';
+const empty204ContractMarker = '<!-- api-contract: response=204; body=empty -->';
 const expectedAddressTypes = ['plain', 'ss58', 'evm', 'solana', 'bitcoin', 'cosmos'];
+const expectedWorkspaceAvatarResponseFields = [
+  'url',
+  'fileName',
+  'extension',
+  'size',
+  'workspace',
+];
 const fixtureRequirementTokens = { required: 'Yes', optional: 'No' };
 const validStateContractFixture = `
 | Field | Required | Description |
@@ -558,6 +667,138 @@ for (const fixture of invalidStateContractFixtures) {
     ).length == 0
   ) {
     issues.push(`subscription state contract validator accepts ${fixture.name}`);
+  }
+}
+
+const validMeMetaFixture = `
+Payload:
+
+| Field | Required | Description |
+| --- | --- | --- |
+| \`nickname\` | Yes | User display name, 2-80 characters. |
+
+Response: HTTP 200 OK.
+
+| Field | Required | Description |
+| --- | --- | --- |
+| \`nickname\` | Yes | Trimmed nickname that was saved. |
+`;
+const invalidMeMetaFixtures = [
+  {
+    name: 'optional request nickname',
+    markdown: validMeMetaFixture.replace(
+      '| `nickname` | Yes | User display name, 2-80 characters. |',
+      '| `nickname` | No | User display name, 2-80 characters. |',
+    ),
+  },
+  {
+    name: 'missing nickname range',
+    markdown: validMeMetaFixture.replace('2-80 characters', 'supported length'),
+  },
+  {
+    name: 'extra response field',
+    markdown: validMeMetaFixture.replace(
+      '| `nickname` | Yes | Trimmed nickname that was saved. |',
+      '| `nickname` | Yes | Trimmed nickname that was saved. |\n| `id` | Yes | Extra. |',
+    ),
+  },
+  {
+    name: 'missing HTTP 200 status',
+    markdown: validMeMetaFixture.replace('HTTP 200 OK', 'Successful response'),
+  },
+  {
+    name: 'full Me response reference',
+    markdown: `${validMeMetaFixture}\nResponse type: [Me](types.md#me).\n`,
+  },
+];
+
+if (
+  validateMeMetaContract(
+    validMeMetaFixture,
+    fixtureRequirementTokens,
+  ).length > 0
+) {
+  issues.push('account metadata contract validator rejects its valid fixture');
+}
+for (const fixture of invalidMeMetaFixtures) {
+  if (
+    validateMeMetaContract(
+      fixture.markdown,
+      fixtureRequirementTokens,
+    ).length == 0
+  ) {
+    issues.push(`account metadata contract validator accepts ${fixture.name}`);
+  }
+}
+
+const validWorkspaceAvatarFixture = `
+Response: HTTP 200 OK.
+
+| Field | Required | Description |
+| --- | --- | --- |
+| \`url\` | Yes | Uploaded avatar URL. |
+| \`fileName\` | Yes | Stored file name. |
+| \`extension\` | Yes | File extension. |
+| \`size\` | Yes | File size in bytes. |
+| \`workspace\` | Yes | Updated [WorkspaceView](types.md#workspaceview). |
+`;
+const invalidWorkspaceAvatarFixtures = [
+  {
+    name: 'missing workspace field',
+    markdown: validWorkspaceAvatarFixture.replace(
+      '| `workspace` | Yes | Updated [WorkspaceView](types.md#workspaceview). |\n',
+      '',
+    ),
+  },
+  {
+    name: 'optional workspace field',
+    markdown: validWorkspaceAvatarFixture.replace(
+      '| `workspace` | Yes |',
+      '| `workspace` | No |',
+    ),
+  },
+  {
+    name: 'extra response field',
+    markdown: validWorkspaceAvatarFixture.replace(
+      '| `workspace` | Yes | Updated [WorkspaceView](types.md#workspaceview). |',
+      '| `workspace` | Yes | Updated [WorkspaceView](types.md#workspaceview). |\n| `extra` | Yes | Extra. |',
+    ),
+  },
+  {
+    name: 'missing HTTP 200 status',
+    markdown: validWorkspaceAvatarFixture.replace('HTTP 200 OK', 'Successful response'),
+  },
+  {
+    name: 'account avatar result reference',
+    markdown: `${validWorkspaceAvatarFixture}\n[AvatarUploadResult](types.md#avataruploadresult)\n`,
+  },
+  {
+    name: 'missing WorkspaceView reference',
+    markdown: validWorkspaceAvatarFixture.replace(
+      '[WorkspaceView](types.md#workspaceview)',
+      'updated workspace',
+    ),
+  },
+];
+
+if (
+  validateWorkspaceAvatarContract(
+    validWorkspaceAvatarFixture,
+    fixtureRequirementTokens,
+    expectedWorkspaceAvatarResponseFields,
+  ).length > 0
+) {
+  issues.push('workspace avatar contract validator rejects its valid fixture');
+}
+for (const fixture of invalidWorkspaceAvatarFixtures) {
+  if (
+    validateWorkspaceAvatarContract(
+      fixture.markdown,
+      fixtureRequirementTokens,
+      expectedWorkspaceAvatarResponseFields,
+    ).length == 0
+  ) {
+    issues.push(`workspace avatar contract validator accepts ${fixture.name}`);
   }
 }
 
@@ -641,15 +882,15 @@ if (
 
 const validSubscriptionDeleteFixtures = [
   `Response: HTTP 204 No Content with an empty body.
-${emptyDeleteContractMarker}`,
+${empty204ContractMarker}`,
   `Формулировка ответа изменена: HTTP 204 No Content.
-${emptyDeleteContractMarker}`,
+${empty204ContractMarker}`,
 ];
 for (const section of validSubscriptionDeleteFixtures) {
   if (
-    validateEmptyDeleteContract(
+    validateEmpty204Contract(
       section,
-      emptyDeleteContractMarker,
+      empty204ContractMarker,
       'subscription',
     ).length > 0
   ) {
@@ -662,7 +903,7 @@ const invalidSubscriptionDeleteFixtures = [
   [
     'missing 204',
     `Response body is empty.
-${emptyDeleteContractMarker}`,
+${empty204ContractMarker}`,
   ],
   [
     'altered body marker',
@@ -671,29 +912,63 @@ ${emptyDeleteContractMarker}`,
   [
     'mixed-case OperationResult',
     `Response: HTTP 204 No Content. oPeRaTiOnReSuLt
-${emptyDeleteContractMarker}`,
+${empty204ContractMarker}`,
   ],
   [
     'lowercase operationresult',
     `Response: HTTP 204 No Content. operationresult
-${emptyDeleteContractMarker}`,
+${empty204ContractMarker}`,
   ],
   [
     'duplicate marker',
     `Response: HTTP 204 No Content.
-${emptyDeleteContractMarker}
-${emptyDeleteContractMarker}`,
+${empty204ContractMarker}
+${empty204ContractMarker}`,
   ],
 ];
 for (const [name, section] of invalidSubscriptionDeleteFixtures) {
   if (
-    validateEmptyDeleteContract(
+    validateEmpty204Contract(
       section,
-      emptyDeleteContractMarker,
+      empty204ContractMarker,
       'subscription',
     ).length == 0
   ) {
     issues.push(`subscription delete validator accepts ${name}`);
+  }
+}
+
+const validWorkspaceAclMutationFixture = `Response: HTTP 204 No Content with an empty body.
+${empty204ContractMarker}`;
+if (
+  validateEmpty204Contract(
+    validWorkspaceAclMutationFixture,
+    empty204ContractMarker,
+    'workspace ACL mutation',
+    ['WorkspaceAclEntry', 'OperationResult'],
+  ).length > 0
+) {
+  issues.push('workspace ACL mutation validator rejects its valid fixture');
+}
+for (const [name, section] of [
+  [
+    'WorkspaceAclEntry response',
+    `${validWorkspaceAclMutationFixture}\nResponse: [WorkspaceAclEntry](types.md#workspaceaclentry).`,
+  ],
+  [
+    'OperationResult response',
+    `${validWorkspaceAclMutationFixture}\nResponse: [OperationResult](types.md#operationresult).`,
+  ],
+]) {
+  if (
+    validateEmpty204Contract(
+      section,
+      empty204ContractMarker,
+      'workspace ACL mutation',
+      ['WorkspaceAclEntry', 'OperationResult'],
+    ).length == 0
+  ) {
+    issues.push(`workspace ACL mutation validator accepts ${name}`);
   }
 }
 
@@ -798,6 +1073,43 @@ for (const locale of locales) {
     zh: { required: '是', optional: '否' },
   }[locale];
 
+  const account = await readFile(
+    path.join(userRoot, locale, 'api-account.md'),
+    'utf8',
+  );
+  for (const error of validateMeMetaContract(
+    routeSection(account, 'PUT /api/me/meta'),
+    requirementTokens,
+  )) {
+    issues.push(`${locale}: ${error}`);
+  }
+
+  const workspaces = await readFile(
+    path.join(userRoot, locale, 'api-workspaces.md'),
+    'utf8',
+  );
+  for (const error of validateWorkspaceAvatarContract(
+    routeSection(workspaces, 'POST /api/workspaces/:fullname/avatar'),
+    requirementTokens,
+    expectedWorkspaceAvatarResponseFields,
+  )) {
+    issues.push(`${locale}: ${error}`);
+  }
+
+  for (const [subject, route] of [
+    ['workspace ACL create', 'POST /api/workspaces/:workspace/acl'],
+    ['workspace ACL update', 'PUT /api/workspaces/:workspace/acl/:entryId'],
+  ]) {
+    for (const error of validateEmpty204Contract(
+      routeSection(workspaces, route),
+      empty204ContractMarker,
+      subject,
+      ['WorkspaceAclEntry', 'OperationResult'],
+    )) {
+      issues.push(`${locale}: ${error}`);
+    }
+  }
+
   for (const error of validateStateSwitchContract(stateSection, requirementTokens)) {
     issues.push(`${locale}: ${error}`);
   }
@@ -807,9 +1119,9 @@ for (const locale of locales) {
     'DELETE /api/subscriptions/:id',
   );
 
-  for (const error of validateEmptyDeleteContract(
+  for (const error of validateEmpty204Contract(
     subscriptionDeleteSection,
-    emptyDeleteContractMarker,
+    empty204ContractMarker,
     'subscription',
   )) {
     issues.push(`${locale}: ${error}`);
@@ -833,9 +1145,9 @@ for (const locale of locales) {
     }
   }
 
-  for (const error of validateEmptyDeleteContract(
+  for (const error of validateEmpty204Contract(
     routeSection(addresses, 'DELETE /api/addresses/:id'),
-    emptyDeleteContractMarker,
+    empty204ContractMarker,
     'address',
   )) {
     issues.push(`${locale}: ${error}`);
