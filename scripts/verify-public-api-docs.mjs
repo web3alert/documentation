@@ -256,16 +256,42 @@ function routeSection(markdown, route) {
   return markdown.slice(start, next == -1 ? markdown.length : next);
 }
 
+function headingSection(markdown, heading) {
+  const lines = markdown.split('\n');
+  const start = lines.findIndex(line => line.trim() == heading);
+  if (start == -1) {
+    return undefined;
+  }
+
+  const level = heading.match(/^#+/)?.[0].length;
+  if (level == null) {
+    return undefined;
+  }
+
+  const next = lines.findIndex(
+    (line, index) => index > start && new RegExp(`^#{1,${level}} `).test(line),
+  );
+  return lines.slice(start, next == -1 ? lines.length : next).join('\n');
+}
+
 function markdownTableRow(line) {
   const trimmed = line.trim();
   if (!trimmed.startsWith('|') || !trimmed.endsWith('|')) {
     return undefined;
   }
 
-  return trimmed
-    .slice(1, -1)
-    .split('|')
-    .map(cell => cell.trim());
+  const cells = [];
+  let cell = '';
+  for (const character of trimmed.slice(1, -1)) {
+    if (character == '|' && !cell.endsWith('\\')) {
+      cells.push(cell.trim());
+      cell = '';
+      continue;
+    }
+    cell += character;
+  }
+  cells.push(cell.trim());
+  return cells;
 }
 
 function isMarkdownTableDivider(cells) {
@@ -372,9 +398,9 @@ function validateStateSwitchContract(section, requirementTokens) {
   return errors;
 }
 
-function validateSubscriptionDeleteContract(section, contractMarker) {
+function validateEmptyDeleteContract(section, contractMarker, subject) {
   if (section == null) {
-    return ['subscription delete route section is missing'];
+    return [`${subject} delete route section is missing`];
   }
 
   const errors = [];
@@ -383,15 +409,74 @@ function validateSubscriptionDeleteContract(section, contractMarker) {
     .map(line => line.trim())
     .filter(line => line.startsWith('<!-- api-contract:'));
   if (contractMarkers.length != 1 || contractMarkers[0] != contractMarker) {
-    errors.push('subscription delete response must carry the exact 204/empty contract marker');
+    errors.push(`${subject} delete response must carry the exact 204/empty contract marker`);
   }
   if (!section.includes('HTTP 204 No Content')) {
-    errors.push('subscription delete response must be HTTP 204 No Content');
+    errors.push(`${subject} delete response must be HTTP 204 No Content`);
   }
   if (/operationresult/i.test(section)) {
-    errors.push('subscription delete response must not reference OperationResult');
+    errors.push(`${subject} delete response must not reference OperationResult`);
   }
   return errors;
+}
+
+function validateAddressTypeContract(section, requirementTokens, expectedAddressTypes, operation) {
+  if (section == null) {
+    return [`address ${operation} route section is missing`];
+  }
+
+  const errors = [];
+  const contractTables = markdownTables(section)
+    .filter(table => table.rows.some(row => tableField(row) == 'type'));
+  if (contractTables.length != 1) {
+    return [
+      `address ${operation} payload must contain one type contract table, found ${contractTables.length}`,
+    ];
+  }
+
+  const typeRows = contractTables[0].rows.filter(row => tableField(row) == 'type');
+  if (typeRows.length != 1) {
+    errors.push(`address ${operation} payload must contain exactly one type field`);
+    return errors;
+  }
+
+  const typeRow = typeRows[0];
+  if (typeRow[1] != requirementTokens.required) {
+    errors.push(`address ${operation} type field must be required`);
+  }
+  if (!exactValues(inlineCodeTokens(typeRow[2]), expectedAddressTypes)) {
+    errors.push(
+      `address ${operation} type enum must be exactly ${expectedAddressTypes.join('|')}`,
+    );
+  }
+  return errors;
+}
+
+function validateAddressEntryTypeContract(markdown, expectedAddressTypes) {
+  const section = headingSection(markdown, '### AddressEntry');
+  if (section == null) {
+    return ['AddressEntry section is missing'];
+  }
+
+  const contractTables = markdownTables(section)
+    .filter(table => table.rows.some(row => tableField(row) == 'type'));
+  if (contractTables.length != 1) {
+    return [
+      `AddressEntry must contain one type contract table, found ${contractTables.length}`,
+    ];
+  }
+
+  const typeRows = contractTables[0].rows.filter(row => tableField(row) == 'type');
+  if (typeRows.length != 1) {
+    return [`AddressEntry must contain exactly one type field, found ${typeRows.length}`];
+  }
+
+  const actualTypes = [...typeRows[0][1].matchAll(/"([^"]+)"/g)]
+    .map(([, type]) => type);
+  if (!exactValues(actualTypes, expectedAddressTypes)) {
+    return [`AddressEntry type enum must be exactly ${expectedAddressTypes.join('|')}`];
+  }
+  return [];
 }
 
 function compareRouteSets(actual, expected, context) {
@@ -411,7 +496,8 @@ function compareRouteSets(actual, expected, context) {
 const issues = [];
 const files = await listMarkdownFiles(userRoot);
 const expectedPublicRoutes = unique(publicCanonicalRoutes);
-const subscriptionDeleteContractMarker = '<!-- api-contract: response=204; body=empty -->';
+const emptyDeleteContractMarker = '<!-- api-contract: response=204; body=empty -->';
+const expectedAddressTypes = ['plain', 'ss58', 'evm', 'solana', 'bitcoin', 'cosmos'];
 const fixtureRequirementTokens = { required: 'Yes', optional: 'No' };
 const validStateContractFixture = `
 | Field | Required | Description |
@@ -475,17 +561,96 @@ for (const fixture of invalidStateContractFixtures) {
   }
 }
 
+const validAddressTypeFixture = `
+| Field | Required | Description |
+| --- | --- | --- |
+| \`type\` | Yes | \`plain\`, \`ss58\`, \`evm\`, \`solana\`, \`bitcoin\`, or \`cosmos\`. |
+| \`address\` | Yes | Address value. |
+`;
+const invalidAddressTypeFixtures = [
+  {
+    name: 'missing solana enum',
+    markdown: validAddressTypeFixture.replace('`solana`, ', ''),
+  },
+  {
+    name: 'extra substrate enum',
+    markdown: validAddressTypeFixture.replace('`solana`, ', '`solana`, `substrate`, '),
+  },
+  {
+    name: 'optional type field',
+    markdown: validAddressTypeFixture.replace('| `type` | Yes |', '| `type` | No |'),
+  },
+];
+
+if (
+  validateAddressTypeContract(
+    validAddressTypeFixture,
+    fixtureRequirementTokens,
+    expectedAddressTypes,
+    'fixture',
+  ).length > 0
+) {
+  issues.push('address type contract validator rejects its valid fixture');
+}
+for (const fixture of invalidAddressTypeFixtures) {
+  if (
+    validateAddressTypeContract(
+      fixture.markdown,
+      fixtureRequirementTokens,
+      expectedAddressTypes,
+      'fixture',
+    ).length == 0
+  ) {
+    issues.push(`address type contract validator accepts ${fixture.name}`);
+  }
+}
+
+const validAddressEntryFixture = `
+### AddressEntry
+
+| Field | Type | Description |
+| --- | --- | --- |
+| \`type\` | \`"plain" \\| "ss58" \\| "evm" \\| "solana" \\| "bitcoin" \\| "cosmos"\` | Address type. |
+`;
+if (
+  validateAddressEntryTypeContract(
+    validAddressEntryFixture,
+    expectedAddressTypes,
+  ).length > 0
+) {
+  issues.push('AddressEntry type validator rejects its valid fixture');
+}
+if (
+  validateAddressEntryTypeContract(
+    validAddressEntryFixture.replace('"solana" \\| ', ''),
+    expectedAddressTypes,
+  ).length == 0
+) {
+  issues.push('AddressEntry type validator accepts a missing solana enum');
+}
+if (
+  validateAddressEntryTypeContract(
+    validAddressEntryFixture
+      .replace('"solana" \\| ', '')
+      .replace('Address type.', 'Address type including "solana".'),
+    expectedAddressTypes,
+  ).length == 0
+) {
+  issues.push('AddressEntry type validator accepts solana only in the description');
+}
+
 const validSubscriptionDeleteFixtures = [
   `Response: HTTP 204 No Content with an empty body.
-${subscriptionDeleteContractMarker}`,
+${emptyDeleteContractMarker}`,
   `Формулировка ответа изменена: HTTP 204 No Content.
-${subscriptionDeleteContractMarker}`,
+${emptyDeleteContractMarker}`,
 ];
 for (const section of validSubscriptionDeleteFixtures) {
   if (
-    validateSubscriptionDeleteContract(
+    validateEmptyDeleteContract(
       section,
-      subscriptionDeleteContractMarker,
+      emptyDeleteContractMarker,
+      'subscription',
     ).length > 0
   ) {
     issues.push('subscription delete validator rejects a harmless visible reword fixture');
@@ -497,7 +662,7 @@ const invalidSubscriptionDeleteFixtures = [
   [
     'missing 204',
     `Response body is empty.
-${subscriptionDeleteContractMarker}`,
+${emptyDeleteContractMarker}`,
   ],
   [
     'altered body marker',
@@ -506,19 +671,26 @@ ${subscriptionDeleteContractMarker}`,
   [
     'mixed-case OperationResult',
     `Response: HTTP 204 No Content. oPeRaTiOnReSuLt
-${subscriptionDeleteContractMarker}`,
+${emptyDeleteContractMarker}`,
   ],
   [
     'lowercase operationresult',
     `Response: HTTP 204 No Content. operationresult
-${subscriptionDeleteContractMarker}`,
+${emptyDeleteContractMarker}`,
+  ],
+  [
+    'duplicate marker',
+    `Response: HTTP 204 No Content.
+${emptyDeleteContractMarker}
+${emptyDeleteContractMarker}`,
   ],
 ];
 for (const [name, section] of invalidSubscriptionDeleteFixtures) {
   if (
-    validateSubscriptionDeleteContract(
+    validateEmptyDeleteContract(
       section,
-      subscriptionDeleteContractMarker,
+      emptyDeleteContractMarker,
+      'subscription',
     ).length == 0
   ) {
     issues.push(`subscription delete validator accepts ${name}`);
@@ -630,14 +802,52 @@ for (const locale of locales) {
     issues.push(`${locale}: ${error}`);
   }
 
-  const deleteSection = routeSection(
+  const subscriptionDeleteSection = routeSection(
     subscriptions,
     'DELETE /api/subscriptions/:id',
   );
 
-  for (const error of validateSubscriptionDeleteContract(
-    deleteSection,
-    subscriptionDeleteContractMarker,
+  for (const error of validateEmptyDeleteContract(
+    subscriptionDeleteSection,
+    emptyDeleteContractMarker,
+    'subscription',
+  )) {
+    issues.push(`${locale}: ${error}`);
+  }
+
+  const addresses = await readFile(
+    path.join(userRoot, locale, 'api-addresses.md'),
+    'utf8',
+  );
+  for (const [operation, route] of [
+    ['create', 'POST /api/addresses'],
+    ['update', 'PUT /api/addresses/:id'],
+  ]) {
+    for (const error of validateAddressTypeContract(
+      routeSection(addresses, route),
+      requirementTokens,
+      expectedAddressTypes,
+      operation,
+    )) {
+      issues.push(`${locale}: ${error}`);
+    }
+  }
+
+  for (const error of validateEmptyDeleteContract(
+    routeSection(addresses, 'DELETE /api/addresses/:id'),
+    emptyDeleteContractMarker,
+    'address',
+  )) {
+    issues.push(`${locale}: ${error}`);
+  }
+
+  const types = await readFile(
+    path.join(userRoot, locale, 'types.md'),
+    'utf8',
+  );
+  for (const error of validateAddressEntryTypeContract(
+    types,
+    expectedAddressTypes,
   )) {
     issues.push(`${locale}: ${error}`);
   }

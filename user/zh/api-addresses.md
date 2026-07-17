@@ -22,7 +22,7 @@ Payload:
 
 | 字段 | 必填 | 说明 |
 | --- | --- | --- |
-| `type` | 是 | `plain`、`ss58`、`evm`、`bitcoin` 或 `cosmos`。 |
+| `type` | 是 | `plain`、`ss58`、`evm`、`solana`、`bitcoin` 或 `cosmos`。 |
 | `address` | 是 | Address 值。 |
 | `alias` | 是 | 人类可读 alias。 |
 
@@ -42,7 +42,7 @@ Payload:
 
 | 字段 | 必填 | 说明 |
 | --- | --- | --- |
-| `type` | 是 | Address 类型。 |
+| `type` | 是 | `plain`、`ss58`、`evm`、`solana`、`bitcoin` 或 `cosmos`。 |
 | `address` | 是 | Address 值。 |
 | `alias` | 是 | 人类可读 alias。 |
 
@@ -60,4 +60,5 @@ Payload:
 
 Payload: 无。
 
-响应：[OperationResult](types.md#operationresult)。
+响应：HTTP 204 No Content，响应正文为空。
+<!-- api-contract: response=204; body=empty -->

@@ -787,7 +787,7 @@
 | Поле | Тип | Описание |
 | --- | --- | --- |
 | `id` | `string` | Id address entry. |
-| `type` | `"plain" \| "ss58" \| "evm" \| "bitcoin" \| "cosmos"` | Тип address. |
+| `type` | `"plain" \| "ss58" \| "evm" \| "solana" \| "bitcoin" \| "cosmos"` | Тип address. |
 | `address` | `string` | Значение address. |
 | `alias` | `string` | Видимый alias. |
 

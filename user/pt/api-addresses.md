@@ -22,7 +22,7 @@ Payload:
 
 | Campo | Obrigatório | Descrição |
 | --- | --- | --- |
-| `type` | Sim | `plain`, `ss58`, `evm`, `bitcoin` ou `cosmos`. |
+| `type` | Sim | `plain`, `ss58`, `evm`, `solana`, `bitcoin` ou `cosmos`. |
 | `address` | Sim | Valor de address. |
 | `alias` | Sim | Alias legível para humanos. |
 
@@ -42,7 +42,7 @@ Payload:
 
 | Campo | Obrigatório | Descrição |
 | --- | --- | --- |
-| `type` | Sim | Tipo de address. |
+| `type` | Sim | `plain`, `ss58`, `evm`, `solana`, `bitcoin` ou `cosmos`. |
 | `address` | Sim | Valor de address. |
 | `alias` | Sim | Alias legível para humanos. |
 
@@ -60,4 +60,5 @@ Argumentos:
 
 Payload: nenhum.
 
-Resposta: [OperationResult](types.md#operationresult).
+Resposta: HTTP 204 No Content com corpo vazio.
+<!-- api-contract: response=204; body=empty -->

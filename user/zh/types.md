@@ -787,7 +787,7 @@
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
 | `id` | `string` | Id address entry. |
-| `type` | `"plain" \| "ss58" \| "evm" \| "bitcoin" \| "cosmos"` | 类型 address. |
+| `type` | `"plain" \| "ss58" \| "evm" \| "solana" \| "bitcoin" \| "cosmos"` | 类型 address. |
 | `address` | `string` | Address value。 |
 | `alias` | `string` | 可见 alias。 |
 

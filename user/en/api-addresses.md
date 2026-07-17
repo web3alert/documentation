@@ -22,7 +22,7 @@ Payload:
 
 | Field | Required | Description |
 | --- | --- | --- |
-| `type` | Yes | `plain`, `ss58`, `evm`, `bitcoin`, or `cosmos`. |
+| `type` | Yes | `plain`, `ss58`, `evm`, `solana`, `bitcoin`, or `cosmos`. |
 | `address` | Yes | Address value. |
 | `alias` | Yes | Human-readable alias. |
 
@@ -42,7 +42,7 @@ Payload:
 
 | Field | Required | Description |
 | --- | --- | --- |
-| `type` | Yes | Address type. |
+| `type` | Yes | `plain`, `ss58`, `evm`, `solana`, `bitcoin`, or `cosmos`. |
 | `address` | Yes | Address value. |
 | `alias` | Yes | Human-readable alias. |
 
@@ -60,4 +60,5 @@ Arguments:
 
 Payload: none.
 
-Response: [OperationResult](types.md#operationresult).
+Response: HTTP 204 No Content with an empty body.
+<!-- api-contract: response=204; body=empty -->

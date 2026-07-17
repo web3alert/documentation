@@ -787,7 +787,7 @@
 | Field | Type | Description |
 | --- | --- | --- |
 | `id` | `string` | Id address entry. |
-| `type` | `"plain" \| "ss58" \| "evm" \| "bitcoin" \| "cosmos"` | Type address. |
+| `type` | `"plain" \| "ss58" \| "evm" \| "solana" \| "bitcoin" \| "cosmos"` | Type address. |
 | `address` | `string` | Address value. |
 | `alias` | `string` | Visible alias. |
 
