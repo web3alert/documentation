@@ -577,6 +577,188 @@ function validateWalletTopupContract(
   return errors;
 }
 
+function validateAccountPlanBalancePurchaseContract(
+  section,
+  requirementTokens,
+  contractMarker,
+) {
+  if (section == null) {
+    return ['account plan balance purchase section is missing'];
+  }
+
+  const errors = [];
+  const markers = contractMarkers(section);
+  if (markers.length != 1 || markers[0] != contractMarker) {
+    errors.push(
+      'account plan balance purchase must carry its exact idempotency contract marker',
+    );
+  }
+
+  const requestTables = markdownTables(section)
+    .filter(table => table.rows.some(row => tableField(row) == 'requestId'));
+  if (requestTables.length != 1) {
+    errors.push(
+      `account plan balance purchase must contain one request table, found ${requestTables.length}`,
+    );
+  } else {
+    const [request] = requestTables;
+    const fields = request.rows.map(tableField);
+    const expectedFields = ['planId', 'durationMonths', 'autoRenew', 'requestId'];
+    if (request.header.length != 3 || !exactValues(fields, expectedFields)) {
+      errors.push(
+        `account plan balance purchase request fields must be exactly ${expectedFields.join(', ')}`,
+      );
+    }
+
+    for (const field of ['planId', 'durationMonths']) {
+      if (
+        request.rows.find(row => tableField(row) == field)?.[1]
+        != requirementTokens.required
+      ) {
+        errors.push(`account plan balance purchase ${field} must be required`);
+      }
+    }
+    for (const field of ['autoRenew', 'requestId']) {
+      if (
+        request.rows.find(row => tableField(row) == field)?.[1]
+        != requirementTokens.optional
+      ) {
+        errors.push(`account plan balance purchase ${field} must be optional`);
+      }
+    }
+
+    const planId = request.rows.find(row => tableField(row) == 'planId');
+    if (!exactValues(inlineCodeTokens(planId?.[2]), ['advanced', 'pro'])) {
+      errors.push('account plan balance purchase planId must be advanced|pro');
+    }
+
+    const durationMonths = request.rows.find(
+      row => tableField(row) == 'durationMonths',
+    );
+    if (
+      !exactValues(
+        inlineCodeTokens(durationMonths?.[2]),
+        ['1', '3', '6', '12'],
+      )
+    ) {
+      errors.push(
+        'account plan balance purchase durationMonths must be 1|3|6|12',
+      );
+    }
+
+    const requestId = request.rows.find(row => tableField(row) == 'requestId');
+    if (!/8(?:-|–|\.\.)128/.test(requestId?.[2] ?? '')) {
+      errors.push('account plan balance purchase requestId must document 8-128 characters');
+    }
+    if (
+      !/RFC 3986/i.test(requestId?.[2] ?? '')
+      || !/unreserved/i.test(requestId?.[2] ?? '')
+    ) {
+      errors.push(
+        'account plan balance purchase requestId must document RFC 3986 unreserved characters',
+      );
+    }
+    if (
+      !exactValues(
+        inlineCodeTokens(requestId?.[2]),
+        ['A-Z', 'a-z', '0-9', '.', '_', '~', '-'],
+      )
+    ) {
+      errors.push(
+        'account plan balance purchase requestId charset must be exactly A-Z a-z 0-9 . _ ~ -',
+      );
+    }
+
+    const autoRenew = request.rows.find(row => tableField(row) == 'autoRenew');
+    if (!inlineCodeTokens(autoRenew?.[2]).includes('false')) {
+      errors.push('account plan balance purchase autoRenew must default to false');
+    }
+  }
+
+  const behaviorTables = markdownTables(section)
+    .filter(table => table.rows.some(row => tableField(row) == 'exact-replay'));
+  if (behaviorTables.length != 1) {
+    errors.push(
+      `account plan balance purchase must contain one visible idempotency behavior table, found ${behaviorTables.length}`,
+    );
+  } else {
+    const [behavior] = behaviorTables;
+    const expectedBehavior = new Map([
+      ['same-intent', ['same-requestId', 'same-payload']],
+      [
+        'exact-replay',
+        ['original-subscriptionId', 'original-invoiceId', 'no-second-debit'],
+      ],
+      ['conflicting-payload', ['rejected']],
+      ['new-intent', ['new-requestId']],
+      [
+        'missing-requestId',
+        [
+          'backward-compatible',
+          'not-retry-safe',
+          'not-idempotent-across-HTTP-attempts',
+        ],
+      ],
+    ]);
+    const fields = behavior.rows.map(tableField);
+    if (
+      behavior.header.length != 2
+      || !exactValues(fields, [...expectedBehavior.keys()])
+    ) {
+      errors.push(
+        'account plan balance purchase idempotency behavior rows are incomplete',
+      );
+    }
+    for (const [field, expectedTokens] of expectedBehavior) {
+      const row = behavior.rows.find(item => tableField(item) == field);
+      if (!exactValues(inlineCodeTokens(row?.[1]), expectedTokens)) {
+        errors.push(
+          `account plan balance purchase ${field} behavior must be ${expectedTokens.join(', ')}`,
+        );
+      }
+    }
+  }
+
+  const responseTables = markdownTables(section)
+    .filter(table => {
+      const fields = table.rows.map(tableField);
+      return fields.includes('subscriptionId') || fields.includes('invoiceId');
+    });
+  if (responseTables.length != 1) {
+    errors.push(
+      `account plan balance purchase must contain one response table, found ${responseTables.length}`,
+    );
+  } else {
+    const [response] = responseTables;
+    const fields = response.rows.map(tableField);
+    if (
+      response.header.length != 3
+      || !exactValues(fields, ['subscriptionId', 'invoiceId'])
+    ) {
+      errors.push(
+        'account plan balance purchase response fields must be exactly subscriptionId and invoiceId',
+      );
+    }
+    for (const field of ['subscriptionId', 'invoiceId']) {
+      if (
+        response.rows.find(row => tableField(row) == field)?.[1]
+        != requirementTokens.required
+      ) {
+        errors.push(`account plan balance purchase response ${field} must be required`);
+      }
+    }
+  }
+
+  if (!section.includes('HTTP 200 OK')) {
+    errors.push('account plan balance purchase response must be HTTP 200 OK');
+  }
+  if (/\/api\/v\d+(?:\/|\b)/.test(section)) {
+    errors.push('account plan balance purchase must use the canonical /api route');
+  }
+
+  return errors;
+}
+
 function validateLinkResponseTable(section, requirementTokens, subject) {
   const responseTables = markdownTables(section)
     .filter(table => exactValues(table.rows.map(tableField), ['key', 'uri']));
@@ -869,6 +1051,7 @@ const linkGetContractMarker = '<!-- api-contract: auth=anonymous; not-found=400;
 const resourceCapabilityContractMarker = '<!-- api-contract: resource-token=persistent-bearer-capability; setup-token=separate-one-time-15m; transport=https-only; logging=forbidden -->';
 const walletTopupCreateContractMarker = '<!-- api-contract: redirect-query=authoritative-externalReference; existing-value=replaced -->';
 const walletTopupRefreshContractMarker = '<!-- api-contract: target=exact-topupId-or-externalReference; recent-topup-fallback=forbidden; result-correlation=fail-closed-on-missing-or-ambiguous -->';
+const accountPlanBalancePurchaseContractMarker = '<!-- api-contract: requestId=optional-backward-compatible-8-128-rfc3986-unreserved; requestId-omitted=not-retry-safe-across-http-attempts; autoRenew-default=false; same-intent=same-requestId-and-payload; exact-replay=original-subscriptionId-and-invoiceId-without-second-debit; conflicting-payload=rejected; new-intent=new-requestId -->';
 const expectedAddressTypes = ['plain', 'ss58', 'evm', 'solana', 'bitcoin', 'cosmos'];
 const expectedWorkspaceAvatarResponseFields = [
   'url',
@@ -878,6 +1061,103 @@ const expectedWorkspaceAvatarResponseFields = [
   'workspace',
 ];
 const fixtureRequirementTokens = { required: 'Yes', optional: 'No' };
+const validAccountPlanBalancePurchaseFixture = `
+${accountPlanBalancePurchaseContractMarker}
+
+| Field | Required | Description |
+| --- | --- | --- |
+| \`planId\` | Yes | \`advanced\` or \`pro\`. |
+| \`durationMonths\` | Yes | \`1\`, \`3\`, \`6\`, or \`12\`. |
+| \`autoRenew\` | No | Defaults to \`false\`. |
+| \`requestId\` | No | 8-128 RFC 3986 unreserved characters: \`A-Z\`, \`a-z\`, \`0-9\`, \`.\`, \`_\`, \`~\`, and \`-\`. |
+
+| Case | Behavior |
+| --- | --- |
+| \`same-intent\` | \`same-requestId\` and \`same-payload\`. |
+| \`exact-replay\` | \`original-subscriptionId\`, \`original-invoiceId\`, and \`no-second-debit\`. |
+| \`conflicting-payload\` | \`rejected\`. |
+| \`new-intent\` | \`new-requestId\`. |
+| \`missing-requestId\` | \`backward-compatible\`, \`not-retry-safe\`, and \`not-idempotent-across-HTTP-attempts\`. |
+
+Response: HTTP 200 OK.
+
+| Field | Required | Description |
+| --- | --- | --- |
+| \`subscriptionId\` | Yes | Subscription. |
+| \`invoiceId\` | Yes | Invoice. |
+`;
+const invalidAccountPlanBalancePurchaseFixtures = [
+  {
+    name: 'marker-only exact replay semantics',
+    markdown: validAccountPlanBalancePurchaseFixture.replace(
+      '| `exact-replay` | `original-subscriptionId`, `original-invoiceId`, and `no-second-debit`. |',
+      '| `exact-replay` | `original-subscriptionId`, `original-invoiceId`, and `second-debit-allowed`. |',
+    ),
+  },
+  {
+    name: 'marker-only conflict semantics',
+    markdown: validAccountPlanBalancePurchaseFixture.replace(
+      '| `conflicting-payload` | `rejected`. |',
+      '| `conflicting-payload` | `accepted`. |',
+    ),
+  },
+  {
+    name: 'missing visible new intent semantics',
+    markdown: validAccountPlanBalancePurchaseFixture.replace(
+      '| `new-intent` | `new-requestId`. |\n',
+      '',
+    ),
+  },
+  {
+    name: 'missing requestId retry-safety warning',
+    markdown: validAccountPlanBalancePurchaseFixture.replace(
+      '| `missing-requestId` | `backward-compatible`, `not-retry-safe`, and `not-idempotent-across-HTTP-attempts`. |',
+      '| `missing-requestId` | `backward-compatible`. |',
+    ),
+  },
+  {
+    name: 'missing autoRenew default',
+    markdown: validAccountPlanBalancePurchaseFixture.replace(
+      '| `autoRenew` | No | Defaults to `false`. |',
+      '| `autoRenew` | No | Optional setting. |',
+    ),
+  },
+  {
+    name: 'incomplete requestId charset',
+    markdown: validAccountPlanBalancePurchaseFixture.replace(
+      ', `~`',
+      '',
+    ),
+  },
+  {
+    name: 'versioned API path',
+    markdown: `${validAccountPlanBalancePurchaseFixture}\nPOST /api/v2/billing/account-plan/balance-purchase\n`,
+  },
+];
+
+if (
+  validateAccountPlanBalancePurchaseContract(
+    validAccountPlanBalancePurchaseFixture,
+    fixtureRequirementTokens,
+    accountPlanBalancePurchaseContractMarker,
+  ).length > 0
+) {
+  issues.push('account plan balance purchase validator rejects its valid fixture');
+}
+for (const fixture of invalidAccountPlanBalancePurchaseFixtures) {
+  if (
+    validateAccountPlanBalancePurchaseContract(
+      fixture.markdown,
+      fixtureRequirementTokens,
+      accountPlanBalancePurchaseContractMarker,
+    ).length == 0
+  ) {
+    issues.push(
+      `account plan balance purchase validator accepts ${fixture.name}`,
+    );
+  }
+}
+
 const validStateContractFixture = `
 | Field | Required | Description |
 | --- | --- | --- |
@@ -1435,6 +1715,16 @@ for (const locale of locales) {
     billing,
     walletTopupCreateContractMarker,
     walletTopupRefreshContractMarker,
+  )) {
+    issues.push(`${locale}: ${error}`);
+  }
+  for (const error of validateAccountPlanBalancePurchaseContract(
+    routeSection(
+      billing,
+      'POST /api/billing/account-plan/balance-purchase',
+    ),
+    requirementTokens,
+    accountPlanBalancePurchaseContractMarker,
   )) {
     issues.push(`${locale}: ${error}`);
   }

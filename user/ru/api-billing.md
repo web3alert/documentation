@@ -31,7 +31,42 @@
 
 ## POST /api/billing/account-plan/balance-purchase
 
+<!-- api-contract: requestId=optional-backward-compatible-8-128-rfc3986-unreserved; requestId-omitted=not-retry-safe-across-http-attempts; autoRenew-default=false; same-intent=same-requestId-and-payload; exact-replay=original-subscriptionId-and-invoiceId-without-second-debit; conflicting-payload=rejected; new-intent=new-requestId -->
 Покупает или улучшает тариф account за баланс кошелька.
+
+Тело запроса:
+
+| Поле | Обязательное | Описание |
+| --- | --- | --- |
+| `planId` | Да | Целевой тариф: `advanced` или `pro`. |
+| `durationMonths` | Да | Период оплаты: `1`, `3`, `6` или `12` месяцев. |
+| `autoRenew` | Нет | Включать ли автоматическое продление полученной подписки. Если поле не передано, используется `false`. |
+| `requestId` | Нет | Ключ идемпотентности из 8-128 unreserved-символов RFC 3986: `A-Z`, `a-z`, `0-9`, `.`, `_`, `~` и `-`. Его можно не передавать для обратной совместимости, но для новых клиентов он рекомендуется. |
+
+Используйте один стабильный `requestId` для одного подтверждённого
+пользователем намерения. После timeout или другого неопределённого результата
+повторите запрос с теми же payload и `requestId`. Точный повтор возвращает
+исходные `subscriptionId` и `invoiceId` без второго списания с кошелька.
+Повторное использование этого `requestId` с другими `planId`,
+`durationMonths` или `autoRenew` отклоняется. Для нового намерения покупки
+создайте новый `requestId`. Без `requestId` запрос по-прежнему принимается для
+обратной совместимости, но отдельные HTTP-попытки не являются retry-safe и
+идемпотентными.
+
+| Случай | Обязательное поведение |
+| --- | --- |
+| `same-intent` | Передать `same-requestId` с `same-payload`. |
+| `exact-replay` | Вернуть `original-subscriptionId` и `original-invoiceId` с `no-second-debit`. |
+| `conflicting-payload` | Запрос `rejected`. |
+| `new-intent` | Создать `new-requestId`. |
+| `missing-requestId` | Сохраняется `backward-compatible`, но запрос `not-retry-safe` и `not-idempotent-across-HTTP-attempts`. |
+
+Ответ: HTTP 200 OK.
+
+| Поле | Обязательное | Описание |
+| --- | --- | --- |
+| `subscriptionId` | Да | Идентификатор активированной подписки. |
+| `invoiceId` | Да | Идентификатор оплаченного счёта. |
 
 ## POST /api/billing/account-plan/checkout
 

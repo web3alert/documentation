@@ -31,7 +31,41 @@ identificador, está repetido o entra en conflicto con otro identificador.
 
 ## POST /api/billing/account-plan/balance-purchase
 
+<!-- api-contract: requestId=optional-backward-compatible-8-128-rfc3986-unreserved; requestId-omitted=not-retry-safe-across-http-attempts; autoRenew-default=false; same-intent=same-requestId-and-payload; exact-replay=original-subscriptionId-and-invoiceId-without-second-debit; conflicting-payload=rejected; new-intent=new-requestId -->
 Compra o mejora un plan de cuenta usando el saldo del monedero.
+
+Cuerpo de la solicitud:
+
+| Campo | Obligatorio | Descripción |
+| --- | --- | --- |
+| `planId` | Sí | Plan de destino: `advanced` o `pro`. |
+| `durationMonths` | Sí | Periodo de facturación: `1`, `3`, `6` o `12` meses. |
+| `autoRenew` | No | Indica si la suscripción resultante se renueva automáticamente. Si se omite, su valor predeterminado es `false`. |
+| `requestId` | No | Clave de idempotencia de 8-128 caracteres unreserved de RFC 3986: `A-Z`, `a-z`, `0-9`, `.`, `_`, `~` y `-`. Puede omitirse por compatibilidad con clientes anteriores, pero se recomienda usarla. |
+
+Usa un `requestId` estable para una única intención confirmada por el usuario.
+Si se produce un timeout u otro resultado desconocido, repite la solicitud con
+el mismo payload y `requestId`. Una repetición exacta devuelve los
+`subscriptionId` e `invoiceId` originales sin un segundo cargo al monedero. Se
+rechaza la reutilización de ese `requestId` con otro `planId`, `durationMonths`
+o `autoRenew`. Genera un `requestId` nuevo para una nueva intención de compra.
+Sin `requestId`, la solicitud sigue aceptándose por compatibilidad con clientes
+anteriores, pero los intentos HTTP separados no son retry-safe ni idempotentes.
+
+| Caso de idempotencia | Comportamiento obligatorio |
+| --- | --- |
+| `same-intent` | Envía el `same-requestId` con el `same-payload`. |
+| `exact-replay` | Devuelve `original-subscriptionId` y `original-invoiceId` con `no-second-debit`. |
+| `conflicting-payload` | La solicitud es `rejected`. |
+| `new-intent` | Genera un `new-requestId`. |
+| `missing-requestId` | Mantiene `backward-compatible`, pero es `not-retry-safe` y `not-idempotent-across-HTTP-attempts`. |
+
+Respuesta: HTTP 200 OK.
+
+| Campo | Obligatorio | Descripción |
+| --- | --- | --- |
+| `subscriptionId` | Sí | Identificador de la suscripción activada. |
+| `invoiceId` | Sí | Identificador de la factura pagada. |
 
 ## POST /api/billing/account-plan/checkout
 

@@ -32,7 +32,41 @@ ausente, repetido ou em conflito com outro identificador.
 
 ## POST /api/billing/account-plan/balance-purchase
 
+<!-- api-contract: requestId=optional-backward-compatible-8-128-rfc3986-unreserved; requestId-omitted=not-retry-safe-across-http-attempts; autoRenew-default=false; same-intent=same-requestId-and-payload; exact-replay=original-subscriptionId-and-invoiceId-without-second-debit; conflicting-payload=rejected; new-intent=new-requestId -->
 Compra ou atualiza um plano de conta usando o saldo da carteira.
+
+Corpo do pedido:
+
+| Campo | Obrigatório | Descrição |
+| --- | --- | --- |
+| `planId` | Sim | Plano de destino: `advanced` ou `pro`. |
+| `durationMonths` | Sim | Período de faturação: `1`, `3`, `6` ou `12` meses. |
+| `autoRenew` | Não | Indica se a subscrição resultante é renovada automaticamente. Quando omitida, o valor predefinido é `false`. |
+| `requestId` | Não | Chave de idempotência com 8-128 caracteres unreserved do RFC 3986: `A-Z`, `a-z`, `0-9`, `.`, `_`, `~` e `-`. Pode ser omitida para compatibilidade com clientes anteriores, mas é recomendada. |
+
+Use um `requestId` estável para uma única intenção confirmada pelo utilizador.
+Se ocorrer um timeout ou outro resultado desconhecido, repita o pedido com o
+mesmo payload e `requestId`. Uma repetição exata devolve os `subscriptionId` e
+`invoiceId` originais sem um segundo débito na carteira. A reutilização desse
+`requestId` com outro `planId`, `durationMonths` ou `autoRenew` é rejeitada.
+Gere um novo `requestId` para uma nova intenção de compra. Sem `requestId`, o
+pedido continua a ser aceite para compatibilidade com clientes anteriores, mas
+tentativas HTTP separadas não são retry-safe nem idempotentes.
+
+| Caso de idempotência | Comportamento obrigatório |
+| --- | --- |
+| `same-intent` | Envie o `same-requestId` com o `same-payload`. |
+| `exact-replay` | Devolve `original-subscriptionId` e `original-invoiceId` com `no-second-debit`. |
+| `conflicting-payload` | O pedido é `rejected`. |
+| `new-intent` | Gere um `new-requestId`. |
+| `missing-requestId` | Mantém `backward-compatible`, mas é `not-retry-safe` e `not-idempotent-across-HTTP-attempts`. |
+
+Resposta: HTTP 200 OK.
+
+| Campo | Obrigatório | Descrição |
+| --- | --- | --- |
+| `subscriptionId` | Sim | Identificador da subscrição ativada. |
+| `invoiceId` | Sim | Identificador da fatura paga. |
 
 ## POST /api/billing/account-plan/checkout
 

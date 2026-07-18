@@ -31,7 +31,41 @@ conflicts with another identifier.
 
 ## POST /api/billing/account-plan/balance-purchase
 
+<!-- api-contract: requestId=optional-backward-compatible-8-128-rfc3986-unreserved; requestId-omitted=not-retry-safe-across-http-attempts; autoRenew-default=false; same-intent=same-requestId-and-payload; exact-replay=original-subscriptionId-and-invoiceId-without-second-debit; conflicting-payload=rejected; new-intent=new-requestId -->
 Purchases or upgrades an account plan using the wallet balance.
+
+Request body:
+
+| Field | Required | Description |
+| --- | --- | --- |
+| `planId` | Yes | Target plan: `advanced` or `pro`. |
+| `durationMonths` | Yes | Billing period: `1`, `3`, `6`, or `12` months. |
+| `autoRenew` | No | Whether the resulting subscription renews automatically. Defaults to `false` when omitted. |
+| `requestId` | No | Idempotency key containing 8-128 RFC 3986 unreserved characters: `A-Z`, `a-z`, `0-9`, `.`, `_`, `~`, and `-`. It may be omitted for backward compatibility, but is recommended. |
+
+Use one stable `requestId` for one confirmed user intent. If a timeout or
+another unknown result occurs, retry with the same payload and `requestId`.
+An exact replay returns the original `subscriptionId` and `invoiceId` without
+a second wallet debit. Reusing that `requestId` with a different `planId`,
+`durationMonths`, or `autoRenew` is rejected. Generate a new `requestId` for a
+new purchase intent. Without `requestId`, the request remains accepted for
+backward compatibility, but separate HTTP attempts are neither retry-safe nor
+idempotent.
+
+| Idempotency case | Required behavior |
+| --- | --- |
+| `same-intent` | Send the `same-requestId` with the `same-payload`. |
+| `exact-replay` | Return the `original-subscriptionId` and `original-invoiceId` with `no-second-debit`. |
+| `conflicting-payload` | The request is `rejected`. |
+| `new-intent` | Generate a `new-requestId`. |
+| `missing-requestId` | Remains `backward-compatible`, but is `not-retry-safe` and `not-idempotent-across-HTTP-attempts`. |
+
+Response: HTTP 200 OK.
+
+| Field | Required | Description |
+| --- | --- | --- |
+| `subscriptionId` | Yes | Identifier of the activated subscription. |
+| `invoiceId` | Yes | Identifier of the paid invoice. |
 
 ## POST /api/billing/account-plan/checkout
 
