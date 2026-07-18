@@ -12,11 +12,17 @@
 
 ## POST /api/billing/wallet/crypto-topup
 
-创建加密货币余额充值。
+<!-- api-contract: redirect-query=authoritative-externalReference; existing-value=replaced -->
+创建加密货币余额充值。提供 `returnUrl` 或 `cancelUrl` 时，API 会将其中的
+`externalReference` 查询参数设置为本次充值的准确引用，并替换旧值。请在支付服务商
+重定向期间保留该引用。
 
 ## POST /api/billing/wallet/topup/refresh
 
-刷新余额充值状态。
+<!-- api-contract: target=exact-topupId-or-externalReference; recent-topup-fallback=forbidden; result-correlation=fail-closed-on-missing-or-ambiguous -->
+刷新由 `topupId` 或 `externalReference` 准确标识的充值状态。请使用创建响应或返回
+URL 中的标识符，不要根据“最近一次充值”推断目标。如果标识符缺失、重复或与另一个
+标识符冲突，返回页面不得发起刷新请求。
 
 ## POST /api/billing/account-plan/balance-purchase
 

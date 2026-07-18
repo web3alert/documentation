@@ -14,11 +14,20 @@ Devuelve el resumen del saldo y del monedero de la cuenta.
 
 ## POST /api/billing/wallet/crypto-topup
 
-Crea una recarga de saldo con criptomonedas.
+<!-- api-contract: redirect-query=authoritative-externalReference; existing-value=replaced -->
+Crea una recarga de saldo con criptomonedas. Si se proporciona `returnUrl` o
+`cancelUrl`, la API establece su parámetro de consulta `externalReference` con
+la referencia exacta de la recarga creada y sustituye cualquier valor anterior.
+Conserva esa referencia durante la redirección del proveedor.
 
 ## POST /api/billing/wallet/topup/refresh
 
-Actualiza el estado de una recarga de saldo.
+<!-- api-contract: target=exact-topupId-or-externalReference; recent-topup-fallback=forbidden; result-correlation=fail-closed-on-missing-or-ambiguous -->
+Actualiza el estado de la recarga identificada por `topupId` o
+`externalReference`. Usa un identificador devuelto por la respuesta de creación
+o por la URL de retorno; no deduzcas el destino a partir de la recarga más
+reciente. Una página de retorno no debe solicitar la actualización si falta el
+identificador, está repetido o entra en conflicto con otro identificador.
 
 ## POST /api/billing/account-plan/balance-purchase
 

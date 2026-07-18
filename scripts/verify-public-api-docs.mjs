@@ -537,6 +537,46 @@ function contractMarkers(section) {
     .filter(line => line.startsWith('<!-- api-contract:'));
 }
 
+function validateWalletTopupContract(
+  markdown,
+  createContractMarker,
+  refreshContractMarker,
+) {
+  const errors = [];
+  const contracts = [
+    {
+      route: 'POST /api/billing/wallet/crypto-topup',
+      marker: createContractMarker,
+      tokens: ['returnUrl', 'cancelUrl', 'externalReference'],
+    },
+    {
+      route: 'POST /api/billing/wallet/topup/refresh',
+      marker: refreshContractMarker,
+      tokens: ['topupId', 'externalReference'],
+    },
+  ];
+
+  for (const contract of contracts) {
+    const section = routeSection(markdown, contract.route);
+    if (section == null) {
+      errors.push(`${contract.route} section is missing`);
+      continue;
+    }
+    const markers = contractMarkers(section);
+    if (markers.length != 1 || markers[0] != contract.marker) {
+      errors.push(`${contract.route} must carry its exact correlation contract marker`);
+    }
+    const tokens = inlineCodeTokens(section);
+    for (const token of contract.tokens) {
+      if (!tokens.includes(token)) {
+        errors.push(`${contract.route} must visibly document ${token}`);
+      }
+    }
+  }
+
+  return errors;
+}
+
 function validateLinkResponseTable(section, requirementTokens, subject) {
   const responseTables = markdownTables(section)
     .filter(table => exactValues(table.rows.map(tableField), ['key', 'uri']));
@@ -827,6 +867,8 @@ const tokenSummaryContractMarker = '<!-- api-contract: auth=provider-credentials
 const linkCreateContractMarker = '<!-- api-contract: auth=anonymous; uri=leading-slash-required; uri-prefix=/link/-forbidden; invalid-uri=400; response=Link-key-uri -->';
 const linkGetContractMarker = '<!-- api-contract: auth=anonymous; not-found=400; response=Link-key-uri -->';
 const resourceCapabilityContractMarker = '<!-- api-contract: resource-token=persistent-bearer-capability; setup-token=separate-one-time-15m; transport=https-only; logging=forbidden -->';
+const walletTopupCreateContractMarker = '<!-- api-contract: redirect-query=authoritative-externalReference; existing-value=replaced -->';
+const walletTopupRefreshContractMarker = '<!-- api-contract: target=exact-topupId-or-externalReference; recent-topup-fallback=forbidden; result-correlation=fail-closed-on-missing-or-ambiguous -->';
 const expectedAddressTypes = ['plain', 'ss58', 'evm', 'solana', 'bitcoin', 'cosmos'];
 const expectedWorkspaceAvatarResponseFields = [
   'url',
@@ -1382,6 +1424,18 @@ for (const locale of locales) {
   }
 
   for (const error of validateStateSwitchContract(stateSection, requirementTokens)) {
+    issues.push(`${locale}: ${error}`);
+  }
+
+  const billing = await readFile(
+    path.join(userRoot, locale, 'api-billing.md'),
+    'utf8',
+  );
+  for (const error of validateWalletTopupContract(
+    billing,
+    walletTopupCreateContractMarker,
+    walletTopupRefreshContractMarker,
+  )) {
     issues.push(`${locale}: ${error}`);
   }
 

@@ -14,11 +14,20 @@ Returns the account balance and wallet overview.
 
 ## POST /api/billing/wallet/crypto-topup
 
-Creates a crypto balance top-up.
+<!-- api-contract: redirect-query=authoritative-externalReference; existing-value=replaced -->
+Creates a crypto balance top-up. When `returnUrl` or `cancelUrl` is supplied,
+the API sets its `externalReference` query parameter to the exact reference of
+the created top-up, replacing any previous value. Preserve that reference
+across the provider redirect.
 
 ## POST /api/billing/wallet/topup/refresh
 
-Refreshes the state of a balance top-up.
+<!-- api-contract: target=exact-topupId-or-externalReference; recent-topup-fallback=forbidden; result-correlation=fail-closed-on-missing-or-ambiguous -->
+Refreshes the state of the top-up identified by `topupId` or
+`externalReference`. Use an identifier returned by the create response or the
+redirect URL; do not infer the target from the most recent top-up. A return page
+must not request a refresh when the identifier is missing, repeated, or
+conflicts with another identifier.
 
 ## POST /api/billing/account-plan/balance-purchase
 

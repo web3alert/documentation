@@ -14,11 +14,20 @@
 
 ## POST /api/billing/wallet/crypto-topup
 
-Создает пополнение баланса криптовалютой.
+<!-- api-contract: redirect-query=authoritative-externalReference; existing-value=replaced -->
+Создает пополнение баланса криптовалютой. Если передан `returnUrl` или
+`cancelUrl`, API устанавливает в нём query-параметр `externalReference` с
+точным идентификатором созданного пополнения, заменяя прежнее значение.
+Сохраните этот идентификатор при возврате от платежного провайдера.
 
 ## POST /api/billing/wallet/topup/refresh
 
-Обновляет статус пополнения баланса.
+<!-- api-contract: target=exact-topupId-or-externalReference; recent-topup-fallback=forbidden; result-correlation=fail-closed-on-missing-or-ambiguous -->
+Обновляет статус пополнения, точно указанного через `topupId` или
+`externalReference`. Используйте идентификатор из ответа создания или URL
+возврата; не определяйте пополнение как самое последнее. Страница возврата не
+должна вызывать refresh, если идентификатор отсутствует, повторяется или
+конфликтует с другим идентификатором.
 
 ## POST /api/billing/account-plan/balance-purchase
 

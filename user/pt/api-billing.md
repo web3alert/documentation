@@ -14,11 +14,21 @@ Devolve a visão geral do saldo e da carteira da conta.
 
 ## POST /api/billing/wallet/crypto-topup
 
-Cria um carregamento de saldo com criptomoeda.
+<!-- api-contract: redirect-query=authoritative-externalReference; existing-value=replaced -->
+Cria um carregamento de saldo com criptomoeda. Quando `returnUrl` ou
+`cancelUrl` é fornecido, a API define o parâmetro de consulta
+`externalReference` com a referência exata do carregamento criado, substituindo
+qualquer valor anterior. Preserve essa referência durante o redirecionamento do
+fornecedor.
 
 ## POST /api/billing/wallet/topup/refresh
 
-Atualiza o estado de um carregamento de saldo.
+<!-- api-contract: target=exact-topupId-or-externalReference; recent-topup-fallback=forbidden; result-correlation=fail-closed-on-missing-or-ambiguous -->
+Atualiza o estado do carregamento identificado por `topupId` ou
+`externalReference`. Use um identificador devolvido pela resposta de criação ou
+pelo URL de retorno; não deduza o destino a partir do carregamento mais recente.
+Uma página de retorno não deve pedir a atualização se o identificador estiver
+ausente, repetido ou em conflito com outro identificador.
 
 ## POST /api/billing/account-plan/balance-purchase
 
