@@ -145,7 +145,33 @@ do not start another checkout until the pending one is canceled or reconciled.
 
 ## POST /api/billing/coupon/redeem
 
-Redeems a coupon.
+<!-- api-contract: code=required-trim-case-insensitive; same-account-retry=same-couponId-same-subscriptionId-same-invoiceId-without-second-application; redeemed-by-another-account-deleted-invalid-or-unsafe-subscription-lineage=fail-closed; paid-account-plan-period=extend-overlay-or-new-term-as-applicable; response=couponId-subscriptionId-invoiceId -->
+Redeems a coupon for a paid account plan.
+
+Request body:
+
+| Field | Required | Description |
+| --- | --- | --- |
+| `code` | Yes | Coupon code. Leading and trailing whitespace is removed (`trim`), and matching is `case-insensitive`. |
+
+The coupon's paid account-plan period is applied once. Depending on the
+current paid plan period, redemption extends it, overlays the applicable
+period, or starts a new term.
+
+| Redemption case | Required behavior |
+| --- | --- |
+| `code-normalization` | Apply `trim` and `case-insensitive` matching. |
+| `same-account-retry` | Return `same-couponId`, `same-subscriptionId`, and `same-invoiceId` with `no-second-application`. |
+| `unavailable-or-unsafe` | A coupon that is `redeemed-by-another-account`, `deleted`, `invalid`, or has an `unsafe-subscription-lineage` must `fail-closed`. |
+| `paid-account-plan-period` | `extend`, `overlay`, or start a `new-term`, `as-applicable`. |
+
+Response: HTTP 200 OK.
+
+| Field | Required | Description |
+| --- | --- | --- |
+| `couponId` | Yes | Identifier of the redeemed coupon. |
+| `subscriptionId` | Yes | Identifier of the resulting account-plan subscription. |
+| `invoiceId` | Yes | Identifier of the paid coupon invoice. |
 
 ## POST /api/billing/coupon/gift-purchase
 

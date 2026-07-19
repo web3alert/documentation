@@ -149,7 +149,33 @@ reconciliation.
 
 ## POST /api/billing/coupon/redeem
 
-Активирует купон.
+<!-- api-contract: code=required-trim-case-insensitive; same-account-retry=same-couponId-same-subscriptionId-same-invoiceId-without-second-application; redeemed-by-another-account-deleted-invalid-or-unsafe-subscription-lineage=fail-closed; paid-account-plan-period=extend-overlay-or-new-term-as-applicable; response=couponId-subscriptionId-invoiceId -->
+Активирует купон для платного тарифа аккаунта.
+
+Тело запроса:
+
+| Поле | Обязательно | Описание |
+| --- | --- | --- |
+| `code` | Да | Код купона. Начальные и конечные пробелы удаляются (`trim`), регистр не учитывается (`case-insensitive`). |
+
+Оплаченный купоном период тарифа применяется только один раз. В зависимости
+от текущего оплаченного периода активация продлевает его, накладывает
+применимый период или начинает новый период.
+
+| Сценарий активации | Обязательное поведение |
+| --- | --- |
+| `code-normalization` | Применяются `trim` и сопоставление `case-insensitive`. |
+| `same-account-retry` | Возвращаются `same-couponId`, `same-subscriptionId` и `same-invoiceId` с `no-second-application`. |
+| `unavailable-or-unsafe` | Купон со статусом `redeemed-by-another-account`, `deleted`, `invalid` или с `unsafe-subscription-lineage` должен завершаться как `fail-closed`. |
+| `paid-account-plan-period` | Выполняется `extend`, `overlay` или начинается `new-term`, `as-applicable`. |
+
+Ответ: HTTP 200 OK.
+
+| Поле | Обязательно | Описание |
+| --- | --- | --- |
+| `couponId` | Да | Идентификатор активированного купона. |
+| `subscriptionId` | Да | Идентификатор полученной подписки на тариф аккаунта. |
+| `invoiceId` | Да | Идентификатор оплаченного купоном счёта. |
 
 ## POST /api/billing/coupon/gift-purchase
 

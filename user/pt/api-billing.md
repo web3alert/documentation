@@ -148,7 +148,33 @@ pendente.
 
 ## POST /api/billing/coupon/redeem
 
-Resgata um cupão.
+<!-- api-contract: code=required-trim-case-insensitive; same-account-retry=same-couponId-same-subscriptionId-same-invoiceId-without-second-application; redeemed-by-another-account-deleted-invalid-or-unsafe-subscription-lineage=fail-closed; paid-account-plan-period=extend-overlay-or-new-term-as-applicable; response=couponId-subscriptionId-invoiceId -->
+Resgata um cupão para um plano de conta pago.
+
+Corpo do pedido:
+
+| Campo | Obrigatório | Descrição |
+| --- | --- | --- |
+| `code` | Sim | Código do cupão. Os espaços iniciais e finais são removidos (`trim`) e a correspondência é `case-insensitive`. |
+
+O período pago do plano de conta do cupão é aplicado uma única vez. Consoante
+o período pago atual, o resgate prolonga-o, sobrepõe o período aplicável ou
+inicia um novo período.
+
+| Caso de resgate | Comportamento obrigatório |
+| --- | --- |
+| `code-normalization` | Aplica `trim` e correspondência `case-insensitive`. |
+| `same-account-retry` | Devolve `same-couponId`, `same-subscriptionId` e `same-invoiceId` com `no-second-application`. |
+| `unavailable-or-unsafe` | Um cupão `redeemed-by-another-account`, `deleted`, `invalid` ou com `unsafe-subscription-lineage` deve fazer `fail-closed`. |
+| `paid-account-plan-period` | Usa `extend`, `overlay` ou inicia um `new-term`, `as-applicable`. |
+
+Resposta: HTTP 200 OK.
+
+| Campo | Obrigatório | Descrição |
+| --- | --- | --- |
+| `couponId` | Sim | Identificador do cupão resgatado. |
+| `subscriptionId` | Sim | Identificador da subscrição resultante do plano de conta. |
+| `invoiceId` | Sim | Identificador da fatura paga do cupão. |
 
 ## POST /api/billing/coupon/gift-purchase
 

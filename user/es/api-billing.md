@@ -146,7 +146,33 @@ el pendiente.
 
 ## POST /api/billing/coupon/redeem
 
-Canjea un cupón.
+<!-- api-contract: code=required-trim-case-insensitive; same-account-retry=same-couponId-same-subscriptionId-same-invoiceId-without-second-application; redeemed-by-another-account-deleted-invalid-or-unsafe-subscription-lineage=fail-closed; paid-account-plan-period=extend-overlay-or-new-term-as-applicable; response=couponId-subscriptionId-invoiceId -->
+Canjea un cupón para un plan de cuenta de pago.
+
+Cuerpo de la solicitud:
+
+| Campo | Obligatorio | Descripción |
+| --- | --- | --- |
+| `code` | Sí | Código del cupón. Se eliminan los espacios iniciales y finales (`trim`) y la comparación es `case-insensitive`. |
+
+El periodo pagado del plan de cuenta del cupón se aplica una sola vez. Según
+el periodo de pago actual, el canje lo amplía, superpone el periodo aplicable
+o inicia un periodo nuevo.
+
+| Caso de canje | Comportamiento obligatorio |
+| --- | --- |
+| `code-normalization` | Aplica `trim` y comparación `case-insensitive`. |
+| `same-account-retry` | Devuelve `same-couponId`, `same-subscriptionId` y `same-invoiceId` con `no-second-application`. |
+| `unavailable-or-unsafe` | Un cupón `redeemed-by-another-account`, `deleted`, `invalid` o con `unsafe-subscription-lineage` debe hacer `fail-closed`. |
+| `paid-account-plan-period` | Usa `extend`, `overlay` o inicia un `new-term`, `as-applicable`. |
+
+Respuesta: HTTP 200 OK.
+
+| Campo | Obligatorio | Descripción |
+| --- | --- | --- |
+| `couponId` | Sí | Identificador del cupón canjeado. |
+| `subscriptionId` | Sí | Identificador de la suscripción resultante del plan de cuenta. |
+| `invoiceId` | Sí | Identificador de la factura pagada del cupón. |
 
 ## POST /api/billing/coupon/gift-purchase
 

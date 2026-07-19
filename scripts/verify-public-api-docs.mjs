@@ -925,6 +925,144 @@ function validateProjectAddonBalancePurchaseContract(
   );
 }
 
+function validateCouponRedeemContract(
+  section,
+  requirementTokens,
+  contractMarker,
+) {
+  const subject = 'coupon redeem';
+  if (section == null) {
+    return [`${subject} section is missing`];
+  }
+
+  const errors = [];
+  const markers = contractMarkers(section);
+  if (markers.length != 1 || markers[0] != contractMarker) {
+    errors.push(`${subject} must carry its exact lifecycle contract marker`);
+  }
+
+  const requestTables = markdownTables(section)
+    .filter(table => table.rows.some(row => tableField(row) == 'code'));
+  if (requestTables.length != 1) {
+    errors.push(
+      `${subject} must contain one request table, found ${requestTables.length}`,
+    );
+  } else {
+    const [request] = requestTables;
+    const fields = request.rows.map(tableField);
+    const code = request.rows.find(row => tableField(row) == 'code');
+    if (request.header.length != 3 || !exactValues(fields, ['code'])) {
+      errors.push(`${subject} request fields must be exactly code`);
+    }
+    if (code?.[1] != requirementTokens.required) {
+      errors.push(`${subject} code must be required`);
+    }
+    if (
+      !exactValues(
+        inlineCodeTokens(code?.[2]),
+        ['trim', 'case-insensitive'],
+      )
+    ) {
+      errors.push(
+        `${subject} code must visibly document trim and case-insensitive normalization`,
+      );
+    }
+  }
+
+  const behaviorTables = markdownTables(section)
+    .filter(table => table.rows.some(row => tableField(row) == 'same-account-retry'));
+  if (behaviorTables.length != 1) {
+    errors.push(
+      `${subject} must contain one visible lifecycle behavior table, found ${behaviorTables.length}`,
+    );
+  } else {
+    const [behavior] = behaviorTables;
+    const expectedBehavior = new Map([
+      ['code-normalization', ['trim', 'case-insensitive']],
+      [
+        'same-account-retry',
+        [
+          'same-couponId',
+          'same-subscriptionId',
+          'same-invoiceId',
+          'no-second-application',
+        ],
+      ],
+      [
+        'unavailable-or-unsafe',
+        [
+          'redeemed-by-another-account',
+          'deleted',
+          'invalid',
+          'unsafe-subscription-lineage',
+          'fail-closed',
+        ],
+      ],
+      [
+        'paid-account-plan-period',
+        ['extend', 'overlay', 'new-term', 'as-applicable'],
+      ],
+    ]);
+    const fields = behavior.rows.map(tableField);
+    if (
+      behavior.header.length != 2
+      || !exactValues(fields, [...expectedBehavior.keys()])
+    ) {
+      errors.push(`${subject} lifecycle behavior rows are incomplete`);
+    }
+    for (const [field, expectedTokens] of expectedBehavior) {
+      const row = behavior.rows.find(item => tableField(item) == field);
+      if (!exactValues(inlineCodeTokens(row?.[1]), expectedTokens)) {
+        errors.push(
+          `${subject} ${field} behavior must be ${expectedTokens.join(', ')}`,
+        );
+      }
+    }
+  }
+
+  const responseTables = markdownTables(section)
+    .filter(table => {
+      const fields = table.rows.map(tableField);
+      return fields.includes('couponId')
+        || fields.includes('subscriptionId')
+        || fields.includes('invoiceId');
+    });
+  if (responseTables.length != 1) {
+    errors.push(
+      `${subject} must contain one response table, found ${responseTables.length}`,
+    );
+  } else {
+    const [response] = responseTables;
+    const expectedFields = ['couponId', 'subscriptionId', 'invoiceId'];
+    const fields = response.rows.map(tableField);
+    if (
+      response.header.length != 3
+      || !exactValues(fields, expectedFields)
+    ) {
+      errors.push(
+        `${subject} response fields must be exactly ${expectedFields.join(', ')}`,
+      );
+    }
+    for (const field of expectedFields) {
+      if (
+        response.rows.find(row => tableField(row) == field)?.[1]
+        != requirementTokens.required
+      ) {
+        errors.push(`${subject} response ${field} must be required`);
+      }
+    }
+  }
+
+  if (!section.includes('HTTP 200 OK')) {
+    errors.push(`${subject} response must be HTTP 200 OK`);
+  }
+  if (/\/api\/v\d+(?:\/|\b)/.test(section)) {
+    errors.push(`${subject} must use the canonical /api route`);
+  }
+
+  return errors;
+}
+
 function validateLinkResponseTable(section, requirementTokens, subject) {
   const responseTables = markdownTables(section)
     .filter(table => exactValues(table.rows.map(tableField), ['key', 'uri']));
@@ -1223,6 +1361,7 @@ const walletTopupCreateContractMarker = '<!-- api-contract: redirect-query=autho
 const walletTopupRefreshContractMarker = '<!-- api-contract: target=exact-topupId-or-externalReference; recent-topup-fallback=forbidden; result-correlation=fail-closed-on-missing-or-ambiguous -->';
 const accountPlanBalancePurchaseContractMarker = '<!-- api-contract: requestId=optional-backward-compatible-8-128-rfc3986-unreserved; requestId-omitted=not-retry-safe-across-http-attempts; autoRenew-default=false; same-intent=same-requestId-and-payload; exact-replay=original-subscriptionId-and-invoiceId-without-second-debit; conflicting-payload=rejected; new-intent=new-requestId -->';
 const projectAddonBalancePurchaseContractMarker = '<!-- api-contract: requestId=optional-backward-compatible-8-128-rfc3986-unreserved; requestId-omitted=not-retry-safe-across-http-attempts; autoRenew-default=false; same-intent=same-requestId-and-full-payload; exact-replay=original-subscriptionId-and-invoiceId-without-second-debit; conflicting-projectFullname-addonCode-durationMonths-autoRenew=rejected; new-intent=new-requestId -->';
+const couponRedeemContractMarker = '<!-- api-contract: code=required-trim-case-insensitive; same-account-retry=same-couponId-same-subscriptionId-same-invoiceId-without-second-application; redeemed-by-another-account-deleted-invalid-or-unsafe-subscription-lineage=fail-closed; paid-account-plan-period=extend-overlay-or-new-term-as-applicable; response=couponId-subscriptionId-invoiceId -->';
 const projectTransferBlockingSubscriptionStatuses = [
   'draft',
   'pending_activation',
@@ -1459,6 +1598,112 @@ for (const fixture of invalidProjectAddonBalancePurchaseFixtures) {
     issues.push(
       `project add-on balance purchase validator accepts ${fixture.name}`,
     );
+  }
+}
+
+const validCouponRedeemFixture = `
+${couponRedeemContractMarker}
+
+| Field | Required | Description |
+| --- | --- | --- |
+| \`code\` | Yes | Apply \`trim\` and \`case-insensitive\` matching. |
+
+| Case | Behavior |
+| --- | --- |
+| \`code-normalization\` | Apply \`trim\` and \`case-insensitive\` matching. |
+| \`same-account-retry\` | Return \`same-couponId\`, \`same-subscriptionId\`, and \`same-invoiceId\` with \`no-second-application\`. |
+| \`unavailable-or-unsafe\` | \`redeemed-by-another-account\`, \`deleted\`, \`invalid\`, or \`unsafe-subscription-lineage\` must \`fail-closed\`. |
+| \`paid-account-plan-period\` | \`extend\`, \`overlay\`, or start a \`new-term\`, \`as-applicable\`. |
+
+Response: HTTP 200 OK.
+
+| Field | Required | Description |
+| --- | --- | --- |
+| \`couponId\` | Yes | Coupon. |
+| \`subscriptionId\` | Yes | Subscription. |
+| \`invoiceId\` | Yes | Invoice. |
+`;
+const invalidCouponRedeemFixtures = [
+  {
+    name: 'altered lifecycle marker',
+    markdown: validCouponRedeemFixture.replace(
+      'code=required-trim-case-insensitive',
+      'code=optional',
+    ),
+  },
+  {
+    name: 'optional code',
+    markdown: validCouponRedeemFixture.replace(
+      '| `code` | Yes |',
+      '| `code` | No |',
+    ),
+  },
+  {
+    name: 'missing case-insensitive normalization',
+    markdown: validCouponRedeemFixture.replace(
+      '| `code` | Yes | Apply `trim` and `case-insensitive` matching. |',
+      '| `code` | Yes | Apply `trim` matching. |',
+    ),
+  },
+  {
+    name: 'same-account retry allows a second application',
+    markdown: validCouponRedeemFixture.replace(
+      '`no-second-application`',
+      '`second-application-allowed`',
+    ),
+  },
+  {
+    name: 'same-account retry omits couponId',
+    markdown: validCouponRedeemFixture.replace(
+      '`same-couponId`, ',
+      '',
+    ),
+  },
+  {
+    name: 'unsafe subscription lineage does not fail closed',
+    markdown: validCouponRedeemFixture.replace(
+      '`unsafe-subscription-lineage` must `fail-closed`',
+      '`unsafe-subscription-lineage` may `continue`',
+    ),
+  },
+  {
+    name: 'missing paid account-plan overlay behavior',
+    markdown: validCouponRedeemFixture.replace(
+      ', `overlay`',
+      '',
+    ),
+  },
+  {
+    name: 'missing couponId response field',
+    markdown: validCouponRedeemFixture.replace(
+      '| `couponId` | Yes | Coupon. |\n',
+      '',
+    ),
+  },
+  {
+    name: 'versioned API path',
+    markdown: `${validCouponRedeemFixture}\nPOST /api/v2/billing/coupon/redeem\n`,
+  },
+];
+
+if (
+  validateCouponRedeemContract(
+    validCouponRedeemFixture,
+    fixtureRequirementTokens,
+    couponRedeemContractMarker,
+  ).length > 0
+) {
+  issues.push('coupon redeem validator rejects its valid fixture');
+}
+for (const fixture of invalidCouponRedeemFixtures) {
+  if (
+    validateCouponRedeemContract(
+      fixture.markdown,
+      fixtureRequirementTokens,
+      couponRedeemContractMarker,
+    ).length == 0
+  ) {
+    issues.push(`coupon redeem validator accepts ${fixture.name}`);
   }
 }
 
@@ -2235,6 +2480,16 @@ for (const locale of locales) {
     ),
     requirementTokens,
     projectAddonBalancePurchaseContractMarker,
+  )) {
+    issues.push(`${locale}: ${error}`);
+  }
+  for (const error of validateCouponRedeemContract(
+    routeSection(
+      billing,
+      'POST /api/billing/coupon/redeem',
+    ),
+    requirementTokens,
+    couponRedeemContractMarker,
   )) {
     issues.push(`${locale}: ${error}`);
   }
