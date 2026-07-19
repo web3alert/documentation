@@ -6,6 +6,13 @@ Endpoints Project Transfers переносят ownership project между work
 
 Возвращает план переноса project без применения изменений.
 
+<!-- api-contract: project-addon-transfer-block=draft-pending_activation-active-past_due-cancel_at_period_end; resolution=cancel-or-wait-until-ended; recurring-billing-owner-continuity=fail-closed -->
+Планирование переноса блокируется, пока подписка project add-on находится в
+статусе `draft`, `pending_activation`, `active`, `past_due` или
+`cancel_at_period_end`. Отмените подписку или дождитесь её завершения, прежде
+чем снова планировать перенос. Это предотвращает неявный перенос регулярных
+списаний между владельцами.
+
 Аргументы:
 
 | Аргумент | Где | Описание |
@@ -24,6 +31,13 @@ Endpoints Project Transfers переносят ownership project между work
 ## POST /api/projects/:fullname/transfer-requests
 
 Создает transfer request. Project будет перенесен только после accept со стороны owner целевого workspace.
+
+<!-- api-contract: project-addon-transfer-block=draft-pending_activation-active-past_due-cancel_at_period_end; resolution=cancel-or-wait-until-ended; recurring-billing-owner-continuity=fail-closed -->
+Создание запроса блокируется, пока подписка project add-on находится в статусе
+`draft`, `pending_activation`, `active`, `past_due` или
+`cancel_at_period_end`. Отмените подписку или дождитесь её завершения, прежде
+чем создавать transfer request. Это предотвращает неявный перенос регулярных
+списаний между владельцами.
 
 Аргументы:
 
@@ -60,6 +74,13 @@ Endpoints Project Transfers переносят ownership project между work
 ## POST /api/project-transfer-requests/:id/accept
 
 Принимает incoming transfer request и применяет перенос project.
+
+<!-- api-contract: project-addon-transfer-block=draft-pending_activation-active-past_due-cancel_at_period_end; resolution=cancel-or-wait-until-ended; recurring-billing-owner-continuity=fail-closed -->
+Принятие запроса блокируется, пока подписка project add-on находится в статусе
+`draft`, `pending_activation`, `active`, `past_due` или
+`cancel_at_period_end`. Отмените подписку или дождитесь её завершения, прежде
+чем принимать запрос. Это предотвращает неявный перенос регулярных списаний
+между владельцами.
 
 Аргументы:
 

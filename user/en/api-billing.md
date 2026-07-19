@@ -77,15 +77,71 @@ Creates a direct crypto checkout for an account plan.
 
 ## POST /api/billing/project-addon/balance-purchase
 
+<!-- api-contract: requestId=optional-backward-compatible-8-128-rfc3986-unreserved; requestId-omitted=not-retry-safe-across-http-attempts; autoRenew-default=false; same-intent=same-requestId-and-full-payload; exact-replay=original-subscriptionId-and-invoiceId-without-second-debit; conflicting-projectFullname-addonCode-durationMonths-autoRenew=rejected; new-intent=new-requestId -->
 Purchases a project free-access add-on using the wallet balance.
+
+Request body:
+
+| Field | Required | Description |
+| --- | --- | --- |
+| `projectFullname` | Yes | Fully qualified name of the project receiving the add-on. |
+| `addonCode` | Yes | Add-on identifier: `project-free-access`. |
+| `durationMonths` | Yes | Billing period: `1`, `3`, `6`, or `12` months. |
+| `autoRenew` | No | Whether the resulting subscription renews automatically. Defaults to `false` when omitted. |
+| `requestId` | No | Idempotency key containing 8-128 RFC 3986 unreserved characters: `A-Z`, `a-z`, `0-9`, `.`, `_`, `~`, and `-`. It may be omitted for backward compatibility, but is recommended. |
+
+Use one stable `requestId` for one confirmed user intent. If a timeout or
+another unknown result occurs, retry with the same `requestId` and the same
+full payload, including `projectFullname`, `addonCode`, `durationMonths`, and
+`autoRenew`. An exact replay returns the original `subscriptionId` and
+`invoiceId` without a second wallet debit. Reusing that `requestId` after
+changing any of those payload fields is rejected. Generate a new `requestId`
+for a new purchase intent. Without `requestId`, the request remains accepted
+for backward compatibility, but separate HTTP attempts are neither retry-safe
+nor idempotent.
+
+| Idempotency case | Required behavior |
+| --- | --- |
+| `same-intent` | Send the `same-requestId` with the `same-full-payload`: `projectFullname`, `addonCode`, `durationMonths`, and `autoRenew`. |
+| `exact-replay` | Return the `original-subscriptionId` and `original-invoiceId` with `no-second-debit`. |
+| `conflicting-payload` | Changing `projectFullname`, `addonCode`, `durationMonths`, or `autoRenew` is `rejected`. |
+| `new-intent` | Generate a `new-requestId`. |
+| `missing-requestId` | Remains `backward-compatible`, but is `not-retry-safe` and `not-idempotent-across-HTTP-attempts`. |
+
+Response: HTTP 200 OK.
+
+| Field | Required | Description |
+| --- | --- | --- |
+| `subscriptionId` | Yes | Identifier of the activated project add-on subscription. |
+| `invoiceId` | Yes | Identifier of the paid invoice. |
 
 ## POST /api/billing/project-addon/checkout
 
+<!-- api-contract: pending-hosted-retry=existing-subscriptionId-invoiceId-externalReference-and-fresh-signed-form -->
 Creates a checkout for a project add-on.
+
+When the matching hosted checkout is still pending, a retry returns the existing
+`subscriptionId`, `invoiceId`, and `externalReference`, together with a newly
+signed `checkout` form. Submit the latest returned form.
+
+| Checkout case | Required behavior |
+| --- | --- |
+| `pending-hosted-retry` | Return the existing `subscriptionId`, `invoiceId`, and `externalReference` with a fresh signed `checkout` form. |
 
 ## POST /api/billing/project-addon/crypto-checkout
 
+<!-- api-contract: pending-linked-provider-order-retry=same-providerOrderId-and-paymentUrl; ambiguous-provider-creation-or-linkage=fail-closed-pending; next-attempt=cancel-or-reconcile-first -->
 Creates a direct crypto checkout for a project add-on.
+
+If a pending checkout is already linked to a provider order, retrying returns
+the same `providerOrderId` and `paymentUrl`. If provider order creation or
+linkage has an ambiguous result, the checkout remains pending and fails closed:
+do not start another checkout until the pending one is canceled or reconciled.
+
+| Checkout case | Required behavior |
+| --- | --- |
+| `pending-linked-order-retry` | Return the same `providerOrderId` and `paymentUrl`. |
+| `ambiguous-provider-creation-or-linkage` | Keep `fail-closed-pending`; require `cancel-or-reconcile-before-new-attempt`. |
 
 ## POST /api/billing/coupon/redeem
 
@@ -113,8 +169,26 @@ Updates automatic billing renewal.
 
 ## POST /api/billing/crypto-checkout/refresh
 
+<!-- api-contract: late-payment-after-cancel-or-project-transfer=no-reactivation; disposition=reconciliation-or-refund -->
 Refreshes the state of a crypto checkout.
+
+For a project add-on, a late payment after checkout cancellation or project
+transfer does not reactivate the subscription or project access. The payment is
+handled through reconciliation or refund instead.
+
+| Lifecycle case | Required behavior |
+| --- | --- |
+| `late-payment-after-cancel-or-project-transfer` | Preserve `no-reactivation`; use `reconciliation-or-refund`. |
 
 ## POST /api/billing/crypto-checkout/cancel
 
+<!-- api-contract: late-payment-after-cancel-or-project-transfer=no-reactivation; disposition=reconciliation-or-refund -->
 Cancels a crypto checkout.
+
+Cancellation is terminal for project add-on activation. If payment is observed
+later, including after the project was transferred, it does not reactivate the
+subscription or project access and is handled through reconciliation or refund.
+
+| Lifecycle case | Required behavior |
+| --- | --- |
+| `late-payment-after-cancel-or-project-transfer` | Preserve `no-reactivation`; use `reconciliation-or-refund`. |

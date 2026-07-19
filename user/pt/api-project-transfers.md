@@ -6,6 +6,13 @@ Project transfer endpoints movem ownership de project entre workspaces através 
 
 Devolve plano de transferência do project sem aplicar alterações.
 
+<!-- api-contract: project-addon-transfer-block=draft-pending_activation-active-past_due-cancel_at_period_end; resolution=cancel-or-wait-until-ended; recurring-billing-owner-continuity=fail-closed -->
+O planeamento é bloqueado enquanto o projeto tiver uma subscrição de add-on no
+estado `draft`, `pending_activation`, `active`, `past_due` ou
+`cancel_at_period_end`. Cancele a subscrição ou aguarde até que termine antes de
+voltar a planear a transferência. Isto impede que a faturação recorrente seja
+transferida implicitamente entre proprietários.
+
 Arguments:
 
 | Argument | Location | Description |
@@ -24,6 +31,13 @@ Resposta: [ProjectTransferPlan](types.md#projecttransferplan).
 ## POST /api/projects/:fullname/transfer-requests
 
 Cria transfer request. Project será movido apenas depois de accept pelo owner do target workspace.
+
+<!-- api-contract: project-addon-transfer-block=draft-pending_activation-active-past_due-cancel_at_period_end; resolution=cancel-or-wait-until-ended; recurring-billing-owner-continuity=fail-closed -->
+A criação do pedido é bloqueada enquanto o projeto tiver uma subscrição de
+add-on no estado `draft`, `pending_activation`, `active`, `past_due` ou
+`cancel_at_period_end`. Cancele a subscrição ou aguarde até que termine antes de
+criar o pedido de transferência. Isto impede que a faturação recorrente seja
+transferida implicitamente entre proprietários.
 
 Arguments:
 
@@ -60,6 +74,13 @@ Resposta: [ProjectTransferRequest[]](types.md#projecttransferrequest).
 ## POST /api/project-transfer-requests/:id/accept
 
 Aceita incoming transfer request e aplica a transferência do project.
+
+<!-- api-contract: project-addon-transfer-block=draft-pending_activation-active-past_due-cancel_at_period_end; resolution=cancel-or-wait-until-ended; recurring-billing-owner-continuity=fail-closed -->
+A aceitação é bloqueada enquanto o projeto tiver uma subscrição de add-on no
+estado `draft`, `pending_activation`, `active`, `past_due` ou
+`cancel_at_period_end`. Cancele a subscrição ou aguarde até que termine antes de
+aceitar o pedido. Isto impede que a faturação recorrente seja transferida
+implicitamente entre proprietários.
 
 Arguments:
 

@@ -6,6 +6,13 @@ Project transfer endpoints move project ownership between workspaces through req
 
 Returns project transfer plan without applying changes.
 
+<!-- api-contract: project-addon-transfer-block=draft-pending_activation-active-past_due-cancel_at_period_end; resolution=cancel-or-wait-until-ended; recurring-billing-owner-continuity=fail-closed -->
+Planning is blocked while the project has a project add-on subscription in
+`draft`, `pending_activation`, `active`, `past_due`, or
+`cancel_at_period_end`. Cancel the subscription or wait until it has ended
+before planning the transfer again. This prevents recurring billing from moving
+implicitly between owners.
+
 Arguments:
 
 | Argument | Location | Description |
@@ -24,6 +31,13 @@ Response: [ProjectTransferPlan](types.md#projecttransferplan).
 ## POST /api/projects/:fullname/transfer-requests
 
 Creates transfer request. Project will be moved only after accept from target workspace owner.
+
+<!-- api-contract: project-addon-transfer-block=draft-pending_activation-active-past_due-cancel_at_period_end; resolution=cancel-or-wait-until-ended; recurring-billing-owner-continuity=fail-closed -->
+Request creation is blocked while the project has a project add-on subscription
+in `draft`, `pending_activation`, `active`, `past_due`, or
+`cancel_at_period_end`. Cancel the subscription or wait until it has ended
+before creating the transfer request. This prevents recurring billing from
+moving implicitly between owners.
 
 Arguments:
 
@@ -60,6 +74,13 @@ Response: [ProjectTransferRequest[]](types.md#projecttransferrequest).
 ## POST /api/project-transfer-requests/:id/accept
 
 Accepts incoming transfer request and applies project transfer.
+
+<!-- api-contract: project-addon-transfer-block=draft-pending_activation-active-past_due-cancel_at_period_end; resolution=cancel-or-wait-until-ended; recurring-billing-owner-continuity=fail-closed -->
+Acceptance is blocked while the project has a project add-on subscription in
+`draft`, `pending_activation`, `active`, `past_due`, or
+`cancel_at_period_end`. Cancel the subscription or wait until it has ended
+before accepting the request. This prevents recurring billing from moving
+implicitly between owners.
 
 Arguments:
 

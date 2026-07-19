@@ -577,20 +577,144 @@ function validateWalletTopupContract(
   return errors;
 }
 
-function validateAccountPlanBalancePurchaseContract(
+function validateProjectAddonCheckoutLifecycleContract(
+  markdown,
+  hostedContractMarker,
+  cryptoContractMarker,
+  latePaymentContractMarker,
+) {
+  const errors = [];
+  const contracts = [
+    {
+      route: 'POST /api/billing/project-addon/checkout',
+      marker: hostedContractMarker,
+      tokens: [
+        'pending-hosted-retry',
+        'subscriptionId',
+        'invoiceId',
+        'externalReference',
+        'checkout',
+      ],
+    },
+    {
+      route: 'POST /api/billing/project-addon/crypto-checkout',
+      marker: cryptoContractMarker,
+      tokens: [
+        'pending-linked-order-retry',
+        'providerOrderId',
+        'paymentUrl',
+        'ambiguous-provider-creation-or-linkage',
+        'fail-closed-pending',
+        'cancel-or-reconcile-before-new-attempt',
+      ],
+    },
+    {
+      route: 'POST /api/billing/crypto-checkout/refresh',
+      marker: latePaymentContractMarker,
+      tokens: [
+        'late-payment-after-cancel-or-project-transfer',
+        'no-reactivation',
+        'reconciliation-or-refund',
+      ],
+    },
+    {
+      route: 'POST /api/billing/crypto-checkout/cancel',
+      marker: latePaymentContractMarker,
+      tokens: [
+        'late-payment-after-cancel-or-project-transfer',
+        'no-reactivation',
+        'reconciliation-or-refund',
+      ],
+    },
+  ];
+
+  for (const contract of contracts) {
+    const section = routeSection(markdown, contract.route);
+    if (section == null) {
+      errors.push(`${contract.route} section is missing`);
+      continue;
+    }
+
+    const markers = contractMarkers(section);
+    if (markers.length != 1 || markers[0] != contract.marker) {
+      errors.push(`${contract.route} must carry its exact checkout lifecycle marker`);
+    }
+
+    const visibleSection = section.replace(/<!--[\s\S]*?-->/g, '');
+    const visibleTokens = inlineCodeTokens(visibleSection);
+    for (const token of contract.tokens) {
+      if (!visibleTokens.includes(token)) {
+        errors.push(`${contract.route} must visibly document ${token}`);
+      }
+    }
+
+    if (/\/api\/v\d+(?:\/|\b)/.test(section)) {
+      errors.push(`${contract.route} must use the canonical /api route`);
+    }
+  }
+
+  return errors;
+}
+
+function validateProjectTransferBillingContinuityContract(
+  markdown,
+  contractMarker,
+  blockingStatuses,
+) {
+  const errors = [];
+  const routes = [
+    'POST /api/projects/:fullname/transfer/plan',
+    'POST /api/projects/:fullname/transfer-requests',
+    'POST /api/project-transfer-requests/:id/accept',
+  ];
+
+  for (const route of routes) {
+    const section = routeSection(markdown, route);
+    if (section == null) {
+      errors.push(`${route} section is missing`);
+      continue;
+    }
+
+    const markers = contractMarkers(section);
+    if (markers.length != 1 || markers[0] != contractMarker) {
+      errors.push(`${route} must carry its exact billing continuity contract marker`);
+    }
+
+    const visibleSection = section.replace(/<!--[\s\S]*?-->/g, '');
+    const visibleTokens = inlineCodeTokens(visibleSection);
+    for (const status of blockingStatuses) {
+      if (!visibleTokens.includes(status)) {
+        errors.push(`${route} must visibly document blocking status ${status}`);
+      }
+    }
+  }
+
+  return errors;
+}
+
+function validateBalancePurchaseContract(
   section,
   requirementTokens,
   contractMarker,
+  {
+    subject,
+    requestFields,
+    requiredFields,
+    optionalFields,
+    enumFields,
+    sameIntentTokens,
+    conflictingPayloadTokens,
+  },
 ) {
   if (section == null) {
-    return ['account plan balance purchase section is missing'];
+    return [`${subject} section is missing`];
   }
 
   const errors = [];
   const markers = contractMarkers(section);
   if (markers.length != 1 || markers[0] != contractMarker) {
     errors.push(
-      'account plan balance purchase must carry its exact idempotency contract marker',
+      `${subject} must carry its exact idempotency contract marker`,
     );
   }
 
@@ -598,64 +722,51 @@ function validateAccountPlanBalancePurchaseContract(
     .filter(table => table.rows.some(row => tableField(row) == 'requestId'));
   if (requestTables.length != 1) {
     errors.push(
-      `account plan balance purchase must contain one request table, found ${requestTables.length}`,
+      `${subject} must contain one request table, found ${requestTables.length}`,
     );
   } else {
     const [request] = requestTables;
     const fields = request.rows.map(tableField);
-    const expectedFields = ['planId', 'durationMonths', 'autoRenew', 'requestId'];
-    if (request.header.length != 3 || !exactValues(fields, expectedFields)) {
+    if (request.header.length != 3 || !exactValues(fields, requestFields)) {
       errors.push(
-        `account plan balance purchase request fields must be exactly ${expectedFields.join(', ')}`,
+        `${subject} request fields must be exactly ${requestFields.join(', ')}`,
       );
     }
 
-    for (const field of ['planId', 'durationMonths']) {
+    for (const field of requiredFields) {
       if (
         request.rows.find(row => tableField(row) == field)?.[1]
         != requirementTokens.required
       ) {
-        errors.push(`account plan balance purchase ${field} must be required`);
+        errors.push(`${subject} ${field} must be required`);
       }
     }
-    for (const field of ['autoRenew', 'requestId']) {
+    for (const field of optionalFields) {
       if (
         request.rows.find(row => tableField(row) == field)?.[1]
         != requirementTokens.optional
       ) {
-        errors.push(`account plan balance purchase ${field} must be optional`);
+        errors.push(`${subject} ${field} must be optional`);
       }
     }
 
-    const planId = request.rows.find(row => tableField(row) == 'planId');
-    if (!exactValues(inlineCodeTokens(planId?.[2]), ['advanced', 'pro'])) {
-      errors.push('account plan balance purchase planId must be advanced|pro');
-    }
-
-    const durationMonths = request.rows.find(
-      row => tableField(row) == 'durationMonths',
-    );
-    if (
-      !exactValues(
-        inlineCodeTokens(durationMonths?.[2]),
-        ['1', '3', '6', '12'],
-      )
-    ) {
-      errors.push(
-        'account plan balance purchase durationMonths must be 1|3|6|12',
-      );
+    for (const [field, expectedValues] of enumFields) {
+      const row = request.rows.find(item => tableField(item) == field);
+      if (!exactValues(inlineCodeTokens(row?.[2]), expectedValues)) {
+        errors.push(`${subject} ${field} must be ${expectedValues.join('|')}`);
+      }
     }
 
     const requestId = request.rows.find(row => tableField(row) == 'requestId');
     if (!/8(?:-|–|\.\.)128/.test(requestId?.[2] ?? '')) {
-      errors.push('account plan balance purchase requestId must document 8-128 characters');
+      errors.push(`${subject} requestId must document 8-128 characters`);
     }
     if (
       !/RFC 3986/i.test(requestId?.[2] ?? '')
       || !/unreserved/i.test(requestId?.[2] ?? '')
     ) {
       errors.push(
-        'account plan balance purchase requestId must document RFC 3986 unreserved characters',
+        `${subject} requestId must document RFC 3986 unreserved characters`,
       );
     }
     if (
@@ -665,13 +776,13 @@ function validateAccountPlanBalancePurchaseContract(
       )
     ) {
       errors.push(
-        'account plan balance purchase requestId charset must be exactly A-Z a-z 0-9 . _ ~ -',
+        `${subject} requestId charset must be exactly A-Z a-z 0-9 . _ ~ -`,
       );
     }
 
     const autoRenew = request.rows.find(row => tableField(row) == 'autoRenew');
     if (!inlineCodeTokens(autoRenew?.[2]).includes('false')) {
-      errors.push('account plan balance purchase autoRenew must default to false');
+      errors.push(`${subject} autoRenew must default to false`);
     }
   }
 
@@ -679,17 +790,17 @@ function validateAccountPlanBalancePurchaseContract(
     .filter(table => table.rows.some(row => tableField(row) == 'exact-replay'));
   if (behaviorTables.length != 1) {
     errors.push(
-      `account plan balance purchase must contain one visible idempotency behavior table, found ${behaviorTables.length}`,
+      `${subject} must contain one visible idempotency behavior table, found ${behaviorTables.length}`,
     );
   } else {
     const [behavior] = behaviorTables;
     const expectedBehavior = new Map([
-      ['same-intent', ['same-requestId', 'same-payload']],
+      ['same-intent', sameIntentTokens],
       [
         'exact-replay',
         ['original-subscriptionId', 'original-invoiceId', 'no-second-debit'],
       ],
-      ['conflicting-payload', ['rejected']],
+      ['conflicting-payload', conflictingPayloadTokens],
       ['new-intent', ['new-requestId']],
       [
         'missing-requestId',
@@ -706,14 +817,14 @@ function validateAccountPlanBalancePurchaseContract(
       || !exactValues(fields, [...expectedBehavior.keys()])
     ) {
       errors.push(
-        'account plan balance purchase idempotency behavior rows are incomplete',
+        `${subject} idempotency behavior rows are incomplete`,
       );
     }
     for (const [field, expectedTokens] of expectedBehavior) {
       const row = behavior.rows.find(item => tableField(item) == field);
       if (!exactValues(inlineCodeTokens(row?.[1]), expectedTokens)) {
         errors.push(
-          `account plan balance purchase ${field} behavior must be ${expectedTokens.join(', ')}`,
+          `${subject} ${field} behavior must be ${expectedTokens.join(', ')}`,
         );
       }
     }
@@ -726,7 +837,7 @@ function validateAccountPlanBalancePurchaseContract(
     });
   if (responseTables.length != 1) {
     errors.push(
-      `account plan balance purchase must contain one response table, found ${responseTables.length}`,
+      `${subject} must contain one response table, found ${responseTables.length}`,
     );
   } else {
     const [response] = responseTables;
@@ -736,7 +847,7 @@ function validateAccountPlanBalancePurchaseContract(
       || !exactValues(fields, ['subscriptionId', 'invoiceId'])
     ) {
       errors.push(
-        'account plan balance purchase response fields must be exactly subscriptionId and invoiceId',
+        `${subject} response fields must be exactly subscriptionId and invoiceId`,
       );
     }
     for (const field of ['subscriptionId', 'invoiceId']) {
@@ -744,19 +855,74 @@ function validateAccountPlanBalancePurchaseContract(
         response.rows.find(row => tableField(row) == field)?.[1]
         != requirementTokens.required
       ) {
-        errors.push(`account plan balance purchase response ${field} must be required`);
+        errors.push(`${subject} response ${field} must be required`);
       }
     }
   }
 
   if (!section.includes('HTTP 200 OK')) {
-    errors.push('account plan balance purchase response must be HTTP 200 OK');
+    errors.push(`${subject} response must be HTTP 200 OK`);
   }
   if (/\/api\/v\d+(?:\/|\b)/.test(section)) {
-    errors.push('account plan balance purchase must use the canonical /api route');
+    errors.push(`${subject} must use the canonical /api route`);
   }
 
   return errors;
+}
+
+function validateAccountPlanBalancePurchaseContract(
+  section,
+  requirementTokens,
+  contractMarker,
+) {
+  return validateBalancePurchaseContract(
+    section,
+    requirementTokens,
+    contractMarker,
+    {
+      subject: 'account plan balance purchase',
+      requestFields: ['planId', 'durationMonths', 'autoRenew', 'requestId'],
+      requiredFields: ['planId', 'durationMonths'],
+      optionalFields: ['autoRenew', 'requestId'],
+      enumFields: new Map([
+        ['planId', ['advanced', 'pro']],
+        ['durationMonths', ['1', '3', '6', '12']],
+      ]),
+      sameIntentTokens: ['same-requestId', 'same-payload'],
+      conflictingPayloadTokens: ['rejected'],
+    },
+  );
+}
+
+function validateProjectAddonBalancePurchaseContract(
+  section,
+  requirementTokens,
+  contractMarker,
+) {
+  const intentFields = [
+    'projectFullname',
+    'addonCode',
+    'durationMonths',
+    'autoRenew',
+  ];
+
+  return validateBalancePurchaseContract(
+    section,
+    requirementTokens,
+    contractMarker,
+    {
+      subject: 'project add-on balance purchase',
+      requestFields: [...intentFields, 'requestId'],
+      requiredFields: ['projectFullname', 'addonCode', 'durationMonths'],
+      optionalFields: ['autoRenew', 'requestId'],
+      enumFields: new Map([
+        ['addonCode', ['project-free-access']],
+        ['durationMonths', ['1', '3', '6', '12']],
+      ]),
+      sameIntentTokens: ['same-requestId', 'same-full-payload', ...intentFields],
+      conflictingPayloadTokens: [...intentFields, 'rejected'],
+    },
+  );
 }
 
 function validateLinkResponseTable(section, requirementTokens, subject) {
@@ -1049,9 +1215,21 @@ const tokenSummaryContractMarker = '<!-- api-contract: auth=provider-credentials
 const linkCreateContractMarker = '<!-- api-contract: auth=anonymous; uri=leading-slash-required; uri-prefix=/link/-forbidden; invalid-uri=400; response=Link-key-uri -->';
 const linkGetContractMarker = '<!-- api-contract: auth=anonymous; not-found=400; response=Link-key-uri -->';
 const resourceCapabilityContractMarker = '<!-- api-contract: resource-token=persistent-bearer-capability; setup-token=separate-one-time-15m; transport=https-only; logging=forbidden -->';
+const projectTransferBillingContinuityContractMarker = '<!-- api-contract: project-addon-transfer-block=draft-pending_activation-active-past_due-cancel_at_period_end; resolution=cancel-or-wait-until-ended; recurring-billing-owner-continuity=fail-closed -->';
+const projectAddonHostedCheckoutContractMarker = '<!-- api-contract: pending-hosted-retry=existing-subscriptionId-invoiceId-externalReference-and-fresh-signed-form -->';
+const projectAddonCryptoCheckoutContractMarker = '<!-- api-contract: pending-linked-provider-order-retry=same-providerOrderId-and-paymentUrl; ambiguous-provider-creation-or-linkage=fail-closed-pending; next-attempt=cancel-or-reconcile-first -->';
+const projectAddonLatePaymentContractMarker = '<!-- api-contract: late-payment-after-cancel-or-project-transfer=no-reactivation; disposition=reconciliation-or-refund -->';
 const walletTopupCreateContractMarker = '<!-- api-contract: redirect-query=authoritative-externalReference; existing-value=replaced -->';
 const walletTopupRefreshContractMarker = '<!-- api-contract: target=exact-topupId-or-externalReference; recent-topup-fallback=forbidden; result-correlation=fail-closed-on-missing-or-ambiguous -->';
 const accountPlanBalancePurchaseContractMarker = '<!-- api-contract: requestId=optional-backward-compatible-8-128-rfc3986-unreserved; requestId-omitted=not-retry-safe-across-http-attempts; autoRenew-default=false; same-intent=same-requestId-and-payload; exact-replay=original-subscriptionId-and-invoiceId-without-second-debit; conflicting-payload=rejected; new-intent=new-requestId -->';
+const projectAddonBalancePurchaseContractMarker = '<!-- api-contract: requestId=optional-backward-compatible-8-128-rfc3986-unreserved; requestId-omitted=not-retry-safe-across-http-attempts; autoRenew-default=false; same-intent=same-requestId-and-full-payload; exact-replay=original-subscriptionId-and-invoiceId-without-second-debit; conflicting-projectFullname-addonCode-durationMonths-autoRenew=rejected; new-intent=new-requestId -->';
+const projectTransferBlockingSubscriptionStatuses = [
+  'draft',
+  'pending_activation',
+  'active',
+  'past_due',
+  'cancel_at_period_end',
+];
 const expectedAddressTypes = ['plain', 'ss58', 'evm', 'solana', 'bitcoin', 'cosmos'];
 const expectedWorkspaceAvatarResponseFields = [
   'url',
@@ -1154,6 +1332,320 @@ for (const fixture of invalidAccountPlanBalancePurchaseFixtures) {
   ) {
     issues.push(
       `account plan balance purchase validator accepts ${fixture.name}`,
+    );
+  }
+}
+
+const validProjectAddonBalancePurchaseFixture = `
+${projectAddonBalancePurchaseContractMarker}
+
+| Field | Required | Description |
+| --- | --- | --- |
+| \`projectFullname\` | Yes | Project identifier. |
+| \`addonCode\` | Yes | \`project-free-access\`. |
+| \`durationMonths\` | Yes | \`1\`, \`3\`, \`6\`, or \`12\`. |
+| \`autoRenew\` | No | Defaults to \`false\`. |
+| \`requestId\` | No | 8-128 RFC 3986 unreserved characters: \`A-Z\`, \`a-z\`, \`0-9\`, \`.\`, \`_\`, \`~\`, and \`-\`. |
+
+| Case | Behavior |
+| --- | --- |
+| \`same-intent\` | \`same-requestId\`, \`same-full-payload\`, \`projectFullname\`, \`addonCode\`, \`durationMonths\`, and \`autoRenew\`. |
+| \`exact-replay\` | \`original-subscriptionId\`, \`original-invoiceId\`, and \`no-second-debit\`. |
+| \`conflicting-payload\` | \`projectFullname\`, \`addonCode\`, \`durationMonths\`, or \`autoRenew\` changed: \`rejected\`. |
+| \`new-intent\` | \`new-requestId\`. |
+| \`missing-requestId\` | \`backward-compatible\`, \`not-retry-safe\`, and \`not-idempotent-across-HTTP-attempts\`. |
+
+Response: HTTP 200 OK.
+
+| Field | Required | Description |
+| --- | --- | --- |
+| \`subscriptionId\` | Yes | Subscription. |
+| \`invoiceId\` | Yes | Invoice. |
+`;
+const invalidProjectAddonBalancePurchaseFixtures = [
+  {
+    name: 'missing projectFullname request field',
+    markdown: validProjectAddonBalancePurchaseFixture.replace(
+      '| `projectFullname` | Yes | Project identifier. |\n',
+      '',
+    ),
+  },
+  {
+    name: 'incorrect addonCode enum',
+    markdown: validProjectAddonBalancePurchaseFixture.replace(
+      '| `addonCode` | Yes | `project-free-access`. |',
+      '| `addonCode` | Yes | `project-free-access` or `project-pro-access`. |',
+    ),
+  },
+  {
+    name: 'incomplete durationMonths enum',
+    markdown: validProjectAddonBalancePurchaseFixture.replace(
+      '`1`, `3`, `6`, or `12`',
+      '`1`, `3`, or `6`',
+    ),
+  },
+  {
+    name: 'missing autoRenew default',
+    markdown: validProjectAddonBalancePurchaseFixture.replace(
+      '| `autoRenew` | No | Defaults to `false`. |',
+      '| `autoRenew` | No | Optional setting. |',
+    ),
+  },
+  {
+    name: 'required backward-compatible requestId',
+    markdown: validProjectAddonBalancePurchaseFixture.replace(
+      '| `requestId` | No |',
+      '| `requestId` | Yes |',
+    ),
+  },
+  {
+    name: 'incomplete requestId charset',
+    markdown: validProjectAddonBalancePurchaseFixture.replace(
+      ', `~`',
+      '',
+    ),
+  },
+  {
+    name: 'same intent omits projectFullname from the full payload',
+    markdown: validProjectAddonBalancePurchaseFixture.replace(
+      ', `projectFullname`',
+      '',
+    ),
+  },
+  {
+    name: 'conflict semantics omit addonCode',
+    markdown: validProjectAddonBalancePurchaseFixture.replace(
+      '| `conflicting-payload` | `projectFullname`, `addonCode`,',
+      '| `conflicting-payload` | `projectFullname`,',
+    ),
+  },
+  {
+    name: 'exact replay permits a second debit',
+    markdown: validProjectAddonBalancePurchaseFixture.replace(
+      '`no-second-debit`',
+      '`second-debit-allowed`',
+    ),
+  },
+  {
+    name: 'missing requestId retry-safety warning',
+    markdown: validProjectAddonBalancePurchaseFixture.replace(
+      '| `missing-requestId` | `backward-compatible`, `not-retry-safe`, and `not-idempotent-across-HTTP-attempts`. |',
+      '| `missing-requestId` | `backward-compatible`. |',
+    ),
+  },
+  {
+    name: 'versioned API path',
+    markdown: `${validProjectAddonBalancePurchaseFixture}\nPOST /api/v2/billing/project-addon/balance-purchase\n`,
+  },
+];
+
+if (
+  validateProjectAddonBalancePurchaseContract(
+    validProjectAddonBalancePurchaseFixture,
+    fixtureRequirementTokens,
+    projectAddonBalancePurchaseContractMarker,
+  ).length > 0
+) {
+  issues.push('project add-on balance purchase validator rejects its valid fixture');
+}
+for (const fixture of invalidProjectAddonBalancePurchaseFixtures) {
+  if (
+    validateProjectAddonBalancePurchaseContract(
+      fixture.markdown,
+      fixtureRequirementTokens,
+      projectAddonBalancePurchaseContractMarker,
+    ).length == 0
+  ) {
+    issues.push(
+      `project add-on balance purchase validator accepts ${fixture.name}`,
+    );
+  }
+}
+
+const validProjectAddonCheckoutLifecycleFixture = `
+## POST /api/billing/project-addon/checkout
+
+${projectAddonHostedCheckoutContractMarker}
+
+| Case | Behavior |
+| --- | --- |
+| \`pending-hosted-retry\` | Existing \`subscriptionId\`, \`invoiceId\`, and \`externalReference\`, with a fresh signed \`checkout\` form. |
+
+## POST /api/billing/project-addon/crypto-checkout
+
+${projectAddonCryptoCheckoutContractMarker}
+
+| Case | Behavior |
+| --- | --- |
+| \`pending-linked-order-retry\` | Same \`providerOrderId\` and \`paymentUrl\`. |
+| \`ambiguous-provider-creation-or-linkage\` | \`fail-closed-pending\`; \`cancel-or-reconcile-before-new-attempt\`. |
+
+## POST /api/billing/crypto-checkout/refresh
+
+${projectAddonLatePaymentContractMarker}
+
+| Case | Behavior |
+| --- | --- |
+| \`late-payment-after-cancel-or-project-transfer\` | \`no-reactivation\`; \`reconciliation-or-refund\`. |
+
+## POST /api/billing/crypto-checkout/cancel
+
+${projectAddonLatePaymentContractMarker}
+
+| Case | Behavior |
+| --- | --- |
+| \`late-payment-after-cancel-or-project-transfer\` | \`no-reactivation\`; \`reconciliation-or-refund\`. |
+`;
+const invalidProjectAddonCheckoutLifecycleFixtures = [
+  {
+    name: 'hosted retry loses externalReference continuity',
+    markdown: validProjectAddonCheckoutLifecycleFixture.replace(
+      ', and `externalReference`',
+      '',
+    ),
+  },
+  {
+    name: 'hosted retry marker permits a reused signature',
+    markdown: validProjectAddonCheckoutLifecycleFixture.replace(
+      'fresh-signed-form',
+      'reused-signed-form',
+    ),
+  },
+  {
+    name: 'crypto retry changes paymentUrl',
+    markdown: validProjectAddonCheckoutLifecycleFixture.replace(
+      'Same `providerOrderId` and `paymentUrl`.',
+      'Same `providerOrderId` and a new payment URL.',
+    ),
+  },
+  {
+    name: 'ambiguous crypto retry omits cancel or reconciliation',
+    markdown: validProjectAddonCheckoutLifecycleFixture.replace(
+      '`cancel-or-reconcile-before-new-attempt`',
+      '`retry-immediately`',
+    ),
+  },
+  {
+    name: 'refresh permits late-payment reactivation',
+    markdown: validProjectAddonCheckoutLifecycleFixture.replace(
+      '`no-reactivation`; `reconciliation-or-refund`.',
+      '`reactivate`; `reconciliation-or-refund`.',
+    ),
+  },
+  {
+    name: 'cancel omits late-payment reconciliation or refund',
+    markdown: validProjectAddonCheckoutLifecycleFixture.replace(
+      /(`late-payment-after-cancel-or-project-transfer` \| `no-reactivation`; )`reconciliation-or-refund`(\. \|\s*)$/,
+      '$1`ignore-late-payment`$2',
+    ),
+  },
+  {
+    name: 'missing cancel lifecycle section',
+    markdown: validProjectAddonCheckoutLifecycleFixture.replace(
+      /## POST \/api\/billing\/crypto-checkout\/cancel[\s\S]*$/,
+      '',
+    ),
+  },
+  {
+    name: 'versioned lifecycle route',
+    markdown: `${validProjectAddonCheckoutLifecycleFixture}\nPOST /api/v2/billing/crypto-checkout/cancel\n`,
+  },
+];
+
+if (
+  validateProjectAddonCheckoutLifecycleContract(
+    validProjectAddonCheckoutLifecycleFixture,
+    projectAddonHostedCheckoutContractMarker,
+    projectAddonCryptoCheckoutContractMarker,
+    projectAddonLatePaymentContractMarker,
+  ).length > 0
+) {
+  issues.push('project add-on checkout lifecycle validator rejects its valid fixture');
+}
+for (const fixture of invalidProjectAddonCheckoutLifecycleFixtures) {
+  if (
+    validateProjectAddonCheckoutLifecycleContract(
+      fixture.markdown,
+      projectAddonHostedCheckoutContractMarker,
+      projectAddonCryptoCheckoutContractMarker,
+      projectAddonLatePaymentContractMarker,
+    ).length == 0
+  ) {
+    issues.push(
+      `project add-on checkout lifecycle validator accepts ${fixture.name}`,
+    );
+  }
+}
+
+const validProjectTransferBillingContinuityRule = `Transfer is blocked while the project add-on subscription is \`draft\`, \`pending_activation\`, \`active\`, \`past_due\`, or \`cancel_at_period_end\`. Cancel it or wait until it has ended before retrying so recurring billing does not move implicitly between owners.`;
+const validProjectTransferBillingContinuityFixture = [
+  'POST /api/projects/:fullname/transfer/plan',
+  'POST /api/projects/:fullname/transfer-requests',
+  'POST /api/project-transfer-requests/:id/accept',
+]
+  .map(route => `## ${route}
+
+${projectTransferBillingContinuityContractMarker}
+${validProjectTransferBillingContinuityRule}
+`)
+  .join('\n');
+const invalidProjectTransferBillingContinuityFixtures = [
+  {
+    name: 'missing plan billing continuity marker',
+    markdown: validProjectTransferBillingContinuityFixture.replace(
+      `${projectTransferBillingContinuityContractMarker}\n`,
+      '',
+    ),
+  },
+  {
+    name: 'deleted visible plan billing continuity rule',
+    markdown: validProjectTransferBillingContinuityFixture.replace(
+      validProjectTransferBillingContinuityRule,
+      'Transfer is allowed.',
+    ),
+  },
+  {
+    name: 'missing visible past_due blocking status',
+    markdown: validProjectTransferBillingContinuityFixture.replaceAll(
+      ', `past_due`',
+      '',
+    ),
+  },
+  {
+    name: 'weakened fail-closed marker',
+    markdown: validProjectTransferBillingContinuityFixture.replace(
+      'recurring-billing-owner-continuity=fail-closed',
+      'recurring-billing-owner-continuity=best-effort',
+    ),
+  },
+  {
+    name: 'missing accept route contract',
+    markdown: validProjectTransferBillingContinuityFixture.replace(
+      /## POST \/api\/project-transfer-requests\/:id\/accept[\s\S]*$/,
+      '',
+    ),
+  },
+];
+
+if (
+  validateProjectTransferBillingContinuityContract(
+    validProjectTransferBillingContinuityFixture,
+    projectTransferBillingContinuityContractMarker,
+    projectTransferBlockingSubscriptionStatuses,
+  ).length > 0
+) {
+  issues.push('project transfer billing continuity validator rejects its valid fixture');
+}
+for (const fixture of invalidProjectTransferBillingContinuityFixtures) {
+  if (
+    validateProjectTransferBillingContinuityContract(
+      fixture.markdown,
+      projectTransferBillingContinuityContractMarker,
+      projectTransferBlockingSubscriptionStatuses,
+    ).length == 0
+  ) {
+    issues.push(
+      `project transfer billing continuity validator accepts ${fixture.name}`,
     );
   }
 }
@@ -1718,6 +2210,14 @@ for (const locale of locales) {
   )) {
     issues.push(`${locale}: ${error}`);
   }
+  for (const error of validateProjectAddonCheckoutLifecycleContract(
+    billing,
+    projectAddonHostedCheckoutContractMarker,
+    projectAddonCryptoCheckoutContractMarker,
+    projectAddonLatePaymentContractMarker,
+  )) {
+    issues.push(`${locale}: ${error}`);
+  }
   for (const error of validateAccountPlanBalancePurchaseContract(
     routeSection(
       billing,
@@ -1725,6 +2225,28 @@ for (const locale of locales) {
     ),
     requirementTokens,
     accountPlanBalancePurchaseContractMarker,
+  )) {
+    issues.push(`${locale}: ${error}`);
+  }
+  for (const error of validateProjectAddonBalancePurchaseContract(
+    routeSection(
+      billing,
+      'POST /api/billing/project-addon/balance-purchase',
+    ),
+    requirementTokens,
+    projectAddonBalancePurchaseContractMarker,
+  )) {
+    issues.push(`${locale}: ${error}`);
+  }
+
+  const projectTransfers = await readFile(
+    path.join(userRoot, locale, 'api-project-transfers.md'),
+    'utf8',
+  );
+  for (const error of validateProjectTransferBillingContinuityContract(
+    projectTransfers,
+    projectTransferBillingContinuityContractMarker,
+    projectTransferBlockingSubscriptionStatuses,
   )) {
     issues.push(`${locale}: ${error}`);
   }

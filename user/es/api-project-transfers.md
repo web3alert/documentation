@@ -6,6 +6,13 @@ Project transfer endpoints mueven ownership de project entre workspaces mediante
 
 Devuelve plan de transferencia de project sin aplicar cambios.
 
+<!-- api-contract: project-addon-transfer-block=draft-pending_activation-active-past_due-cancel_at_period_end; resolution=cancel-or-wait-until-ended; recurring-billing-owner-continuity=fail-closed -->
+La planificación se bloquea mientras el proyecto tenga una suscripción de
+add-on en estado `draft`, `pending_activation`, `active`, `past_due` o
+`cancel_at_period_end`. Cancela la suscripción o espera a que termine antes de
+volver a planificar la transferencia. Así se evita trasladar implícitamente la
+facturación recurrente entre propietarios.
+
 Arguments:
 
 | Argument | Location | Description |
@@ -24,6 +31,13 @@ Respuesta: [ProjectTransferPlan](types.md#projecttransferplan).
 ## POST /api/projects/:fullname/transfer-requests
 
 Crea transfer request. Project se moverá solo después de accept por parte del owner del target workspace.
+
+<!-- api-contract: project-addon-transfer-block=draft-pending_activation-active-past_due-cancel_at_period_end; resolution=cancel-or-wait-until-ended; recurring-billing-owner-continuity=fail-closed -->
+La creación de la solicitud se bloquea mientras el proyecto tenga una
+suscripción de add-on en estado `draft`, `pending_activation`, `active`,
+`past_due` o `cancel_at_period_end`. Cancela la suscripción o espera a que
+termine antes de crear la solicitud de transferencia. Así se evita trasladar
+implícitamente la facturación recurrente entre propietarios.
 
 Arguments:
 
@@ -60,6 +74,13 @@ Respuesta: [ProjectTransferRequest[]](types.md#projecttransferrequest).
 ## POST /api/project-transfer-requests/:id/accept
 
 Acepta incoming transfer request y aplica transferencia de project.
+
+<!-- api-contract: project-addon-transfer-block=draft-pending_activation-active-past_due-cancel_at_period_end; resolution=cancel-or-wait-until-ended; recurring-billing-owner-continuity=fail-closed -->
+La aceptación se bloquea mientras el proyecto tenga una suscripción de add-on
+en estado `draft`, `pending_activation`, `active`, `past_due` o
+`cancel_at_period_end`. Cancela la suscripción o espera a que termine antes de
+aceptar la solicitud. Así se evita trasladar implícitamente la facturación
+recurrente entre propietarios.
 
 Arguments:
 
