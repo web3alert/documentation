@@ -176,7 +176,35 @@ Respuesta: HTTP 200 OK.
 
 ## POST /api/billing/coupon/gift-purchase
 
+<!-- api-contract: requestId=optional-backward-compatible-8-128-rfc3986-unreserved; requestId-omitted=not-retry-safe-across-http-attempts; same-intent=same-requestId-planId-durationMonths; exact-replay=same-couponId-and-code-without-second-debit-or-referral-reward; conflicting-payload=rejected; new-intent=new-requestId; response=couponId-code -->
 Compra un cupón regalo usando el saldo del monedero.
+
+Cuerpo de la solicitud:
+
+| Campo | Obligatorio | Descripción |
+| --- | --- | --- |
+| `planId` | Sí | Plan de cuenta de pago: `advanced` o `pro`. |
+| `durationMonths` | Sí | Duración del cupón: `1`, `3`, `6` o `12` meses. |
+| `requestId` | No | Clave de idempotencia de 8-128 caracteres unreserved de RFC 3986: `A-Z`, `a-z`, `0-9`, `.`, `_`, `~` y `-`. Puede omitirse por compatibilidad con clientes anteriores, pero se recomienda usarla. |
+
+Dentro de la misma cuenta, usa un `requestId` estable para una única compra de
+regalo confirmada. Si se produce un timeout u otro resultado desconocido,
+repite la solicitud con el mismo plan y la misma duración.
+
+| Caso de compra | Comportamiento obligatorio |
+| --- | --- |
+| `same-intent` | Envía el `same-requestId`, `same-planId` y `same-durationMonths`. |
+| `exact-replay` | Devuelve el `same-couponId` y el `same-code` con `no-second-debit` y `no-second-referral-reward`. |
+| `conflicting-payload` | Reutilizar el identificador de solicitud con otro plan o duración es `rejected`. |
+| `new-intent` | Genera un `new-requestId`. |
+| `missing-requestId` | Mantiene `backward-compatible`, pero es `not-retry-safe` y `not-idempotent-across-HTTP-attempts`. |
+
+Respuesta: HTTP 200 OK.
+
+| Campo | Obligatorio | Descripción |
+| --- | --- | --- |
+| `couponId` | Sí | Identificador del cupón regalo comprado. |
+| `code` | Sí | Código que se entrega al destinatario del cupón. |
 
 ## GET /api/billing/referral/overview
 

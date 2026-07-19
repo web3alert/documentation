@@ -2,8 +2,9 @@ name: Conventional Commits
 
 on:
   workflow_dispatch:
-  push: {}
-  pull_request: {}
+  pull_request:
+    branches:
+      - master
 
 permissions:
   contents: read

@@ -178,7 +178,35 @@ Resposta: HTTP 200 OK.
 
 ## POST /api/billing/coupon/gift-purchase
 
+<!-- api-contract: requestId=optional-backward-compatible-8-128-rfc3986-unreserved; requestId-omitted=not-retry-safe-across-http-attempts; same-intent=same-requestId-planId-durationMonths; exact-replay=same-couponId-and-code-without-second-debit-or-referral-reward; conflicting-payload=rejected; new-intent=new-requestId; response=couponId-code -->
 Compra um cupão-presente usando o saldo da carteira.
+
+Corpo do pedido:
+
+| Campo | Obrigatório | Descrição |
+| --- | --- | --- |
+| `planId` | Sim | Plano de conta pago: `advanced` ou `pro`. |
+| `durationMonths` | Sim | Duração do cupão: `1`, `3`, `6` ou `12` meses. |
+| `requestId` | Não | Chave de idempotência com 8-128 caracteres unreserved do RFC 3986: `A-Z`, `a-z`, `0-9`, `.`, `_`, `~` e `-`. Pode ser omitida para compatibilidade com clientes anteriores, mas é recomendada. |
+
+Na mesma conta, use um `requestId` estável para uma única compra de presente
+confirmada. Se ocorrer um timeout ou outro resultado desconhecido, repita o
+pedido com o mesmo plano e a mesma duração.
+
+| Caso de compra | Comportamento obrigatório |
+| --- | --- |
+| `same-intent` | Envie o `same-requestId`, `same-planId` e `same-durationMonths`. |
+| `exact-replay` | Devolve o `same-couponId` e o `same-code` com `no-second-debit` e `no-second-referral-reward`. |
+| `conflicting-payload` | Reutilizar o identificador do pedido com outro plano ou duração é `rejected`. |
+| `new-intent` | Gere um `new-requestId`. |
+| `missing-requestId` | Mantém `backward-compatible`, mas é `not-retry-safe` e `not-idempotent-across-HTTP-attempts`. |
+
+Resposta: HTTP 200 OK.
+
+| Campo | Obrigatório | Descrição |
+| --- | --- | --- |
+| `couponId` | Sim | Identificador do cupão-presente comprado. |
+| `code` | Sim | Código a entregar ao destinatário do cupão. |
 
 ## GET /api/billing/referral/overview
 

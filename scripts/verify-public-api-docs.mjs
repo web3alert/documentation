@@ -1063,6 +1063,192 @@ function validateCouponRedeemContract(
   return errors;
 }
 
+function validateGiftCouponPurchaseContract(
+  section,
+  requirementTokens,
+  contractMarker,
+) {
+  const subject = 'gift coupon purchase';
+  if (section == null) {
+    return [`${subject} section is missing`];
+  }
+
+  const errors = [];
+  const markers = contractMarkers(section);
+  if (markers.length != 1 || markers[0] != contractMarker) {
+    errors.push(`${subject} must carry its exact idempotency contract marker`);
+  }
+
+  const requestTables = markdownTables(section)
+    .filter(table => table.rows.some(row => tableField(row) == 'requestId'));
+  if (requestTables.length != 1) {
+    errors.push(
+      `${subject} must contain one request table, found ${requestTables.length}`,
+    );
+  } else {
+    const [request] = requestTables;
+    const fields = request.rows.map(tableField);
+    if (
+      request.header.length != 3
+      || !exactValues(fields, ['planId', 'durationMonths', 'requestId'])
+    ) {
+      errors.push(
+        `${subject} request fields must be exactly planId, durationMonths, requestId`,
+      );
+    }
+
+    for (const field of ['planId', 'durationMonths']) {
+      if (
+        request.rows.find(row => tableField(row) == field)?.[1]
+        != requirementTokens.required
+      ) {
+        errors.push(`${subject} ${field} must be required`);
+      }
+    }
+    if (
+      request.rows.find(row => tableField(row) == 'requestId')?.[1]
+      != requirementTokens.optional
+    ) {
+      errors.push(`${subject} requestId must be optional`);
+    }
+
+    const planId = request.rows.find(row => tableField(row) == 'planId');
+    if (
+      !exactValues(
+        inlineCodeTokens(planId?.[2]),
+        ['advanced', 'pro'],
+      )
+    ) {
+      errors.push(`${subject} planId must be advanced|pro`);
+    }
+
+    const durationMonths = request.rows.find(
+      row => tableField(row) == 'durationMonths',
+    );
+    if (
+      !exactValues(
+        inlineCodeTokens(durationMonths?.[2]),
+        ['1', '3', '6', '12'],
+      )
+    ) {
+      errors.push(`${subject} durationMonths must be 1|3|6|12`);
+    }
+
+    const requestId = request.rows.find(row => tableField(row) == 'requestId');
+    if (!/8(?:-|–|\.\.)128/.test(requestId?.[2] ?? '')) {
+      errors.push(`${subject} requestId must document 8-128 characters`);
+    }
+    if (
+      !/RFC 3986/i.test(requestId?.[2] ?? '')
+      || !/unreserved/i.test(requestId?.[2] ?? '')
+    ) {
+      errors.push(
+        `${subject} requestId must document RFC 3986 unreserved characters`,
+      );
+    }
+    if (
+      !exactValues(
+        inlineCodeTokens(requestId?.[2]),
+        ['A-Z', 'a-z', '0-9', '.', '_', '~', '-'],
+      )
+    ) {
+      errors.push(
+        `${subject} requestId charset must be exactly A-Z a-z 0-9 . _ ~ -`,
+      );
+    }
+  }
+
+  const behaviorTables = markdownTables(section)
+    .filter(table => table.rows.some(row => tableField(row) == 'exact-replay'));
+  if (behaviorTables.length != 1) {
+    errors.push(
+      `${subject} must contain one visible idempotency behavior table, found ${behaviorTables.length}`,
+    );
+  } else {
+    const [behavior] = behaviorTables;
+    const expectedBehavior = new Map([
+      [
+        'same-intent',
+        ['same-requestId', 'same-planId', 'same-durationMonths'],
+      ],
+      [
+        'exact-replay',
+        [
+          'same-couponId',
+          'same-code',
+          'no-second-debit',
+          'no-second-referral-reward',
+        ],
+      ],
+      ['conflicting-payload', ['rejected']],
+      ['new-intent', ['new-requestId']],
+      [
+        'missing-requestId',
+        [
+          'backward-compatible',
+          'not-retry-safe',
+          'not-idempotent-across-HTTP-attempts',
+        ],
+      ],
+    ]);
+    const fields = behavior.rows.map(tableField);
+    if (
+      behavior.header.length != 2
+      || !exactValues(fields, [...expectedBehavior.keys()])
+    ) {
+      errors.push(`${subject} idempotency behavior rows are incomplete`);
+    }
+    for (const [field, expectedTokens] of expectedBehavior) {
+      const row = behavior.rows.find(item => tableField(item) == field);
+      if (!exactValues(inlineCodeTokens(row?.[1]), expectedTokens)) {
+        errors.push(
+          `${subject} ${field} behavior must be ${expectedTokens.join(', ')}`,
+        );
+      }
+    }
+  }
+
+  const responseTables = markdownTables(section)
+    .filter(table => {
+      const fields = table.rows.map(tableField);
+      return fields.includes('couponId') || fields.includes('code');
+    });
+  if (responseTables.length != 1) {
+    errors.push(
+      `${subject} must contain one response table, found ${responseTables.length}`,
+    );
+  } else {
+    const [response] = responseTables;
+    const expectedFields = ['couponId', 'code'];
+    const fields = response.rows.map(tableField);
+    if (
+      response.header.length != 3
+      || !exactValues(fields, expectedFields)
+    ) {
+      errors.push(
+        `${subject} response fields must be exactly ${expectedFields.join(', ')}`,
+      );
+    }
+    for (const field of expectedFields) {
+      if (
+        response.rows.find(row => tableField(row) == field)?.[1]
+        != requirementTokens.required
+      ) {
+        errors.push(`${subject} response ${field} must be required`);
+      }
+    }
+  }
+
+  if (!section.includes('HTTP 200 OK')) {
+    errors.push(`${subject} response must be HTTP 200 OK`);
+  }
+  if (/\/api\/v\d+(?:\/|\b)/.test(section)) {
+    errors.push(`${subject} must use the canonical /api route`);
+  }
+
+  return errors;
+}
+
 function validateLinkResponseTable(section, requirementTokens, subject) {
   const responseTables = markdownTables(section)
     .filter(table => exactValues(table.rows.map(tableField), ['key', 'uri']));
@@ -1362,6 +1548,7 @@ const walletTopupRefreshContractMarker = '<!-- api-contract: target=exact-topupI
 const accountPlanBalancePurchaseContractMarker = '<!-- api-contract: requestId=optional-backward-compatible-8-128-rfc3986-unreserved; requestId-omitted=not-retry-safe-across-http-attempts; autoRenew-default=false; same-intent=same-requestId-and-payload; exact-replay=original-subscriptionId-and-invoiceId-without-second-debit; conflicting-payload=rejected; new-intent=new-requestId -->';
 const projectAddonBalancePurchaseContractMarker = '<!-- api-contract: requestId=optional-backward-compatible-8-128-rfc3986-unreserved; requestId-omitted=not-retry-safe-across-http-attempts; autoRenew-default=false; same-intent=same-requestId-and-full-payload; exact-replay=original-subscriptionId-and-invoiceId-without-second-debit; conflicting-projectFullname-addonCode-durationMonths-autoRenew=rejected; new-intent=new-requestId -->';
 const couponRedeemContractMarker = '<!-- api-contract: code=required-trim-case-insensitive; same-account-retry=same-couponId-same-subscriptionId-same-invoiceId-without-second-application; redeemed-by-another-account-deleted-invalid-or-unsafe-subscription-lineage=fail-closed; paid-account-plan-period=extend-overlay-or-new-term-as-applicable; response=couponId-subscriptionId-invoiceId -->';
+const giftCouponPurchaseContractMarker = '<!-- api-contract: requestId=optional-backward-compatible-8-128-rfc3986-unreserved; requestId-omitted=not-retry-safe-across-http-attempts; same-intent=same-requestId-planId-durationMonths; exact-replay=same-couponId-and-code-without-second-debit-or-referral-reward; conflicting-payload=rejected; new-intent=new-requestId; response=couponId-code -->';
 const projectTransferBlockingSubscriptionStatuses = [
   'draft',
   'pending_activation',
@@ -1704,6 +1891,149 @@ for (const fixture of invalidCouponRedeemFixtures) {
     ).length == 0
   ) {
     issues.push(`coupon redeem validator accepts ${fixture.name}`);
+  }
+}
+
+const validGiftCouponPurchaseFixture = `
+${giftCouponPurchaseContractMarker}
+
+| Field | Required | Description |
+| --- | --- | --- |
+| \`planId\` | Yes | \`advanced\` or \`pro\`. |
+| \`durationMonths\` | Yes | \`1\`, \`3\`, \`6\`, or \`12\`. |
+| \`requestId\` | No | 8-128 RFC 3986 unreserved characters: \`A-Z\`, \`a-z\`, \`0-9\`, \`.\`, \`_\`, \`~\`, and \`-\`. |
+
+| Case | Behavior |
+| --- | --- |
+| \`same-intent\` | \`same-requestId\`, \`same-planId\`, and \`same-durationMonths\`. |
+| \`exact-replay\` | \`same-couponId\`, \`same-code\`, \`no-second-debit\`, and \`no-second-referral-reward\`. |
+| \`conflicting-payload\` | \`rejected\`. |
+| \`new-intent\` | \`new-requestId\`. |
+| \`missing-requestId\` | \`backward-compatible\`, \`not-retry-safe\`, and \`not-idempotent-across-HTTP-attempts\`. |
+
+Response: HTTP 200 OK.
+
+| Field | Required | Description |
+| --- | --- | --- |
+| \`couponId\` | Yes | Coupon. |
+| \`code\` | Yes | Coupon code. |
+`;
+const invalidGiftCouponPurchaseFixtures = [
+  {
+    name: 'altered idempotency marker',
+    markdown: validGiftCouponPurchaseFixture.replace(
+      'exact-replay=same-couponId-and-code-without-second-debit-or-referral-reward',
+      'exact-replay=new-coupon-and-second-debit',
+    ),
+  },
+  {
+    name: 'missing requestId request field',
+    markdown: validGiftCouponPurchaseFixture.replace(
+      '| `requestId` | No | 8-128 RFC 3986 unreserved characters: `A-Z`, `a-z`, `0-9`, `.`, `_`, `~`, and `-`. |\n',
+      '',
+    ),
+  },
+  {
+    name: 'incorrect planId enum',
+    markdown: validGiftCouponPurchaseFixture.replace(
+      '`advanced` or `pro`',
+      '`advanced`, `pro`, or `enterprise`',
+    ),
+  },
+  {
+    name: 'incomplete durationMonths enum',
+    markdown: validGiftCouponPurchaseFixture.replace(
+      '`1`, `3`, `6`, or `12`',
+      '`1`, `3`, or `6`',
+    ),
+  },
+  {
+    name: 'required backward-compatible requestId',
+    markdown: validGiftCouponPurchaseFixture.replace(
+      '| `requestId` | No |',
+      '| `requestId` | Yes |',
+    ),
+  },
+  {
+    name: 'incomplete requestId charset',
+    markdown: validGiftCouponPurchaseFixture.replace(
+      ', `~`',
+      '',
+    ),
+  },
+  {
+    name: 'same intent omits durationMonths',
+    markdown: validGiftCouponPurchaseFixture.replace(
+      ', and `same-durationMonths`',
+      '',
+    ),
+  },
+  {
+    name: 'exact replay permits a second debit',
+    markdown: validGiftCouponPurchaseFixture.replace(
+      '`no-second-debit`',
+      '`second-debit-allowed`',
+    ),
+  },
+  {
+    name: 'exact replay permits a second referral reward',
+    markdown: validGiftCouponPurchaseFixture.replace(
+      '`no-second-referral-reward`',
+      '`second-referral-reward-allowed`',
+    ),
+  },
+  {
+    name: 'conflicting payload is accepted',
+    markdown: validGiftCouponPurchaseFixture.replace(
+      '| `conflicting-payload` | `rejected`. |',
+      '| `conflicting-payload` | `accepted`. |',
+    ),
+  },
+  {
+    name: 'missing visible new intent semantics',
+    markdown: validGiftCouponPurchaseFixture.replace(
+      '| `new-intent` | `new-requestId`. |\n',
+      '',
+    ),
+  },
+  {
+    name: 'missing requestId retry-safety warning',
+    markdown: validGiftCouponPurchaseFixture.replace(
+      '| `missing-requestId` | `backward-compatible`, `not-retry-safe`, and `not-idempotent-across-HTTP-attempts`. |',
+      '| `missing-requestId` | `backward-compatible`. |',
+    ),
+  },
+  {
+    name: 'missing code response field',
+    markdown: validGiftCouponPurchaseFixture.replace(
+      '| `code` | Yes | Coupon code. |\n',
+      '',
+    ),
+  },
+  {
+    name: 'versioned API path',
+    markdown: `${validGiftCouponPurchaseFixture}\nPOST /api/v2/billing/coupon/gift-purchase\n`,
+  },
+];
+
+if (
+  validateGiftCouponPurchaseContract(
+    validGiftCouponPurchaseFixture,
+    fixtureRequirementTokens,
+    giftCouponPurchaseContractMarker,
+  ).length > 0
+) {
+  issues.push('gift coupon purchase validator rejects its valid fixture');
+}
+for (const fixture of invalidGiftCouponPurchaseFixtures) {
+  if (
+    validateGiftCouponPurchaseContract(
+      fixture.markdown,
+      fixtureRequirementTokens,
+      giftCouponPurchaseContractMarker,
+    ).length == 0
+  ) {
+    issues.push(`gift coupon purchase validator accepts ${fixture.name}`);
   }
 }
 
@@ -2490,6 +2820,16 @@ for (const locale of locales) {
     ),
     requirementTokens,
     couponRedeemContractMarker,
+  )) {
+    issues.push(`${locale}: ${error}`);
+  }
+  for (const error of validateGiftCouponPurchaseContract(
+    routeSection(
+      billing,
+      'POST /api/billing/coupon/gift-purchase',
+    ),
+    requirementTokens,
+    giftCouponPurchaseContractMarker,
   )) {
     issues.push(`${locale}: ${error}`);
   }

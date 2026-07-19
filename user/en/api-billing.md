@@ -175,7 +175,35 @@ Response: HTTP 200 OK.
 
 ## POST /api/billing/coupon/gift-purchase
 
+<!-- api-contract: requestId=optional-backward-compatible-8-128-rfc3986-unreserved; requestId-omitted=not-retry-safe-across-http-attempts; same-intent=same-requestId-planId-durationMonths; exact-replay=same-couponId-and-code-without-second-debit-or-referral-reward; conflicting-payload=rejected; new-intent=new-requestId; response=couponId-code -->
 Purchases a gift coupon using the wallet balance.
+
+Request body:
+
+| Field | Required | Description |
+| --- | --- | --- |
+| `planId` | Yes | Paid account plan: `advanced` or `pro`. |
+| `durationMonths` | Yes | Coupon duration: `1`, `3`, `6`, or `12` months. |
+| `requestId` | No | Idempotency key containing 8-128 RFC 3986 unreserved characters: `A-Z`, `a-z`, `0-9`, `.`, `_`, `~`, and `-`. It may be omitted for backward compatibility, but is recommended. |
+
+Within the same account, use one stable `requestId` for one confirmed gift
+purchase. If a timeout or another unknown result occurs, retry with the same
+plan and duration.
+
+| Purchase case | Required behavior |
+| --- | --- |
+| `same-intent` | Send the `same-requestId`, `same-planId`, and `same-durationMonths`. |
+| `exact-replay` | Return the `same-couponId` and `same-code` with `no-second-debit` and `no-second-referral-reward`. |
+| `conflicting-payload` | Reusing the request identifier with a different plan or duration is `rejected`. |
+| `new-intent` | Generate a `new-requestId`. |
+| `missing-requestId` | Remains `backward-compatible`, but is `not-retry-safe` and `not-idempotent-across-HTTP-attempts`. |
+
+Response: HTTP 200 OK.
+
+| Field | Required | Description |
+| --- | --- | --- |
+| `couponId` | Yes | Identifier of the purchased gift coupon. |
+| `code` | Yes | Code to give to the coupon recipient. |
 
 ## GET /api/billing/referral/overview
 

@@ -179,7 +179,35 @@ reconciliation.
 
 ## POST /api/billing/coupon/gift-purchase
 
+<!-- api-contract: requestId=optional-backward-compatible-8-128-rfc3986-unreserved; requestId-omitted=not-retry-safe-across-http-attempts; same-intent=same-requestId-planId-durationMonths; exact-replay=same-couponId-and-code-without-second-debit-or-referral-reward; conflicting-payload=rejected; new-intent=new-requestId; response=couponId-code -->
 Покупает подарочный купон за баланс кошелька.
+
+Тело запроса:
+
+| Поле | Обязательно | Описание |
+| --- | --- | --- |
+| `planId` | Да | Платный тариф аккаунта: `advanced` или `pro`. |
+| `durationMonths` | Да | Срок действия купона: `1`, `3`, `6` или `12` месяцев. |
+| `requestId` | Нет | Ключ идемпотентности из 8-128 unreserved-символов RFC 3986: `A-Z`, `a-z`, `0-9`, `.`, `_`, `~` и `-`. Его можно не передавать для обратной совместимости, но для новых клиентов он рекомендуется. |
+
+В рамках одного аккаунта используйте один стабильный `requestId` для одной
+подтверждённой покупки подарка. После таймаута или другого неизвестного
+результата повторите запрос с тем же тарифом и сроком.
+
+| Сценарий покупки | Обязательное поведение |
+| --- | --- |
+| `same-intent` | Передать `same-requestId`, `same-planId` и `same-durationMonths`. |
+| `exact-replay` | Возвращаются `same-couponId` и `same-code` с `no-second-debit` и `no-second-referral-reward`. |
+| `conflicting-payload` | Повторное использование идентификатора запроса с другим тарифом или сроком будет `rejected`. |
+| `new-intent` | Создать `new-requestId`. |
+| `missing-requestId` | Сохраняется `backward-compatible`, но запрос `not-retry-safe` и `not-idempotent-across-HTTP-attempts`. |
+
+Ответ: HTTP 200 OK.
+
+| Поле | Обязательно | Описание |
+| --- | --- | --- |
+| `couponId` | Да | Идентификатор купленного подарочного купона. |
+| `code` | Да | Код для передачи получателю купона. |
 
 ## GET /api/billing/referral/overview
 
