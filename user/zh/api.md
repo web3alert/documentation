@@ -63,6 +63,8 @@ X-RateLimit-Window: 60000
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
 | `POST` | `/api/token` | 使用 provider `credentials` 验证 identity 并创建新的持久化 Bearer token；无需现有 Bearer token。 <!-- api-contract: auth=provider-credentials; existing-bearer=not-required; token=fresh-persistent --> |
+| `DELETE` | `/api/token` | 撤销请求使用的 token。 |
+| `DELETE` | `/api/tokens` | 撤销已通过身份验证的 account 的所有 tokens。 |
 | `GET` | `/api/me` | 获取当前 account、identity、tier 和 memberships。 |
 | `DELETE` | `/api/me` | 删除当前 account。 |
 | `PUT` | `/api/me/meta` | 更新 account metadata。 |

@@ -47,6 +47,32 @@ Example response:
 
 Provider credentials and the returned token are secrets. Send them only over HTTPS; never log, publish, or commit them.
 
+## DELETE /api/token
+
+Revokes the token used to authenticate this request.
+
+Send the request with no path or query arguments and no body.
+
+```http
+DELETE /api/token
+Authorization: Bearer YOUR_PERSONAL_ACCESS_TOKEN
+```
+
+On success, the server returns `204 No Content` with an empty body. This endpoint is available even when the account has reached its API rate limit.
+
+## DELETE /api/tokens
+
+Revokes every token belonging to the authenticated account, including the token used for this request.
+
+Send the request with no path or query arguments and no body.
+
+```http
+DELETE /api/tokens
+Authorization: Bearer YOUR_PERSONAL_ACCESS_TOKEN
+```
+
+On success, the server returns `204 No Content` with an empty body. This endpoint is available even when the account has reached its API rate limit.
+
 ## GET /api/me
 
 Returns current account, identity, tier, memberships, and selected workspace.

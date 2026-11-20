@@ -63,6 +63,8 @@ Detalles: [Account API](api-account.md).
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
 | `POST` | `/api/token` | Autenticar la identity con `credentials` del provider y crear un Bearer token nuevo y persistente; no requiere un Bearer token existente. <!-- api-contract: auth=provider-credentials; existing-bearer=not-required; token=fresh-persistent --> |
+| `DELETE` | `/api/token` | Revocar el token usado para la solicitud. |
+| `DELETE` | `/api/tokens` | Revocar todos los tokens del account autenticado. |
 | `GET` | `/api/me` | Obtener account actual, identity, tier y memberships. |
 | `DELETE` | `/api/me` | Eliminar account actual. |
 | `PUT` | `/api/me/meta` | Actualizar account metadata. |

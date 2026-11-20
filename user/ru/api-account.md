@@ -47,6 +47,32 @@ Content-Type: application/json
 
 Учетные данные provider и возвращенный токен — секреты. Отправляйте их только по HTTPS; не записывайте в логи, не публикуйте и не добавляйте в commits.
 
+## DELETE /api/token
+
+Отзывает токен, которым аутентифицирован этот запрос.
+
+Отправьте запрос без path/query аргументов и без тела.
+
+```http
+DELETE /api/token
+Authorization: Bearer YOUR_PERSONAL_ACCESS_TOKEN
+```
+
+При успехе сервер возвращает `204 No Content` с пустым телом. Этот endpoint доступен, даже если account исчерпал свой лимит запросов к API.
+
+## DELETE /api/tokens
+
+Отзывает все токены аутентифицированного account, включая токен, использованный в этом запросе.
+
+Отправьте запрос без path/query аргументов и без тела.
+
+```http
+DELETE /api/tokens
+Authorization: Bearer YOUR_PERSONAL_ACCESS_TOKEN
+```
+
+При успехе сервер возвращает `204 No Content` с пустым телом. Этот endpoint доступен, даже если account исчерпал свой лимит запросов к API.
+
 ## GET /api/me
 
 Возвращает текущий account, identity, tier, memberships и выбранный workspace.

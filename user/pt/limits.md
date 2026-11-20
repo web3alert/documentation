@@ -31,7 +31,7 @@ Para projects e custom data sources, os limites normalmente são contados pelo o
 | Gerir templates | Não | Sim | Sim |
 | Gerir custom data sources | Não | Sim | Sim |
 | Test run | Não | Sim | Sim |
-| MCP server access | Não | Sim | Sim |
+| MCP server access | Sim | Sim | Sim |
 | Active non-free subscriptions | 5 | Unlimited | Unlimited |
 | Private projects | 0 | 1 | 5 |
 | Private custom data sources | 0 | 1 | 5 |
@@ -141,11 +141,11 @@ Na UI, o log pode ser lido em páginas de 50, 100, 250 ou 500 registos.
 
 ### MCP Server Access
 
-MCP server está disponível apenas para `Advanced` e `Pro`.
+MCP server está disponível para `Free`, `Advanced` e `Pro`.
 
 ### External API Rate
 
-External API rate aplica-se a account-token API requests que não vêm do web UI Web3alert nem do Web3alert MCP server.
+Os limites por tier na tabela aplicam-se aos pedidos externos à API autenticados com um token do account.
 
 | Tier | External API requests |
 | --- | ---: |
@@ -153,7 +153,7 @@ External API rate aplica-se a account-token API requests que não vêm do web UI
 | Advanced | 300/min |
 | Pro | 900/min |
 
-Requests do web UI e MCP server não são limitados por esta regra.
+Os pedidos do web UI têm um limite próprio. Os pedidos de confiança do MCP server à API estão isentos do limite externo. As chamadas a ferramentas MCP têm um limite próprio de 120 por minuto e por account por predefinição, partilhado pelos dois endpoints MCP em cada processo do servidor.
 
 ## Triggers
 

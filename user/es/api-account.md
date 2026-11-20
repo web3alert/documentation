@@ -47,6 +47,32 @@ Ejemplo de respuesta:
 
 Las credenciales del provider y el token devuelto son secretos. Envíalos solo mediante HTTPS; no los registres, publiques ni incluyas en commits.
 
+## DELETE /api/token
+
+Revoca el token usado para autenticar esta solicitud.
+
+Envía la solicitud sin argumentos path/query y sin cuerpo.
+
+```http
+DELETE /api/token
+Authorization: Bearer YOUR_PERSONAL_ACCESS_TOKEN
+```
+
+Si la solicitud tiene éxito, el servidor devuelve `204 No Content` con el cuerpo vacío. Este endpoint está disponible incluso si el account ha alcanzado su límite de solicitudes a la API.
+
+## DELETE /api/tokens
+
+Revoca todos los tokens del account autenticado, incluido el token usado para esta solicitud.
+
+Envía la solicitud sin argumentos path/query y sin cuerpo.
+
+```http
+DELETE /api/tokens
+Authorization: Bearer YOUR_PERSONAL_ACCESS_TOKEN
+```
+
+Si la solicitud tiene éxito, el servidor devuelve `204 No Content` con el cuerpo vacío. Este endpoint está disponible incluso si el account ha alcanzado su límite de solicitudes a la API.
+
 ## GET /api/me
 
 Devuelve el account actual, identity, tier, memberships y workspace seleccionado.

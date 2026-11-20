@@ -63,6 +63,8 @@ Details: [Account API](api-account.md).
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
 | `POST` | `/api/token` | Authenticate with provider `credentials` and create a fresh persistent Bearer token; no existing Bearer token is required. <!-- api-contract: auth=provider-credentials; existing-bearer=not-required; token=fresh-persistent --> |
+| `DELETE` | `/api/token` | Revoke the token used for the request. |
+| `DELETE` | `/api/tokens` | Revoke all tokens for the authenticated account. |
 | `GET` | `/api/me` | Get current account, identity, tier, and memberships. |
 | `DELETE` | `/api/me` | Delete current account. |
 | `PUT` | `/api/me/meta` | Update account metadata. |

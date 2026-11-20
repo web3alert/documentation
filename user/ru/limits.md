@@ -31,7 +31,7 @@ Tier limit сам по себе не дает права на действие. 
 | Управление templates | Нет | Да | Да |
 | Управление custom data sources | Нет | Да | Да |
 | Test run | Нет | Да | Да |
-| MCP server access | Нет | Да | Да |
+| MCP server access | Да | Да | Да |
 | Активные non-free subscriptions | 5 | Unlimited | Unlimited |
 | Private projects | 0 | 1 | 5 |
 | Private custom data sources | 0 | 1 | 5 |
@@ -141,11 +141,11 @@ Subscriptions, связанные с frozen project, блокируются с �
 
 ### MCP server access
 
-MCP server доступен только для `Advanced` и `Pro`.
+MCP server доступен для `Free`, `Advanced` и `Pro`.
 
 ### External API rate
 
-External API rate применяется к account-token API requests, которые приходят не с web UI Web3alert и не от Web3alert MCP server.
+Лимиты в таблице применяются к внешним API-запросам, которые используют токен account для аутентификации.
 
 | Tier | External API requests |
 | --- | ---: |
@@ -153,7 +153,7 @@ External API rate применяется к account-token API requests, кото
 | Advanced | 300/min |
 | Pro | 900/min |
 
-Запросы с web UI и MCP server не лимитируются этим правилом.
+Для запросов из web UI действует отдельный лимит. К доверенным запросам от MCP server к API внешний лимит не применяется. Для вызовов инструментов MCP по умолчанию действует собственный лимит в 120 вызовов в минуту на account. В каждом процессе сервера этот лимит общий для обоих endpoints MCP.
 
 ## Triggers
 

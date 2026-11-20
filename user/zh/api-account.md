@@ -47,6 +47,32 @@ Content-Type: application/json
 
 Provider credentials 和返回的 token 都是敏感信息。仅通过 HTTPS 发送，切勿记录到日志、公开或提交到代码仓库。
 
+## DELETE /api/token
+
+撤销用于验证此请求的 token。
+
+发送请求时无需提供 path/query 参数或请求体。
+
+```http
+DELETE /api/token
+Authorization: Bearer YOUR_PERSONAL_ACCESS_TOKEN
+```
+
+成功时，server 返回 `204 No Content`，响应体为空。即使 account 已达到 API 请求限额，此 endpoint 仍可用。
+
+## DELETE /api/tokens
+
+撤销已通过身份验证的 account 的所有 tokens，包括此请求使用的 token。
+
+发送请求时无需提供 path/query 参数或请求体。
+
+```http
+DELETE /api/tokens
+Authorization: Bearer YOUR_PERSONAL_ACCESS_TOKEN
+```
+
+成功时，server 返回 `204 No Content`，响应体为空。即使 account 已达到 API 请求限额，此 endpoint 仍可用。
+
 ## GET /api/me
 
 返回当前 account、identity、tier、memberships 和选中的 workspace。

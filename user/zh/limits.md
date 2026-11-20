@@ -31,7 +31,7 @@ Tier limit 本身并不授予操作权限。大多数操作需要同时满足两
 | 管理 templates | 否 | 是 | 是 |
 | 管理 custom data sources | 否 | 是 | 是 |
 | Test run | 否 | 是 | 是 |
-| MCP server access | 否 | 是 | 是 |
+| MCP server access | 是 | 是 | 是 |
 | Active non-free subscriptions | 5 | Unlimited | Unlimited |
 | Private projects | 0 | 1 | 5 |
 | Private custom data sources | 0 | 1 | 5 |
@@ -141,11 +141,11 @@ Free access 通过 [Account Billing](account.md#project-free-access-add-on) 中�
 
 ### MCP Server Access
 
-MCP server 仅对 `Advanced` 和 `Pro` 可用。
+MCP server 适用于 `Free`、`Advanced` 和 `Pro`。
 
 ### External API Rate
 
-External API rate 适用于使用 account-token 的 API requests，但不包括来自 Web3alert web UI 的请求，也不包括来自 Web3alert MCP server 的请求。
+下表按 tier 列出的限额适用于使用 account token 验证身份的外部 API 请求。
 
 | Tier | External API requests |
 | --- | ---: |
@@ -153,7 +153,7 @@ External API rate 适用于使用 account-token 的 API requests，但不包括�
 | Advanced | 300/min |
 | Pro | 900/min |
 
-来自 web UI 和 MCP server 的 requests 不受此规则限制。
+Web UI 请求使用单独的限额。MCP server 向 API 发送的受信任请求不受外部 API 限额约束。MCP 工具调用有自己的默认限额，每个 account 每分钟 120 次。同一 server 进程中的两个 MCP endpoints 共享此限额。
 
 ## Triggers
 

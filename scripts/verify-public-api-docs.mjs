@@ -45,6 +45,8 @@ const expectedApiFiles = [
 // part of the public documentation contract.
 const publicCanonicalRoutes = [
   'POST /api/token',
+  'DELETE /api/token',
+  'DELETE /api/tokens',
   'GET /api/me',
   'DELETE /api/me',
   'PUT /api/me/meta',
@@ -2592,8 +2594,8 @@ for (const [name, section] of [
 if (expectedApiFiles.length != 15) {
   issues.push(`API file manifest must contain 15 files, found ${expectedApiFiles.length}`);
 }
-if (publicCanonicalRoutes.length != 138) {
-  issues.push(`public canonical manifest must contain 138 routes, found ${publicCanonicalRoutes.length}`);
+if (publicCanonicalRoutes.length != 140) {
+  issues.push(`public canonical manifest must contain 140 routes, found ${publicCanonicalRoutes.length}`);
 }
 if (new Set(publicCanonicalRoutes).size != publicCanonicalRoutes.length) {
   issues.push(`public canonical manifest contains duplicates: ${duplicates(publicCanonicalRoutes).join(', ')}`);
@@ -2601,8 +2603,8 @@ if (new Set(publicCanonicalRoutes).size != publicCanonicalRoutes.length) {
 if (excludedCanonicalRoutes.size != 8) {
   issues.push(`canonical exclusion manifest must contain 8 routes, found ${excludedCanonicalRoutes.size}`);
 }
-if (expectedPublicRoutes.length != 138) {
-  issues.push(`public route manifest must contain 138 routes, found ${expectedPublicRoutes.length}`);
+if (expectedPublicRoutes.length != 140) {
+  issues.push(`public route manifest must contain 140 routes, found ${expectedPublicRoutes.length}`);
 }
 for (const [excludedRoute, reason] of excludedCanonicalRoutes) {
   if (publicCanonicalRoutes.includes(excludedRoute)) {
