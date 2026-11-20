@@ -17,7 +17,7 @@ Tier limit сам по себе не дает права на действие. 
 - account tier разрешает действие;
 - роль пользователя в [Workspace](workspaces.md) дает право управлять нужной сущностью.
 
-Для проектов и custom data sources лимиты обычно считаются по owner или billing account сущности. Для subscriptions лимит считается по account, который создал subscription.
+Для проектов и custom data sources лимиты обычно считаются по owner или billing account сущности. Лимит подписок применяется к создавшему их аккаунту и учитывает подписки во всех воркспейсах.
 
 ## Tier Summary
 
@@ -32,14 +32,15 @@ Tier limit сам по себе не дает права на действие. 
 | Управление custom data sources | Нет | Да | Да |
 | Test run | Нет | Да | Да |
 | MCP server access | Да | Да | Да |
-| Активные non-free subscriptions | 5 | Unlimited | Unlimited |
+| Активные подписки на проекты без статуса Free (на создавший их аккаунт) | 5 | Unlimited | Unlimited |
 | Private projects | 0 | 1 | 5 |
 | Private custom data sources | 0 | 1 | 5 |
 | Triggers в private project | 0 | 50 | 200 |
 | Triggers в public/free project | 0 | Unlimited | Unlimited |
 | Provider weight на trigger | 0 | 6 | 20 |
-| Runtime rate на subscription | 3 burst, 0.25/sec, queue 15 | 10 burst, 1/sec, queue 50 | 20 burst, 3/sec, queue 150 |
-| Runtime rate на workspace | 10 burst, 1/sec | 30 burst, 5/sec | 100 burst, 20/sec |
+| Частота на подписку (другие способы доставки) | 3 burst, 0.25/sec, queue 15 | 10 burst, 1/sec, queue 50 | 20 burst, 3/sec, queue 150 |
+| Частота на подписку (только встроенные вебхуки) | 12 burst, 1/sec, queue 15 | 40 burst, 4/sec, queue 50 | 80 burst, 12/sec, queue 150 |
+| Частота на воркспейс (другие способы доставки) | 10 burst, 1/sec | 30 burst, 5/sec | 100 burst, 20/sec |
 | External API rate | 60/min | 300/min | 900/min |
 | Subscriptions logs | Нет | 7 дней / 25 000 записей | 30 дней / 100 000 записей |
 | Custom source logs | Нет | 7 дней / 25 000 записей | 30 дней / 100 000 записей |
@@ -86,7 +87,7 @@ Free access включается через project free-access add-on в [Accou
 
 ### Counted subscriptions
 
-`Free` account может держать до 5 активных subscriptions на non-free projects.
+На тарифе Free аккаунт может иметь до 5 созданных им активных подписок на проекты без статуса Free суммарно во всех воркспейсах. Подписки на проекты Free не входят в лимит.
 
 `Advanced` и `Pro` не имеют численного лимита counted subscriptions.
 
@@ -336,6 +337,8 @@ Alert delivery ограничивается rate limits, чтобы один acc
 
 ### Per-subscription notification rate
 
+Базовые значения в таблице действуют для подписок с другими способами доставки.
+
 | Tier | Burst bucket | Sustained rate | Queue cutoff |
 | --- | ---: | ---: | ---: |
 | Free | 3 | 0.25 / second | 15 |
@@ -348,7 +351,19 @@ Alert delivery ограничивается rate limits, чтобы один acc
 
 `Queue cutoff` - максимальный размер очереди для subscription перед тем, как delivery начнет отбрасывать или rate-limit events.
 
+### Подписки с доставкой только на встроенные вебхуки
+
+По умолчанию для подписок с доставкой только на встроенные вебхуки, включая созданные через эндпоинт для агентов, движок увеличивает допустимый всплеск и постоянную скорость в четыре раза. Предел очереди сохраняется. Лимит на подписку определяется тарифом создавшего её аккаунта.
+
+| Tier | Burst bucket | Sustained rate | Queue cutoff |
+| --- | ---: | ---: | ---: |
+| Free | 12 | 1 / second | 15 |
+| Advanced | 40 | 4 / second | 50 |
+| Pro | 80 | 12 / second | 150 |
+
 ### Per-workspace notification rate
+
+Подписки с доставкой только на встроенные вебхуки не расходуют эту квоту воркспейса.
 
 | Tier | Burst bucket | Sustained rate |
 | --- | ---: | ---: |

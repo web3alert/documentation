@@ -11,7 +11,7 @@ Web3alert 目录提供 EVM、Substrate、Solana 和 HyperCore 上已解码的链
 
 ## 1. 获取令牌
 
-由用户登录 [Web3alert](https://web3alert.io)，在[账户设置](account.md#personal-access-token)中复制个人访问令牌。智能体目前还不能自行创建账户。请在应用中选定要使用的工作区。
+由用户登录 [Web3alert](https://web3alert.io)，在[账户设置](account.md#personal-access-token)中复制个人访问令牌。智能体目前还不能自行创建账户。请在应用中选择你拥有或管理的工作区。添加 Webhook、创建订阅和查看投递历史需要 `owner` 或 `admin` 角色。
 
 ## 2. 连接 MCP 客户端
 
@@ -79,6 +79,8 @@ claude mcp add --transport http web3alert-agent https://web3alert.io/mcp/agent \
 5. `create_subscription({"trigger":"<trigger-fullname>","webhook":"<webhook-fullname>","state":"on"})` → 订阅的 ID、标题、最终状态、触发器和 Webhook。
 6. `get_delivery_log({"subscriptionId":"<subscription-id>"})` → 投递结果，以及有更多结果时返回的 `nextCursor`。告警历史按工作区访问列表中第一个具有所有者角色的账户的套餐检查。如果没有这样的账户，API 会检查请求方账户的套餐。如果该套餐不含历史记录，工具返回 `not_in_plan`。
 
+   如果有超过 500 条投递记录使用同一时间戳，导致游标无法继续翻页，工具会返回 `api_error`。请缩小筛选范围，例如按状态筛选，然后不带游标重新查询。
+
 确认返回的订阅 `state` 为 `on`。之后，符合条件的事件即可投递。请使用新的 Webhook 名称，或通过 `list_webhooks` 查找已注册的 Webhook。
 
 ## Webhook 请求体
@@ -100,9 +102,13 @@ Webhook 签名和自动重试即将推出。
 
 ## 限制
 
-Free 账户最多可保持 **5 个针对非 Free 项目的启用订阅**。Free 项目的订阅不计入此上限。每个订阅的告警突发上限为 3 条，持续速率为每秒 0.25 条，队列上限为 15 条。每个工作区的告警突发上限为 10 条，持续速率为每秒 1 条。Free 套餐每分钟允许 60 次外部 API 请求，且不包含测试运行或告警历史。完整数值见[限制](limits.md)。
+Free 账户在所有工作区中，最多可保留 **5 个由该账户创建且针对非 Free 项目的启用订阅**。Free 项目的订阅不计入上限。
 
-MCP 服务器默认允许每个账户每分钟调用工具 120 次。每个服务进程中的两个端点共享此额度。`get_account` 返回账户套餐以及与 `GET /api/me` 相同的[套餐限制](api-account.md#me-limits)。API 未提供套餐限制时，工具返回的 `limits` 为 `null`。
+智能体端点创建的订阅只向 Webhook 投递告警。在 Free 套餐中，每个此类订阅的默认突发上限为 12 条，持续速率为每秒 1 条，队列上限为 15 条。此类订阅不占用工作区的投递额度。
+
+Free 套餐每分钟允许 60 次外部 API 请求。订阅测试和告警历史在 Advanced 和 Pro 套餐中可用。两项功能均按工作区首位所有者的套餐检查，找不到所有者时按第 6 步所述规则处理。完整数值见[限制](limits.md)。
+
+MCP 服务器默认允许每个账户每分钟调用工具 120 次。每个服务进程中的两个端点共享此额度。`get_account` 返回账户套餐以及与 `GET /api/me` 相同的[套餐限制](api-account.md#me-limits)。API 未提供套餐限制时，工具返回的 `limits` 为 `null`。MCP 最多可使用缓存的 `/me` 响应 30 秒，因此套餐变更最多可能需要 30 秒才会反映在 `get_account` 中。
 
 ## 机器可读资料
 

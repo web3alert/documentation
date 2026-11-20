@@ -152,7 +152,7 @@ Account tiers 列表。
 
 基础 tier。
 
-提供对 free projects 的 unlimited access，以及对 non-free project triggers 的有限数量 active subscriptions。
+Free 账户在所有工作区中，最多可保留 5 个由该账户创建且针对非 Free 项目的启用订阅。Free 项目的订阅不计入上限。
 
 ### Advanced
 

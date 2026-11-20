@@ -11,7 +11,7 @@ Encontre eventos on-chain descodificados de EVM, Substrate, Solana e HyperCore n
 
 ## 1. Obtenha um token
 
-Uma pessoa inicia sessão na [Web3alert](https://web3alert.io) e copia o token de acesso pessoal dos [parâmetros da conta](account.md#personal-access-token). Os agentes ainda não podem criar as suas próprias contas. Selecione na aplicação o espaço de trabalho que pretende usar.
+Uma pessoa inicia sessão na [Web3alert](https://web3alert.io) e copia o token de acesso pessoal dos [parâmetros da conta](account.md#personal-access-token). Os agentes ainda não podem criar as suas próprias contas. Selecione na aplicação um espaço de trabalho de que seja proprietário ou administrador. Para adicionar um webhook, criar uma subscrição e consultar o histórico de entregas, precisa da função `owner` ou `admin`.
 
 ## 2. Ligue o cliente MCP
 
@@ -79,6 +79,8 @@ Nesta sessão de exemplo, substitua os valores entre parênteses angulares pelos
 5. `create_subscription({"trigger":"<trigger-fullname>","webhook":"<webhook-fullname>","state":"on"})` → ID, título, estado resultante, gatilho e webhook da subscrição.
 6. `get_delivery_log({"subscriptionId":"<subscription-id>"})` → Resultados de entrega e `nextCursor` se houver mais resultados. O histórico de alertas usa o plano da primeira conta com a função de proprietário na lista de acesso do espaço de trabalho. Se essa conta não existir, a API verifica o plano da conta que faz o pedido. Se esse plano não incluir histórico, a ferramenta devolve `not_in_plan`.
 
+   Se o cursor não conseguir avançar porque mais de 500 entregas têm a mesma marca temporal, a ferramenta devolve `api_error`. Restrinja o filtro, por exemplo por estado, e comece de novo sem o cursor.
+
 Confirme que o `state` devolvido para a subscrição é `on`. A partir daí, podem chegar os eventos correspondentes. Use um nome de webhook novo ou procure um já registado com `list_webhooks`.
 
 ## Corpo do webhook
@@ -100,9 +102,13 @@ As assinaturas de webhook e as novas tentativas automáticas estarão disponíve
 
 ## Limites
 
-As contas Free podem manter até **5 subscrições ativas de projetos que não sejam Free**. As subscrições de projetos Free ficam fora deste limite. Free permite picos de 3 alertas, uma taxa sustentada de 0,25 alertas por segundo e uma fila de até 15 alertas por subscrição. Por espaço de trabalho, permite picos de 10 alertas e uma taxa sustentada de 1 por segundo. Free permite 60 pedidos por minuto à API externa e não inclui execuções de teste nem histórico de alertas. Consulte as tabelas completas em [Limites](limits.md).
+O plano Free limita a conta a **5 subscrições ativas que tenha criado para projetos que não sejam Free**, somadas entre todos os espaços de trabalho. As subscrições de projetos Free ficam fora do limite.
 
-Por predefinição, o servidor MCP permite 120 chamadas a ferramentas por conta e por minuto. Os dois endpoints partilham este limite em cada processo do servidor. `get_account` devolve o plano da conta e os mesmos [limites do plano](api-account.md#me-limits) que `GET /api/me`. O valor de `limits` na ferramenta é `null` quando a API não fornece os limites do plano.
+O endpoint para agentes cria subscrições que entregam alertas apenas a webhooks. Em Free, cada uma permite por predefinição um pico de 12 alertas, uma taxa sustentada de 1 alerta por segundo e um limite de fila de 15. Estas subscrições não consomem a quota de entrega do espaço de trabalho.
+
+Free permite 60 pedidos por minuto à API externa. Os testes de subscrições e o histórico de alertas estão disponíveis em Advanced e Pro. Para ambos, a API verifica o plano do primeiro proprietário do espaço de trabalho e aplica a alternativa descrita no passo 6. Consulte as tabelas completas em [Limites](limits.md).
+
+Por predefinição, o servidor MCP permite 120 chamadas a ferramentas por conta e por minuto. Os dois endpoints partilham este limite em cada processo do servidor. `get_account` devolve o plano da conta e os mesmos [limites do plano](api-account.md#me-limits) que `GET /api/me`. O valor de `limits` na ferramenta é `null` quando a API não fornece os limites do plano. O MCP pode usar a resposta de `/me` em cache durante até 30 segundos, pelo que uma alteração de plano pode demorar esse tempo a aparecer em `get_account`.
 
 ## Referências legíveis por máquinas
 

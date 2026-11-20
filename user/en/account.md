@@ -152,7 +152,7 @@ The full list of limits and capabilities for each tier is described on the [Limi
 
 Base tier.
 
-Gives unlimited access to free projects and a limited number of active subscriptions to non-free project triggers.
+Across all workspaces, a Free account can have up to 5 active subscriptions it created to non-Free projects. Subscriptions to Free projects are exempt.
 
 ### Advanced
 

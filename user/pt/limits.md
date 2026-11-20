@@ -17,7 +17,7 @@ Um tier limit por si só não dá permissão para uma ação. Para a maioria das
 - o account tier permite a ação;
 - o role do utilizador em [Workspace](workspaces.md) dá permissão para gerir a entidade necessária.
 
-Para projects e custom data sources, os limites normalmente são contados pelo owner ou billing account da entidade. Para subscriptions, o limite é contado pelo account que criou a subscription.
+Para projects e custom data sources, os limites normalmente são contados pelo owner ou billing account da entidade. O limite de subscrições aplica-se à conta que as criou e soma todos os espaços de trabalho.
 
 ## Tier Summary
 
@@ -32,14 +32,15 @@ Para projects e custom data sources, os limites normalmente são contados pelo o
 | Gerir custom data sources | Não | Sim | Sim |
 | Test run | Não | Sim | Sim |
 | MCP server access | Sim | Sim | Sim |
-| Active non-free subscriptions | 5 | Unlimited | Unlimited |
+| Subscrições ativas de projetos que não sejam Free (por conta que as criou) | 5 | Unlimited | Unlimited |
 | Private projects | 0 | 1 | 5 |
 | Private custom data sources | 0 | 1 | 5 |
 | Triggers em private project | 0 | 50 | 200 |
 | Triggers em public/free project | 0 | Unlimited | Unlimited |
 | Provider weight por trigger | 0 | 6 | 20 |
-| Runtime rate por subscription | 3 burst, 0.25/sec, queue 15 | 10 burst, 1/sec, queue 50 | 20 burst, 3/sec, queue 150 |
-| Runtime rate por workspace | 10 burst, 1/sec | 30 burst, 5/sec | 100 burst, 20/sec |
+| Taxa por subscrição (outros tipos de entrega) | 3 burst, 0.25/sec, queue 15 | 10 burst, 1/sec, queue 50 | 20 burst, 3/sec, queue 150 |
+| Taxa por subscrição (apenas webhooks integrados) | 12 burst, 1/sec, queue 15 | 40 burst, 4/sec, queue 50 | 80 burst, 12/sec, queue 150 |
+| Taxa por espaço de trabalho (outros tipos de entrega) | 10 burst, 1/sec | 30 burst, 5/sec | 100 burst, 20/sec |
 | External API rate | 60/min | 300/min | 900/min |
 | Subscriptions logs | Não | 7 dias / 25,000 registos | 30 dias / 100,000 registos |
 | Custom source logs | Não | 7 dias / 25,000 registos | 30 dias / 100,000 registos |
@@ -86,7 +87,7 @@ Se o add-on não for renovado, o project torna-se public. Depois disso, as subsc
 
 ### Counted Subscriptions
 
-Um account `Free` pode manter até 5 active subscriptions para non-free projects.
+O plano Free limita a conta a 5 subscrições ativas que tenha criado para projetos que não sejam Free, somadas entre todos os espaços de trabalho. As subscrições de projetos Free ficam fora do limite.
 
 `Advanced` e `Pro` não têm limite numérico de counted subscriptions.
 
@@ -336,6 +337,8 @@ Alert delivery é limitada por rate limits para que um account/workspace não po
 
 ### Per-Subscription Notification Rate
 
+As taxas de base abaixo aplicam-se às subscrições com outros métodos de entrega.
+
 | Tier | Burst bucket | Sustained rate | Queue cutoff |
 | --- | ---: | ---: | ---: |
 | Free | 3 | 0.25 / second | 15 |
@@ -348,7 +351,19 @@ Alert delivery é limitada por rate limits para que um account/workspace não po
 
 `Queue cutoff` é o tamanho máximo da fila da subscription antes de delivery começar a descartar ou rate-limit events.
 
+### Subscrições que entregam apenas a webhooks integrados
+
+Por predefinição, o motor quadruplica o pico e a taxa sustentada das subscrições que entregam apenas a webhooks integrados, incluindo as criadas através do endpoint para agentes. O limite da fila mantém-se. A taxa por subscrição depende do plano da conta que a criou.
+
+| Tier | Burst bucket | Sustained rate | Queue cutoff |
+| --- | ---: | ---: | ---: |
+| Free | 12 | 1 / second | 15 |
+| Advanced | 40 | 4 / second | 50 |
+| Pro | 80 | 12 / second | 150 |
+
 ### Per-Workspace Notification Rate
+
+As subscrições que entregam apenas a webhooks integrados estão isentas deste limite do espaço de trabalho.
 
 | Tier | Burst bucket | Sustained rate |
 | --- | ---: | ---: |

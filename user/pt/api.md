@@ -36,7 +36,7 @@ As respostas bem-sucedidas com corpo devolvem JSON. Uma resposta `204 No Content
 
 As estruturas detalhadas do response body estão descritas em [Types](types.md).
 
-A resposta de erro contém `error.message` e pode incluir `error.details`, como neste exemplo.
+Os erros das rotas da API devolvem um objeto JSON com `error.message` e o campo opcional `error.details`.
 
 ```json
 {
@@ -46,6 +46,8 @@ A resposta de erro contém `error.message` e pode incluir `error.details`, como 
   }
 }
 ```
+
+Se o corpo do pedido contiver JSON malformado, a API pode rejeitá-lo antes de executar o controlador da rota e devolver um `400 Bad Request` em texto simples. Verifique o `Content-Type` da resposta antes de a interpretar como JSON.
 
 Quando um pedido excede o limite de external API, a API devolve `429` com headers como os do exemplo. Consulte `Retry-After` para saber quantos segundos deve aguardar antes de voltar a tentar.
 

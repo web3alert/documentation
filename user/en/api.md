@@ -36,7 +36,7 @@ Successful responses with a body contain JSON. A `204 No Content` response, such
 
 Detailed response body structures are described in [Types](types.md).
 
-The error response contains `error.message` and may include `error.details`, as in this example.
+API route errors return a JSON object with `error.message` and optional `error.details`.
 
 ```json
 {
@@ -46,6 +46,8 @@ The error response contains `error.message` and may include `error.details`, as 
   }
 }
 ```
+
+The API can reject a malformed JSON request body before the route handler runs, with a plain-text `400 Bad Request`. Check the response's `Content-Type` before parsing it as JSON.
 
 When a request exceeds the external API limit, the API returns `429` with headers like these. Read `Retry-After` to determine how many seconds to wait before retrying.
 

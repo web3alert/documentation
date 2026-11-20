@@ -41,6 +41,8 @@ Las herramientas para agentes actúan sobre el workspace actual del account. Par
 | `remove_subscription` | Elimina una subscription y detiene la entrega. |
 | `get_delivery_log` | Muestra los resultados de entrega del espacio de trabajo o de una suscripción. El historial de alertas usa el plan de la primera cuenta con rol de propietario en la lista de acceso del espacio de trabajo. Si no existe esa cuenta, la API comprueba el plan de la cuenta que hace la solicitud. Si ese plan no incluye el historial, la herramienta devuelve `not_in_plan`. |
 
+`limits.maxSubscriptions` limita las suscripciones activas que has creado a proyectos que no sean Free, sumadas entre todos los espacios de trabajo. El límite de Free es de 5. Las suscripciones a proyectos Free quedan fuera del límite.
+
 Al alcanzar el límite de subscriptions del tier, `create_subscription` puede devolver el error `subscription_limit_reached`. Una creación o reanudación exitosa (mediante `set_subscription_state` con `on` para reanudar) puede devolver `state: "blocked"` y `blockedReason: "subscription_limit_reached"`. Comprueba que el `state` devuelto sea `on` antes de dar por hecho que la entrega está activa.
 
 En este endpoint, los agentes no pueden crear, editar ni eliminar triggers, projects, templates o data sources. Tampoco pueden cambiar la facturación, los planes o los pagos, gestionar tokens, eliminar accounts o workspaces, cambiar de workspace, poner una subscription en estado `blocked` ni gestionar otros resources aparte de los webhooks.

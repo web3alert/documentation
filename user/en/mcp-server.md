@@ -41,6 +41,8 @@ Agent tools act on the account's current workspace. To change which workspace th
 | `remove_subscription` | Deletes a subscription and stops delivery. |
 | `get_delivery_log` | Shows delivery outcomes for the workspace or a single subscription. Alert history uses the plan of the first account with the owner role in the workspace's access list. If there is no such account, the API checks the caller's plan. Without history on that plan, the tool returns `not_in_plan`. |
 
+`limits.maxSubscriptions` caps active subscriptions you created to non-Free projects across all workspaces. The cap is 5 on Free. Subscriptions to Free projects are exempt.
+
 At the tier's subscription limit, `create_subscription` can fail with `subscription_limit_reached`. A successful create or resume (`set_subscription_state` with `on`) can return `state: "blocked"` and `blockedReason: "subscription_limit_reached"`. Check that the returned `state` is `on` before assuming delivery is running.
 
 Through this endpoint, agents cannot create, edit, or delete triggers, projects, templates, or data sources. They also cannot change billing, plans, or payments, manage tokens, delete accounts or workspaces, switch workspaces, set subscriptions to `blocked`, or manage resources other than webhooks.

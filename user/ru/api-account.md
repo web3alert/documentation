@@ -89,7 +89,7 @@ Authorization: Bearer YOUR_PERSONAL_ACCESS_TOKEN
 
 | Поле | Тип | Описание |
 | --- | --- | --- |
-| `limits.maxSubscriptions` | `number \| null` | Максимум активных подписок, учитываемых в лимите тарифа. `null` означает отсутствие ограничения. |
+| `limits.maxSubscriptions` | `number \| null` | Общий для аккаунта лимит на созданные им активные подписки на проекты без статуса Free во всех воркспейсах. Подписки на проекты Free не входят в лимит. `null` означает отсутствие ограничения. |
 | `limits.canRunTests` | `boolean` | Разрешён ли запуск тестов на этом тарифе. |
 | `limits.alertHistory` | `object \| null` | Лимиты истории оповещений. `null` означает, что тариф не включает историю. |
 | `limits.alertHistory.retentionDays` | `number` | Срок хранения истории оповещений в днях. |

@@ -17,7 +17,7 @@ Tier limit 本身并不授予操作权限。大多数操作需要同时满足两
 - account tier 允许该操作；
 - 用户在 [Workspace](workspaces.md) 中的 role 允许管理相应实体。
 
-对于 projects 和 custom data sources，限制通常按实体的 owner 或 billing account 计算。对于 subscriptions，限制按创建 subscription 的 account 计算。
+对于 projects 和 custom data sources，限制通常按实体的 owner 或 billing account 计算。订阅上限按创建订阅的账户计算，涵盖所有工作区。
 
 ## Tier Summary
 
@@ -32,14 +32,15 @@ Tier limit 本身并不授予操作权限。大多数操作需要同时满足两
 | 管理 custom data sources | 否 | 是 | 是 |
 | Test run | 否 | 是 | 是 |
 | MCP server access | 是 | 是 | 是 |
-| Active non-free subscriptions | 5 | Unlimited | Unlimited |
+| 非 Free 项目的启用订阅数（按创建账户计算） | 5 | Unlimited | Unlimited |
 | Private projects | 0 | 1 | 5 |
 | Private custom data sources | 0 | 1 | 5 |
 | Private project 中的 triggers | 0 | 50 | 200 |
 | Public/free project 中的 triggers | 0 | Unlimited | Unlimited |
 | 每个 trigger 的 provider weight | 0 | 6 | 20 |
-| 每个 subscription 的 runtime rate | 3 burst, 0.25/sec, queue 15 | 10 burst, 1/sec, queue 50 | 20 burst, 3/sec, queue 150 |
-| 每个 workspace 的 runtime rate | 10 burst, 1/sec | 30 burst, 5/sec | 100 burst, 20/sec |
+| 每个订阅的投递速率（其他投递方式） | 3 burst, 0.25/sec, queue 15 | 10 burst, 1/sec, queue 50 | 20 burst, 3/sec, queue 150 |
+| 每个订阅的投递速率（仅使用内置 Webhook） | 12 burst, 1/sec, queue 15 | 40 burst, 4/sec, queue 50 | 80 burst, 12/sec, queue 150 |
+| 每个工作区的投递速率（其他投递方式） | 10 burst, 1/sec | 30 burst, 5/sec | 100 burst, 20/sec |
 | External API rate | 60/min | 300/min | 900/min |
 | Subscriptions logs | 否 | 7 天 / 25,000 条记录 | 30 天 / 100,000 条记录 |
 | Custom source logs | 否 | 7 天 / 25,000 条记录 | 30 天 / 100,000 条记录 |
@@ -86,7 +87,7 @@ Free access 通过 [Account Billing](account.md#project-free-access-add-on) 中�
 
 ### Counted Subscriptions
 
-`Free` account 最多可以保留 5 个指向 non-free projects 的 active subscriptions。
+Free 账户在所有工作区中，最多可保留 5 个由该账户创建且针对非 Free 项目的启用订阅。Free 项目的订阅不计入上限。
 
 `Advanced` 和 `Pro` 没有 counted subscriptions 数量限制。
 
@@ -336,6 +337,8 @@ Alert delivery 通过 rate limits 限制，防止单个 account/workspace 使 de
 
 ### Per-Subscription Notification Rate
 
+下表的基础速率适用于采用其他投递方式的订阅。
+
 | Tier | Burst bucket | Sustained rate | Queue cutoff |
 | --- | ---: | ---: | ---: |
 | Free | 3 | 0.25 / second | 15 |
@@ -348,7 +351,19 @@ Alert delivery 通过 rate limits 限制，防止单个 account/workspace 使 de
 
 `Queue cutoff` 是 subscription 队列的最大大小，超过后 delivery 会开始丢弃或 rate-limit events。
 
+### 仅向内置 Webhook 投递的订阅
+
+仅向内置 Webhook 投递的订阅，其默认突发上限和持续速率均为常规值的四倍。这也适用于通过智能体端点创建的订阅。队列上限保持不变。单个订阅的投递速率取决于创建该订阅的账户套餐。
+
+| Tier | Burst bucket | Sustained rate | Queue cutoff |
+| --- | ---: | ---: | ---: |
+| Free | 12 | 1 / second | 15 |
+| Advanced | 40 | 4 / second | 50 |
+| Pro | 80 | 12 / second | 150 |
+
 ### Per-Workspace Notification Rate
+
+仅向内置 Webhook 投递的订阅不占用此工作区投递额度。
 
 | Tier | Burst bucket | Sustained rate |
 | --- | ---: | ---: |

@@ -36,7 +36,7 @@ Authorization: Bearer YOUR_PERSONAL_ACCESS_TOKEN
 
 Подробные структуры response body описаны в [Types](types.md).
 
-Ответ с ошибкой содержит `error.message` и может включать `error.details`, как в этом примере.
+При ошибке на маршруте API возвращает объект JSON с полем `error.message` и необязательным полем `error.details`.
 
 ```json
 {
@@ -46,6 +46,8 @@ Authorization: Bearer YOUR_PERSONAL_ACCESS_TOKEN
   }
 }
 ```
+
+Запрос с некорректным JSON в теле может быть отклонён до запуска обработчика маршрута с ответом `400 Bad Request` в виде обычного текста. Проверьте `Content-Type` ответа перед разбором JSON.
 
 Если запрос превышает лимит external API, API возвращает `429` с заголовками, как в примере. Прочитайте `Retry-After`, чтобы узнать, сколько секунд подождать до повторного запроса.
 

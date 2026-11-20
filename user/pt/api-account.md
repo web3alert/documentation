@@ -89,7 +89,7 @@ A resposta também inclui `limits` para o plano da conta autenticada.
 
 | Campo | Tipo | Descrição |
 | --- | --- | --- |
-| `limits.maxSubscriptions` | `number \| null` | Máximo de subscrições ativas que contam para o plano. `null` significa que não há limite. |
+| `limits.maxSubscriptions` | `number \| null` | Limite por conta das subscrições ativas que criou para projetos que não sejam Free, somadas entre todos os espaços de trabalho. As subscrições de projetos Free ficam fora do limite. `null` significa que não há limite. |
 | `limits.canRunTests` | `boolean` | Indica se o plano permite executar testes. |
 | `limits.alertHistory` | `object \| null` | Limites do histórico de alertas. `null` significa que o plano não inclui histórico. |
 | `limits.alertHistory.retentionDays` | `number` | Retenção do histórico de alertas em dias. |

@@ -152,7 +152,7 @@ A lista completa de limites e capacidades de cada tier está descrita na página
 
 Tier básico.
 
-Dá unlimited access a free projects e um número limitado de subscriptions ativas para triggers de non-free projects.
+O plano Free limita a conta a 5 subscrições ativas que tenha criado para projetos que não sejam Free, somadas entre todos os espaços de trabalho. As subscrições de projetos Free ficam fora do limite.
 
 ### Advanced
 

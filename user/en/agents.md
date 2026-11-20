@@ -11,7 +11,7 @@ Find decoded EVM, Substrate, Solana, and HyperCore on-chain events in the Web3al
 
 ## 1. Get a token
 
-A person signs in to [Web3alert](https://web3alert.io) and copies the personal access token from [Account parameters](account.md#personal-access-token). Agents cannot create their own accounts yet. Select the workspace to use in the app.
+A person signs in to [Web3alert](https://web3alert.io) and copies the personal access token from [Account parameters](account.md#personal-access-token). Agents cannot create their own accounts yet. Select a workspace you own or administer in the app. Adding a webhook, creating a subscription, and reading delivery history require the `owner` or `admin` role.
 
 ## 2. Connect your MCP client
 
@@ -79,6 +79,8 @@ In this example session, replace the values in angle brackets with results from 
 5. `create_subscription({"trigger":"<trigger-fullname>","webhook":"<webhook-fullname>","state":"on"})` → The subscription's ID, title, resulting state, trigger, and webhook.
 6. `get_delivery_log({"subscriptionId":"<subscription-id>"})` → Delivery outcomes and `nextCursor` when there are more results. Alert history uses the plan of the first account with the owner role in the workspace's access list. If there is no such account, the API checks the caller's plan. Without history on that plan, the tool returns `not_in_plan`.
 
+   If the cursor cannot advance because more than 500 deliveries share a timestamp, the tool returns `api_error`. Narrow the filter, for example by status, and start again without the cursor.
+
 Use the subscription's returned `state` to confirm it is `on`. Matching events can arrive after that. Use a new webhook name or look up an existing webhook with `list_webhooks`.
 
 ## Webhook payload
@@ -100,9 +102,13 @@ Webhook signatures and automatic retries are coming soon.
 
 ## Limits
 
-Free accounts can keep up to **5 active subscriptions to non-free projects**. Subscriptions to Free projects do not count toward this cap. Free also has a runtime limit of 3 alerts in a burst, 0.25 alerts per second sustained, and a queue cutoff of 15 per subscription. The corresponding workspace limits are 10 alerts in a burst and 1 per second sustained. Free has 60 external API requests per minute and includes neither test runs nor alert history. See [Limits](limits.md) for the full tables.
+The Free plan caps active subscriptions you created to non-Free projects at **5 across all workspaces**. Subscriptions to Free projects are exempt.
 
-The MCP server allows 120 tool calls per account per minute by default, shared across both endpoints on each server process. `get_account` reports the account tier and the same [tier limits](api-account.md#me-limits) as `GET /api/me`. Its `limits` is `null` when the API does not supply tier limits.
+The agent endpoint creates subscriptions that deliver only to webhooks. On Free, each of these subscriptions has a default burst of 12 alerts, a sustained rate of 1 alert per second, and a queue cutoff of 15. These subscriptions skip the workspace delivery bucket.
+
+Free allows 60 external API requests per minute. Subscription tests and alert history are available on Advanced and Pro. For both, the API checks the plan of the first workspace owner, with the fallback described in step 6. See [Limits](limits.md) for the full tables.
+
+The MCP server allows 120 tool calls per account per minute by default, shared across both endpoints on each server process. `get_account` reports the account tier and the [tier limits](api-account.md#me-limits) from `GET /api/me`. Its `limits` is `null` when the API does not supply tier limits. MCP can serve its cached `/me` snapshot for up to 30 seconds, so a plan change can take that long to appear in `get_account`.
 
 ## Machine-readable references
 

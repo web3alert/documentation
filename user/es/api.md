@@ -36,7 +36,7 @@ Las respuestas correctas con cuerpo devuelven JSON. Una respuesta `204 No Conten
 
 Las estructuras detalladas del response body están descritas en [Types](types.md).
 
-La respuesta de error contiene `error.message` y puede incluir `error.details`, como en este ejemplo.
+Los errores de las rutas de la API devuelven un objeto JSON con `error.message` y el campo opcional `error.details`.
 
 ```json
 {
@@ -46,6 +46,8 @@ La respuesta de error contiene `error.message` y puede incluir `error.details`, 
   }
 }
 ```
+
+Si el cuerpo de la solicitud contiene JSON mal formado, la API puede rechazarlo antes de ejecutar el controlador de la ruta y devolver un `400 Bad Request` en texto plano. Comprueba el `Content-Type` de la respuesta antes de interpretarla como JSON.
 
 Cuando una solicitud supera el límite de external API, la API devuelve `429` con headers como los del ejemplo. Lee `Retry-After` para saber cuántos segundos debes esperar antes de reintentar.
 

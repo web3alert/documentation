@@ -17,7 +17,7 @@ A tier limit by itself does not grant permission for an action. For most operati
 - account tier allows the action;
 - the user's role in [Workspace](workspaces.md) grants permission to manage the required entity.
 
-For projects and custom data sources, limits are usually counted by owner or billing account of the entity. For subscriptions, the limit is counted by the account that created the subscription.
+For projects and custom data sources, limits are usually counted by owner or billing account of the entity. For subscriptions, the cap follows the account that created them and counts across all workspaces.
 
 ## Tier Summary
 
@@ -32,14 +32,15 @@ For projects and custom data sources, limits are usually counted by owner or bil
 | Manage custom data sources | No | Yes | Yes |
 | Test run | No | Yes | Yes |
 | MCP server access | Yes | Yes | Yes |
-| Active non-free subscriptions | 5 | Unlimited | Unlimited |
+| Active subscriptions to non-Free projects (per creating account) | 5 | Unlimited | Unlimited |
 | Private projects | 0 | 1 | 5 |
 | Private custom data sources | 0 | 1 | 5 |
 | Triggers in private project | 0 | 50 | 200 |
 | Triggers in public/free project | 0 | Unlimited | Unlimited |
 | Provider weight per trigger | 0 | 6 | 20 |
-| Runtime rate per subscription | 3 burst, 0.25/sec, queue 15 | 10 burst, 1/sec, queue 50 | 20 burst, 3/sec, queue 150 |
-| Runtime rate per workspace | 10 burst, 1/sec | 30 burst, 5/sec | 100 burst, 20/sec |
+| Per-subscription rate (other delivery) | 3 burst, 0.25/sec, queue 15 | 10 burst, 1/sec, queue 50 | 20 burst, 3/sec, queue 150 |
+| Per-subscription rate (built-in webhooks only) | 12 burst, 1/sec, queue 15 | 40 burst, 4/sec, queue 50 | 80 burst, 12/sec, queue 150 |
+| Workspace rate (other delivery) | 10 burst, 1/sec | 30 burst, 5/sec | 100 burst, 20/sec |
 | External API rate | 60/min | 300/min | 900/min |
 | Subscriptions logs | No | 7 days / 25,000 records | 30 days / 100,000 records |
 | Custom source logs | No | 7 days / 25,000 records | 30 days / 100,000 records |
@@ -86,7 +87,7 @@ If the add-on is not renewed, project becomes public. After that, `Free` users' 
 
 ### Counted Subscriptions
 
-`Free` account can keep up to 5 active subscriptions to non-free projects.
+Across all workspaces, a Free account can have up to 5 active subscriptions it created to non-Free projects. Subscriptions to Free projects are exempt.
 
 `Advanced` and `Pro` have no numerical counted subscriptions limit.
 
@@ -336,6 +337,8 @@ Alert delivery is limited by rate limits so that one account/workspace cannot ov
 
 ### Per-Subscription Notification Rate
 
+The base rates below apply to subscriptions with other delivery methods.
+
 | Tier | Burst bucket | Sustained rate | Queue cutoff |
 | --- | ---: | ---: | ---: |
 | Free | 3 | 0.25 / second | 15 |
@@ -348,7 +351,19 @@ Alert delivery is limited by rate limits so that one account/workspace cannot ov
 
 `Queue cutoff` is the maximum subscription queue size before delivery starts dropping or rate-limiting events.
 
+### Subscriptions that deliver only to built-in webhooks
+
+By default, the engine quadruples the burst and sustained rates for subscriptions that deliver only to built-in webhooks, including those created through the agent endpoint. The queue cutoff stays the same. The per-subscription rate follows the creating account's tier.
+
+| Tier | Burst bucket | Sustained rate | Queue cutoff |
+| --- | ---: | ---: | ---: |
+| Free | 12 | 1 / second | 15 |
+| Advanced | 40 | 4 / second | 50 |
+| Pro | 80 | 12 / second | 150 |
+
 ### Per-Workspace Notification Rate
+
+Subscriptions that deliver only to built-in webhooks skip this workspace rate limit.
 
 | Tier | Burst bucket | Sustained rate |
 | --- | ---: | ---: |

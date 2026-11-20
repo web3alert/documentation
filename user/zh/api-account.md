@@ -89,7 +89,7 @@ Payload: 无。
 
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
-| `limits.maxSubscriptions` | `number \| null` | 计入套餐上限的启用订阅数量上限。`null` 表示无上限。 |
+| `limits.maxSubscriptions` | `number \| null` | 账户在所有工作区创建的非 Free 项目启用订阅的账户级上限。Free 项目的订阅不计入上限。`null` 表示无上限。 |
 | `limits.canRunTests` | `boolean` | 套餐是否允许运行测试。 |
 | `limits.alertHistory` | `object \| null` | 告警历史限制。`null` 表示套餐不包含告警历史。 |
 | `limits.alertHistory.retentionDays` | `number` | 告警历史的保留天数。 |

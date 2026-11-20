@@ -41,6 +41,8 @@ Agent 工具在 account 当前选中的 workspace 中执行操作。如需让下
 | `remove_subscription` | 删除 subscription 并停止投递。 |
 | `get_delivery_log` | 查看工作区或单个订阅的投递结果。 告警历史按工作区访问列表中第一个具有所有者角色的账户的套餐检查。如果没有这样的账户，API 会检查请求方账户的套餐。如果该套餐不含历史记录，工具返回 `not_in_plan`。 |
 
+`limits.maxSubscriptions` 限制账户在所有工作区内创建的非 Free 项目启用订阅数。Free 套餐的上限为 5 个。Free 项目的订阅不计入上限。
+
 达到 tier 的 subscriptions 限额时，`create_subscription` 可能返回 `subscription_limit_reached` 错误。成功创建或恢复投递（调用 `set_subscription_state` 并传入 `on`）时，仍可能返回 `state: "blocked"` 和 `blockedReason: "subscription_limit_reached"`。请先确认返回的 `state` 为 `on`，再判断投递是否已启用。
 
 通过此 endpoint，agent 无法创建、编辑或删除 triggers、projects、templates 或 data sources。Agent 也无法更改账单、套餐或付款、管理 tokens、删除 accounts 或 workspaces、切换 workspace、将 subscriptions 设为 `blocked`，或管理 webhooks 之外的 resources。

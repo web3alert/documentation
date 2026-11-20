@@ -152,7 +152,7 @@ Internal balance account в EUR.
 
 Базовый тариф.
 
-Дает unlimited access к free projects и ограниченное количество активных подписок на non-free project triggers.
+На тарифе Free аккаунт может иметь до 5 созданных им активных подписок на проекты без статуса Free суммарно во всех воркспейсах. Подписки на проекты Free не входят в лимит.
 
 ### Advanced
 

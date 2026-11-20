@@ -36,7 +36,7 @@ External API requests 会按 tier 限制。`DELETE /api/token` 和 `DELETE /api/
 
 详细的 response body 结构见 [Types](types.md)。
 
-错误响应包含 `error.message`，也可能包含示例中的可选字段 `error.details`。
+API 路由处理错误时会返回 JSON 对象，包含 `error.message` 和可选字段 `error.details`。
 
 ```json
 {
@@ -46,6 +46,8 @@ External API requests 会按 tier 限制。`DELETE /api/token` 和 `DELETE /api/
   }
 }
 ```
+
+如果请求体中的 JSON 格式有误，API 可能在调用路由处理程序之前拒绝请求，并返回纯文本 `400 Bad Request`。将响应解析为 JSON 前，请先检查响应的 `Content-Type`。
 
 请求超出 external API 限额时，API 会返回 `429`，并附带示例中的这类 headers。请读取 `Retry-After`，了解重试前需要等待的秒数。
 

@@ -89,7 +89,7 @@ The response also includes `limits` for the authenticated account's tier.
 
 | Field | Type | Description |
 | --- | --- | --- |
-| `limits.maxSubscriptions` | `number \| null` | Maximum active subscriptions counted toward the plan. `null` means unlimited. |
+| `limits.maxSubscriptions` | `number \| null` | Account-wide cap on active subscriptions you created to non-Free projects across all workspaces. Subscriptions to Free projects are exempt. `null` means unlimited. |
 | `limits.canRunTests` | `boolean` | Whether the tier allows test runs. |
 | `limits.alertHistory` | `object \| null` | Alert history limits. `null` means the tier has no alert history. |
 | `limits.alertHistory.retentionDays` | `number` | Alert history retention in days. |
