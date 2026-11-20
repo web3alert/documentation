@@ -83,6 +83,18 @@ Payload: 无。
 
 响应：[Me](types.md#me)。
 
+### 套餐限制 {#me-limits}
+
+响应还包含已认证账户的套餐限制 `limits`。
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `limits.maxSubscriptions` | `number \| null` | 计入套餐上限的启用订阅数量上限。`null` 表示无上限。 |
+| `limits.canRunTests` | `boolean` | 套餐是否允许运行测试。 |
+| `limits.alertHistory` | `object \| null` | 告警历史限制。`null` 表示套餐不包含告警历史。 |
+| `limits.alertHistory.retentionDays` | `number` | 告警历史的保留天数。 |
+| `limits.alertHistory.maxRecords` | `number \| null` | 最多保留的记录数。`null` 表示记录数没有上限。 |
+
 ## DELETE /api/me
 
 删除当前 account。

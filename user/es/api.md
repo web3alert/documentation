@@ -36,7 +36,7 @@ Las respuestas correctas con cuerpo devuelven JSON. Una respuesta `204 No Conten
 
 Las estructuras detalladas del response body están descritas en [Types](types.md).
 
-El error se devuelve en este formato:
+La respuesta de error contiene `error.message` y puede incluir `error.details`, como en este ejemplo.
 
 ```json
 {

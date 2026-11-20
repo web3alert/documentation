@@ -83,6 +83,18 @@ Payload: ninguno.
 
 Respuesta: [Me](types.md#me).
 
+### Límites del plan {#me-limits}
+
+La respuesta también incluye `limits` para el plan de la cuenta autenticada.
+
+| Campo | Tipo | Descripción |
+| --- | --- | --- |
+| `limits.maxSubscriptions` | `number \| null` | Máximo de suscripciones activas que cuentan para el plan. `null` significa que no hay límite. |
+| `limits.canRunTests` | `boolean` | Indica si el plan permite ejecutar pruebas. |
+| `limits.alertHistory` | `object \| null` | Límites del historial de alertas. `null` significa que el plan no incluye historial. |
+| `limits.alertHistory.retentionDays` | `number` | Retención del historial de alertas en días. |
+| `limits.alertHistory.maxRecords` | `number \| null` | Número máximo de registros conservados. `null` significa que no hay límite de registros. |
+
 ## DELETE /api/me
 
 Elimina el account actual.

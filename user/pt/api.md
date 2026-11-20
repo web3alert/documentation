@@ -36,7 +36,7 @@ As respostas bem-sucedidas com corpo devolvem JSON. Uma resposta `204 No Content
 
 As estruturas detalhadas do response body estão descritas em [Types](types.md).
 
-Erro é devolvido neste formato:
+A resposta de erro contém `error.message` e pode incluir `error.details`, como neste exemplo.
 
 ```json
 {

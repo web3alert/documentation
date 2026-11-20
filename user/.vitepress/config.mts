@@ -14,6 +14,7 @@ type LocaleMeta = {
   };
   sections: {
     core: string;
+    agents: string;
     overview: string;
     account: string;
     workspaces: string;
@@ -65,6 +66,7 @@ const locales: Record<LocaleKey, LocaleMeta> = {
     },
     sections: {
       core: 'Core sections',
+      agents: 'For agents',
       overview: 'Overview',
       account: 'Account',
       workspaces: 'Workspaces',
@@ -114,6 +116,7 @@ const locales: Record<LocaleKey, LocaleMeta> = {
     },
     sections: {
       core: 'Основные разделы',
+      agents: 'Для агентов',
       overview: 'Обзор',
       account: 'Аккаунт',
       workspaces: 'Воркспейсы',
@@ -163,6 +166,7 @@ const locales: Record<LocaleKey, LocaleMeta> = {
     },
     sections: {
       core: 'Core sections',
+      agents: 'For agents',
       overview: 'Overview',
       account: 'Account',
       workspaces: 'Workspaces',
@@ -212,6 +216,7 @@ const locales: Record<LocaleKey, LocaleMeta> = {
     },
     sections: {
       core: 'Secciones principales',
+      agents: 'Para agentes',
       overview: 'Resumen',
       account: 'Cuenta',
       workspaces: 'Espacios de trabajo',
@@ -261,6 +266,7 @@ const locales: Record<LocaleKey, LocaleMeta> = {
     },
     sections: {
       core: 'Secções principais',
+      agents: 'Para agentes',
       overview: 'Visão geral',
       account: 'Conta',
       workspaces: 'Espaços de trabalho',
@@ -310,6 +316,7 @@ const locales: Record<LocaleKey, LocaleMeta> = {
     },
     sections: {
       core: '核心章节',
+      agents: '面向智能体',
       overview: '概览',
       account: '账户',
       workspaces: '工作区',
@@ -358,6 +365,7 @@ const createThemeConfig = (locale: LocaleMeta) => {
     {
       text: locale.sections.core,
       items: [
+        { text: locale.sections.agents, link: linkFor(locale, '/agents') },
         { text: locale.sections.overview, link: linkFor(locale, '/') },
         { text: locale.sections.account, link: linkFor(locale, '/account') },
         { text: locale.sections.workspaces, link: linkFor(locale, '/workspaces') },

@@ -113,11 +113,11 @@ Subscription created through a template counts as one subscription. The number o
 
 ### What Happens When the Free Limit Is Exceeded
 
-If a `Free` account tries to enable more than 5 counted subscriptions, extra subscriptions are blocked.
+When a Free account is already at the limit, the API refuses to create another counted subscription with state `on`.
 
 If the user disables one counted subscription, they can enable another one within the limit.
 
-If a project was `Free`, but the free-access add-on ended and the project became `Public`, `Free` users' subscriptions to this project start to count as counted. If the limit is exceeded after that, extra subscriptions are frozen with a reason about the Free tier limit.
+An existing subscription can become `blocked` when the API reconciles entitlements. For example, if a project's free-access add-on expires, subscriptions to the project begin counting toward the Free limit and any excess subscriptions can become `blocked`.
 
 ### Frozen Private Projects
 

@@ -36,7 +36,7 @@ Authorization: Bearer YOUR_PERSONAL_ACCESS_TOKEN
 
 Подробные структуры response body описаны в [Types](types.md).
 
-Ошибка возвращается в формате:
+Ответ с ошибкой содержит `error.message` и может включать `error.details`, как в этом примере.
 
 ```json
 {

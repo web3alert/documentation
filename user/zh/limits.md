@@ -113,11 +113,11 @@ Free access 通过 [Account Billing](account.md#project-free-access-add-on) 中�
 
 ### 超过 Free limit 时会发生什么
 
-如果 `Free` account 尝试启用超过 5 个 counted subscriptions，额外的 subscriptions 会被阻止。
+Free 账户已达到上限时，API 会拒绝以 `on` 状态创建另一个计入上限的订阅。
 
 如果用户关闭一个 counted subscription，就可以在限制范围内启用另一个。
 
-如果某个 project 原来是 `Free`，但 free-access add-on 结束后 project 变为 `Public`，`Free` users 对该 project 的 subscriptions 会开始计为 counted。如果之后超过限制，额外 subscriptions 会被冻结，原因会说明 Free tier 限制。
+API 重新核算套餐权益时，已保存的订阅可能变为 `blocked`。例如，项目的免费访问附加服务到期后，该项目的订阅开始计入 Free 套餐上限，超限的订阅可能变为 `blocked`。
 
 ### Frozen Private Projects
 

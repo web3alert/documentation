@@ -36,7 +36,7 @@ Successful responses with a body contain JSON. A `204 No Content` response, such
 
 Detailed response body structures are described in [Types](types.md).
 
-Error is returned in this format:
+The error response contains `error.message` and may include `error.details`, as in this example.
 
 ```json
 {

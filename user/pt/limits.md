@@ -113,11 +113,11 @@ Subscription criada através de template conta como uma subscription. O número 
 
 ### O que acontece ao exceder o Free limit
 
-Se um account `Free` tentar ativar mais de 5 counted subscriptions, as subscriptions extra são bloqueadas.
+Quando uma conta Free já atingiu o limite, a API recusa criar outra subscrição que conte para o limite com estado `on`.
 
 Se o utilizador desligar uma counted subscription, poderá ativar outra dentro do limite.
 
-Se um project era `Free`, mas o free-access add-on terminou e o project se tornou `Public`, as subscriptions de utilizadores `Free` a esse project começam a contar como counted. Se depois disso o limite for excedido, as subscriptions extra serão congeladas com uma razão sobre o limite do Free tier.
+Uma subscrição guardada pode passar a `blocked` quando a API volta a aplicar as condições do plano. Por exemplo, se o suplemento de acesso gratuito de um projeto expirar, as suas subscrições passam a contar para o limite Free e as que o excedam podem passar a `blocked`.
 
 ### Frozen Private Projects
 

@@ -36,7 +36,7 @@ External API requests 会按 tier 限制。`DELETE /api/token` 和 `DELETE /api/
 
 详细的 response body 结构见 [Types](types.md)。
 
-错误返回格式：
+错误响应包含 `error.message`，也可能包含示例中的可选字段 `error.details`。
 
 ```json
 {

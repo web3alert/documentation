@@ -83,6 +83,18 @@ Authorization: Bearer YOUR_PERSONAL_ACCESS_TOKEN
 
 Ответ: [Me](types.md#me).
 
+### Лимиты тарифа {#me-limits}
+
+Ответ также содержит `limits` для тарифа аккаунта, от имени которого сделан запрос.
+
+| Поле | Тип | Описание |
+| --- | --- | --- |
+| `limits.maxSubscriptions` | `number \| null` | Максимум активных подписок, учитываемых в лимите тарифа. `null` означает отсутствие ограничения. |
+| `limits.canRunTests` | `boolean` | Разрешён ли запуск тестов на этом тарифе. |
+| `limits.alertHistory` | `object \| null` | Лимиты истории оповещений. `null` означает, что тариф не включает историю. |
+| `limits.alertHistory.retentionDays` | `number` | Срок хранения истории оповещений в днях. |
+| `limits.alertHistory.maxRecords` | `number \| null` | Максимальное число хранимых записей. `null` означает отсутствие ограничения. |
+
 ## DELETE /api/me
 
 Удаляет текущий account.

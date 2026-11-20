@@ -83,6 +83,18 @@ Payload: none.
 
 Response: [Me](types.md#me).
 
+### Tier limits {#me-limits}
+
+The response also includes `limits` for the authenticated account's tier.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `limits.maxSubscriptions` | `number \| null` | Maximum active subscriptions counted toward the plan. `null` means unlimited. |
+| `limits.canRunTests` | `boolean` | Whether the tier allows test runs. |
+| `limits.alertHistory` | `object \| null` | Alert history limits. `null` means the tier has no alert history. |
+| `limits.alertHistory.retentionDays` | `number` | Alert history retention in days. |
+| `limits.alertHistory.maxRecords` | `number \| null` | Maximum records retained. `null` means there is no record cap. |
+
 ## DELETE /api/me
 
 Deletes current account.

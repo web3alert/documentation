@@ -30,16 +30,16 @@ As ferramentas para agentes atuam no workspace atual do account. Para usar outro
 
 | Ferramenta | O que faz |
 | --- | --- |
-| `get_account` | Devolve o ID, o nome e o tier do account, o saldo em EUR e as contagens de subscriptions ativas e totais do workspace atual quando estão disponíveis. |
+| `get_account` | Devolve o ID, o nome e o plano da conta, o saldo em EUR, os limites do plano e as contagens de subscrições ativas e totais do espaço de trabalho atual, quando disponíveis. |
 | `find_triggers` | Pesquisa no catálogo publicado e nos triggers do workspace atual. |
 | `get_trigger` | Mostra os inputs de execução do trigger, os campos dos eventos entregues e os campos que pode usar em `conditions`. |
 | `list_webhooks` | Lista o `fullname`, o nome e o URL de cada webhook registado no workspace. |
-| `add_webhook` | Regista um webhook HTTPS com um nome novo. Se o nome já estiver em uso no workspace, a ferramenta devolve `webhook_exists`. |
+| `add_webhook` | Regista um webhook com um URL HTTPS sem credenciais. Se, ao verificar o nome, já existir um recurso com esse nome no espaço de trabalho, a ferramenta recusa o pedido com `webhook_exists`. |
 | `create_subscription` | Cria uma subscription a um trigger com entrega num webhook. Indique os inputs obrigatórios e, se quiser filtrar eventos, `conditions`. |
 | `list_subscriptions` | Lista os IDs, títulos, estados, triggers, webhooks e datas de criação das subscriptions. |
 | `set_subscription_state` | Pausa (`off`) ou retoma (`on`) uma subscription. |
 | `remove_subscription` | Elimina uma subscription e interrompe a entrega. |
-| `get_delivery_log` | Mostra os resultados da entrega no workspace ou numa subscription. O histórico de alertas exige que o proprietário do workspace tenha o plano `Advanced` ou `Pro`. Se o plano não incluir o histórico de alertas, a ferramenta devolve `not_in_plan`. |
+| `get_delivery_log` | Mostra os resultados de entrega do espaço de trabalho ou de uma subscrição. O histórico de alertas usa o plano da primeira conta com a função de proprietário na lista de acesso do espaço de trabalho. Se essa conta não existir, a API verifica o plano da conta que faz o pedido. Se esse plano não incluir histórico, a ferramenta devolve `not_in_plan`. |
 
 Quando o limite de subscriptions do tier é atingido, `create_subscription` pode devolver o erro `subscription_limit_reached`. A criação ou a retoma (com `set_subscription_state` e `on`) pode ter sucesso e devolver `state: "blocked"` e `blockedReason: "subscription_limit_reached"`. Confirme que o `state` devolvido é `on` antes de assumir que a entrega está ativa.
 
@@ -52,9 +52,9 @@ claude mcp add --transport http web3alert-agent https://web3alert.io/mcp/agent \
   --header "Authorization: Bearer YOUR_PERSONAL_ACCESS_TOKEN"
 ```
 
-### Configuração JSON genérica
+### Claude Desktop e Cursor
 
-Coloque este JSON no ficheiro de configuração MCP do seu cliente.
+No Claude Desktop, adicione a entrada em `mcpServers` no ficheiro `claude_desktop_config.json`. No Cursor, use o ficheiro pessoal `~/.cursor/mcp.json`.
 
 ```json
 {
@@ -62,10 +62,11 @@ Coloque este JSON no ficheiro de configuração MCP do seu cliente.
     "web3alert-agent": {
       "command": "npx",
       "args": [
+        "-y",
         "mcp-remote",
+        "https://web3alert.io/mcp/agent",
         "--header",
-        "Authorization:${AUTH_HEADER}",
-        "https://web3alert.io/mcp/agent"
+        "Authorization:${AUTH_HEADER}"
       ],
       "env": {
         "AUTH_HEADER": "Bearer YOUR_PERSONAL_ACCESS_TOKEN"
@@ -75,9 +76,27 @@ Coloque este JSON no ficheiro de configuração MCP do seu cliente.
 }
 ```
 
+### VS Code
+
+Para uma ligação gerida pelo editor, adicione a entrada em `servers` em `.vscode/mcp.json` e disponibilize `WEB3ALERT_TOKEN` no ambiente do processo do VS Code.
+
+```json
+{
+  "servers": {
+    "web3alert-agent": {
+      "type": "http",
+      "url": "https://web3alert.io/mcp/agent",
+      "headers": {
+        "Authorization": "Bearer ${env:WEB3ALERT_TOKEN}"
+      }
+    }
+  }
+}
+```
+
 ## Remote MCP Endpoint
 
-Coloque este JSON no ficheiro de configuração MCP do seu cliente.
+Use o mesmo ficheiro de configuração do Claude Desktop ou do Cursor. Para [VS Code](#vs-code), use o mesmo exemplo de `servers` com o URL `https://web3alert.io/mcp`.
 
 ```json
 {
@@ -85,10 +104,11 @@ Coloque este JSON no ficheiro de configuração MCP do seu cliente.
     "web3alert": {
       "command": "npx",
       "args": [
+        "-y",
         "mcp-remote",
+        "https://web3alert.io/mcp",
         "--header",
-        "Authorization:${AUTH_HEADER}",
-        "https://web3alert.io/mcp"
+        "Authorization:${AUTH_HEADER}"
       ],
       "env": {
         "AUTH_HEADER": "Bearer YOUR_PERSONAL_ACCESS_TOKEN"
