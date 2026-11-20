@@ -51,7 +51,7 @@ Las credenciales del provider y el token devuelto son secretos. Envíalos solo m
 
 Revoca el token usado para autenticar esta solicitud.
 
-Envía la solicitud sin argumentos path/query y sin cuerpo.
+Envía la solicitud sin argumentos path/query y sin cuerpo. Los parámetros adicionales no permiten seleccionar otro token ni otro account.
 
 ```http
 DELETE /api/token
@@ -64,7 +64,7 @@ Si la solicitud tiene éxito, el servidor devuelve `204 No Content` con el cuerp
 
 Revoca todos los tokens del account autenticado, incluido el token usado para esta solicitud.
 
-Envía la solicitud sin argumentos path/query y sin cuerpo.
+Envía la solicitud sin argumentos path/query y sin cuerpo. Los parámetros adicionales no permiten seleccionar otro token ni otro account.
 
 ```http
 DELETE /api/tokens

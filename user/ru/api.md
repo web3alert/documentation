@@ -28,11 +28,11 @@ Authorization: Bearer YOUR_PERSONAL_ACCESS_TOKEN
 - access level project/data source/resource;
 - состояния сущности.
 
-Внешние API-запросы лимитируются по tier. Подробные значения описаны в [Limits](limits.md#api-and-mcp).
+Внешние API-запросы лимитируются по tier. Лимит запросов account никогда не применяется к `DELETE /api/token` и `DELETE /api/tokens`, поэтому токены можно отозвать даже после исчерпания лимита. Подробные значения описаны в [Limits](limits.md#api-and-mcp).
 
 ## Формат ответа
 
-Успешный response возвращает JSON endpoint-а.
+Успешный ответ с телом содержит JSON. У ответа `204 No Content`, например после удаления subscription или отзыва токенов, тела нет. При `204` пропустите разбор JSON.
 
 Подробные структуры response body описаны в [Types](types.md).
 
@@ -47,10 +47,10 @@ Authorization: Bearer YOUR_PERSONAL_ACCESS_TOKEN
 }
 ```
 
-При превышении external API лимита возвращается `429` и headers:
+Если запрос превышает лимит external API, API возвращает `429` с заголовками, как в примере. Прочитайте `Retry-After`, чтобы узнать, сколько секунд подождать до повторного запроса.
 
 ```http
-Retry-After: 10
+Retry-After: 1
 X-RateLimit-Limit: 300
 X-RateLimit-Remaining: 0
 X-RateLimit-Window: 60000

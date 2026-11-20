@@ -51,7 +51,7 @@ As credenciais do provider e o token devolvido são segredos. Envie-os apenas at
 
 Revoga o token usado para autenticar este pedido.
 
-Envie o pedido sem argumentos path/query e sem corpo.
+Envie o pedido sem argumentos path/query e sem corpo. Os parâmetros adicionais não permitem selecionar outro token nem outro account.
 
 ```http
 DELETE /api/token
@@ -64,7 +64,7 @@ Em caso de sucesso, o servidor devolve `204 No Content` com o corpo vazio. Este 
 
 Revoga todos os tokens do account autenticado, incluindo o token usado neste pedido.
 
-Envie o pedido sem argumentos path/query e sem corpo.
+Envie o pedido sem argumentos path/query e sem corpo. Os parâmetros adicionais não permitem selecionar outro token nem outro account.
 
 ```http
 DELETE /api/tokens

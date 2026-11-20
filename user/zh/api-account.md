@@ -51,7 +51,7 @@ Provider credentials 和返回的 token 都是敏感信息。仅通过 HTTPS 发
 
 撤销用于验证此请求的 token。
 
-发送请求时无需提供 path/query 参数或请求体。
+发送请求时请省略 path/query 参数和请求体。额外参数无法指定其他 token 或 account。
 
 ```http
 DELETE /api/token
@@ -64,7 +64,7 @@ Authorization: Bearer YOUR_PERSONAL_ACCESS_TOKEN
 
 撤销已通过身份验证的 account 的所有 tokens，包括此请求使用的 token。
 
-发送请求时无需提供 path/query 参数或请求体。
+发送请求时请省略 path/query 参数和请求体。额外参数无法指定其他 token 或 account。
 
 ```http
 DELETE /api/tokens

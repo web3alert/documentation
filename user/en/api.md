@@ -28,11 +28,11 @@ Endpoint access depends on:
 - project/data source/resource access level;
 - entity state.
 
-External API requests are limited by tier. Detailed values are described in [Limits](limits.md#api-and-mcp).
+External API requests are limited by tier. The account rate limit never applies to `DELETE /api/token` or `DELETE /api/tokens`, so you can revoke tokens even after using up the account's budget. Detailed values are described in [Limits](limits.md#api-and-mcp).
 
 ## Response format
 
-Successful response returns endpoint JSON.
+Successful responses with a body contain JSON. A `204 No Content` response, such as after deleting a subscription or revoking tokens, has no body. Skip JSON parsing for `204`.
 
 Detailed response body structures are described in [Types](types.md).
 
@@ -47,10 +47,10 @@ Error is returned in this format:
 }
 ```
 
-When external API limit is exceeded, `429` is returned with headers:
+When a request exceeds the external API limit, the API returns `429` with headers like these. Read `Retry-After` to determine how many seconds to wait before retrying.
 
 ```http
-Retry-After: 10
+Retry-After: 1
 X-RateLimit-Limit: 300
 X-RateLimit-Remaining: 0
 X-RateLimit-Window: 60000

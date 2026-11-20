@@ -11,7 +11,9 @@ MCP доступен для tiers `Free`, `Advanced` и `Pro`.
 
 Token дает MCP server доступ к Web3alert API от имени текущего account. Уровень доступных действий зависит от tier account и ролей пользователя в workspace.
 
-Передавайте токен в заголовке `Authorization: Bearer <token>` в каждом HTTP-запросе. Сервер не принимает токены в строке запроса или его теле. MCP кеширует результаты успешной проверки, поэтому отозванный токен может работать в MCP еще до 30 секунд.
+Передавайте токен в заголовке `Authorization: Bearer <token>` в каждом HTTP-запросе. Сервер не принимает токены в строке запроса или его теле.
+
+После отзыва API сразу отклоняет токен. Пока MCP хранит результат проверки в кеше, вызов инструмента для агентов, дошедший до API, возвращает `access_denied`. Благодаря кешу `initialize` и `tools/list` могут еще успешно выполняться до 30 секунд. Когда MCP повторно проверяет отозванный токен, сервер возвращает HTTP `401`.
 
 | Статус HTTP | Что делать |
 | --- | --- |
@@ -32,12 +34,14 @@ Token дает MCP server доступ к Web3alert API от имени теку
 | `find_triggers` | Ищет по опубликованному каталогу и по triggers в текущем workspace. |
 | `get_trigger` | Показывает inputs для выполнения trigger, поля доставляемых событий и поля, которые можно использовать в `conditions`. |
 | `list_webhooks` | Возвращает `fullname`, имя и URL каждого webhook, зарегистрированного в workspace. |
-| `add_webhook` | Регистрирует HTTPS webhook с уникальным именем и URL без учетных данных. |
+| `add_webhook` | Регистрирует HTTPS webhook с новым именем. Если имя уже используется в workspace, инструмент возвращает `webhook_exists`. |
 | `create_subscription` | Создает subscription на один trigger с доставкой на один webhook. Передайте обязательные inputs и при необходимости задайте фильтр событий в `conditions`. |
 | `list_subscriptions` | Возвращает ID, названия, состояния, triggers, webhooks и время создания subscriptions. |
 | `set_subscription_state` | Приостанавливает (`off`) или возобновляет (`on`) subscription. |
 | `remove_subscription` | Удаляет subscription и прекращает доставку. |
-| `get_delivery_log` | Показывает результаты доставки для workspace или отдельной subscription. |
+| `get_delivery_log` | Показывает результаты доставки для workspace или отдельной subscription. История оповещений доступна, если у владельца workspace тариф `Advanced` или `Pro`. Если тариф не включает историю оповещений, инструмент возвращает `not_in_plan`. |
+
+При достижении лимита subscriptions для tier вызов `create_subscription` может вернуть ошибку `subscription_limit_reached`. Успешное создание или возобновление (вызов `set_subscription_state` с `on`) может вернуть `state: "blocked"` и `blockedReason: "subscription_limit_reached"`. Прежде чем считать доставку активной, убедитесь, что вернулся `state` со значением `on`.
 
 Через этот endpoint агенты не могут создавать, редактировать или удалять triggers, projects, templates и data sources. Они также не могут менять billing, тарифы и платежи, управлять токенами, удалять accounts или workspaces, переключать workspace, переводить subscriptions в состояние `blocked` или управлять другими resources, кроме webhooks.
 
@@ -50,34 +54,46 @@ claude mcp add --transport http web3alert-agent https://web3alert.io/mcp/agent \
 
 ### Универсальная конфигурация JSON
 
+Поместите этот JSON в файл конфигурации MCP вашего клиента.
+
 ```json
 {
-  "command": "npx",
-  "args": [
-    "mcp-remote",
-    "--header",
-    "Authorization:${AUTH_HEADER}",
-    "https://web3alert.io/mcp/agent"
-  ],
-  "env": {
-    "AUTH_HEADER": "Bearer YOUR_PERSONAL_ACCESS_TOKEN"
+  "mcpServers": {
+    "web3alert-agent": {
+      "command": "npx",
+      "args": [
+        "mcp-remote",
+        "--header",
+        "Authorization:${AUTH_HEADER}",
+        "https://web3alert.io/mcp/agent"
+      ],
+      "env": {
+        "AUTH_HEADER": "Bearer YOUR_PERSONAL_ACCESS_TOKEN"
+      }
+    }
   }
 }
 ```
 
 ## Remote MCP endpoint
 
+Поместите этот JSON в файл конфигурации MCP вашего клиента.
+
 ```json
 {
-  "command": "npx",
-  "args": [
-    "mcp-remote",
-    "--header",
-    "Authorization:${AUTH_HEADER}",
-    "https://web3alert.io/mcp"
-  ],
-  "env": {
-    "AUTH_HEADER": "Bearer YOUR_PERSONAL_ACCESS_TOKEN"
+  "mcpServers": {
+    "web3alert": {
+      "command": "npx",
+      "args": [
+        "mcp-remote",
+        "--header",
+        "Authorization:${AUTH_HEADER}",
+        "https://web3alert.io/mcp"
+      ],
+      "env": {
+        "AUTH_HEADER": "Bearer YOUR_PERSONAL_ACCESS_TOKEN"
+      }
+    }
   }
 }
 ```

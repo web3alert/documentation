@@ -28,11 +28,11 @@ O acesso ao endpoint depende de:
 - access level de project/data source/resource;
 - estado da entidade.
 
-External API requests são limitadas por tier. Os valores detalhados estão descritos em [Limits](limits.md#api-and-mcp).
+External API requests são limitadas por tier. O limite de pedidos do account nunca se aplica a `DELETE /api/token` nem a `DELETE /api/tokens`, pelo que pode revogar tokens mesmo quando o account já esgotou a sua quota. Os valores detalhados estão descritos em [Limits](limits.md#api-and-mcp).
 
 ## Response format
 
-Um response bem-sucedido devolve JSON do endpoint.
+As respostas bem-sucedidas com corpo devolvem JSON. Uma resposta `204 No Content`, como a que se segue à eliminação de uma subscription ou à revogação de tokens, não tem corpo. Ignore a leitura de JSON quando receber `204`.
 
 As estruturas detalhadas do response body estão descritas em [Types](types.md).
 
@@ -47,10 +47,10 @@ Erro é devolvido neste formato:
 }
 ```
 
-Ao exceder o limite de external API, é devolvido `429` com headers:
+Quando um pedido excede o limite de external API, a API devolve `429` com headers como os do exemplo. Consulte `Retry-After` para saber quantos segundos deve aguardar antes de voltar a tentar.
 
 ```http
-Retry-After: 10
+Retry-After: 1
 X-RateLimit-Limit: 300
 X-RateLimit-Remaining: 0
 X-RateLimit-Window: 60000

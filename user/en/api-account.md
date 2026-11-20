@@ -51,7 +51,7 @@ Provider credentials and the returned token are secrets. Send them only over HTT
 
 Revokes the token used to authenticate this request.
 
-Send the request with no path or query arguments and no body.
+Send the request with no path or query arguments and no body. Extra parameters cannot select another token or account.
 
 ```http
 DELETE /api/token
@@ -64,7 +64,7 @@ On success, the server returns `204 No Content` with an empty body. This endpoin
 
 Revokes every token belonging to the authenticated account, including the token used for this request.
 
-Send the request with no path or query arguments and no body.
+Send the request with no path or query arguments and no body. Extra parameters cannot select another token or account.
 
 ```http
 DELETE /api/tokens

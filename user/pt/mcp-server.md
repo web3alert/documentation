@@ -11,7 +11,9 @@ Para ligar, é necessário um personal access token de [Account parameters](acco
 
 O token dá ao MCP server acesso à Web3alert API em nome do account atual. O nível de ações disponíveis depende do account tier e dos roles do utilizador em workspace.
 
-Envie o token em cada pedido HTTP no header `Authorization: Bearer <token>`. O servidor não aceita tokens na query string nem no corpo do pedido. O MCP guarda em cache as verificações bem-sucedidas, pelo que um token revogado pode continuar a funcionar no MCP até 30 segundos.
+Envie o token em cada pedido HTTP no header `Authorization: Bearer <token>`. O servidor não aceita tokens na query string nem no corpo do pedido.
+
+Após a revogação, a API rejeita o token imediatamente. Enquanto o MCP mantiver a verificação em cache, uma chamada a uma ferramenta para agentes que chegue à API devolve `access_denied`. `initialize` e `tools/list` podem continuar a responder durante até 30 segundos com a verificação em cache. Quando o MCP volta a verificar o token revogado, devolve HTTP `401`.
 
 | Estado HTTP | O que fazer |
 | --- | --- |
@@ -32,12 +34,14 @@ As ferramentas para agentes atuam no workspace atual do account. Para usar outro
 | `find_triggers` | Pesquisa no catálogo publicado e nos triggers do workspace atual. |
 | `get_trigger` | Mostra os inputs de execução do trigger, os campos dos eventos entregues e os campos que pode usar em `conditions`. |
 | `list_webhooks` | Lista o `fullname`, o nome e o URL de cada webhook registado no workspace. |
-| `add_webhook` | Regista um webhook HTTPS com um nome único e um URL sem credenciais. |
+| `add_webhook` | Regista um webhook HTTPS com um nome novo. Se o nome já estiver em uso no workspace, a ferramenta devolve `webhook_exists`. |
 | `create_subscription` | Cria uma subscription a um trigger com entrega num webhook. Indique os inputs obrigatórios e, se quiser filtrar eventos, `conditions`. |
 | `list_subscriptions` | Lista os IDs, títulos, estados, triggers, webhooks e datas de criação das subscriptions. |
 | `set_subscription_state` | Pausa (`off`) ou retoma (`on`) uma subscription. |
 | `remove_subscription` | Elimina uma subscription e interrompe a entrega. |
-| `get_delivery_log` | Mostra os resultados da entrega no workspace ou numa subscription. |
+| `get_delivery_log` | Mostra os resultados da entrega no workspace ou numa subscription. O histórico de alertas exige que o proprietário do workspace tenha o plano `Advanced` ou `Pro`. Se o plano não incluir o histórico de alertas, a ferramenta devolve `not_in_plan`. |
+
+Quando o limite de subscriptions do tier é atingido, `create_subscription` pode devolver o erro `subscription_limit_reached`. A criação ou a retoma (com `set_subscription_state` e `on`) pode ter sucesso e devolver `state: "blocked"` e `blockedReason: "subscription_limit_reached"`. Confirme que o `state` devolvido é `on` antes de assumir que a entrega está ativa.
 
 Neste endpoint, os agentes não podem criar, editar ou eliminar triggers, projects, templates ou data sources. Também não podem alterar a faturação, os planos ou os pagamentos, gerir tokens, eliminar accounts ou workspaces, mudar de workspace, colocar subscriptions no estado `blocked` nem gerir outros resources além de webhooks.
 
@@ -50,34 +54,46 @@ claude mcp add --transport http web3alert-agent https://web3alert.io/mcp/agent \
 
 ### Configuração JSON genérica
 
+Coloque este JSON no ficheiro de configuração MCP do seu cliente.
+
 ```json
 {
-  "command": "npx",
-  "args": [
-    "mcp-remote",
-    "--header",
-    "Authorization:${AUTH_HEADER}",
-    "https://web3alert.io/mcp/agent"
-  ],
-  "env": {
-    "AUTH_HEADER": "Bearer YOUR_PERSONAL_ACCESS_TOKEN"
+  "mcpServers": {
+    "web3alert-agent": {
+      "command": "npx",
+      "args": [
+        "mcp-remote",
+        "--header",
+        "Authorization:${AUTH_HEADER}",
+        "https://web3alert.io/mcp/agent"
+      ],
+      "env": {
+        "AUTH_HEADER": "Bearer YOUR_PERSONAL_ACCESS_TOKEN"
+      }
+    }
   }
 }
 ```
 
 ## Remote MCP Endpoint
 
+Coloque este JSON no ficheiro de configuração MCP do seu cliente.
+
 ```json
 {
-  "command": "npx",
-  "args": [
-    "mcp-remote",
-    "--header",
-    "Authorization:${AUTH_HEADER}",
-    "https://web3alert.io/mcp"
-  ],
-  "env": {
-    "AUTH_HEADER": "Bearer YOUR_PERSONAL_ACCESS_TOKEN"
+  "mcpServers": {
+    "web3alert": {
+      "command": "npx",
+      "args": [
+        "mcp-remote",
+        "--header",
+        "Authorization:${AUTH_HEADER}",
+        "https://web3alert.io/mcp"
+      ],
+      "env": {
+        "AUTH_HEADER": "Bearer YOUR_PERSONAL_ACCESS_TOKEN"
+      }
+    }
   }
 }
 ```

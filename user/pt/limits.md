@@ -145,7 +145,7 @@ MCP server está disponível para `Free`, `Advanced` e `Pro`.
 
 ### External API Rate
 
-Os limites por tier na tabela aplicam-se aos pedidos externos à API autenticados com um token do account.
+Os limites por tier na tabela aplicam-se aos pedidos externos à API autenticados com um token do account. O limite de pedidos do account nunca se aplica a `DELETE /api/token` nem a `DELETE /api/tokens`, pelo que pode revogar tokens mesmo quando o account já esgotou a sua quota.
 
 | Tier | External API requests |
 | --- | ---: |

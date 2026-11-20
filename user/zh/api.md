@@ -28,11 +28,11 @@ Endpoint access 取决于：
 - project/data source/resource access level；
 - 实体状态。
 
-External API requests 会按 tier 限制。详细数值见 [Limits](limits.md#api-and-mcp)。
+External API requests 会按 tier 限制。`DELETE /api/token` 和 `DELETE /api/tokens` 均不受 account 请求限额约束，因此即使 account 已用完配额，仍可撤销 token。详细数值见 [Limits](limits.md#api-and-mcp)。
 
 ## Response format
 
-成功 response 会返回 endpoint JSON。
+带响应体的成功响应会返回 JSON。删除 subscription 或撤销 token 等操作返回 `204 No Content` 时，响应没有正文。收到 `204` 时请跳过 JSON 解析。
 
 详细的 response body 结构见 [Types](types.md)。
 
@@ -47,10 +47,10 @@ External API requests 会按 tier 限制。详细数值见 [Limits](limits.md#ap
 }
 ```
 
-超过 external API limit 时，会返回 `429` 和 headers：
+请求超出 external API 限额时，API 会返回 `429`，并附带示例中的这类 headers。请读取 `Retry-After`，了解重试前需要等待的秒数。
 
 ```http
-Retry-After: 10
+Retry-After: 1
 X-RateLimit-Limit: 300
 X-RateLimit-Remaining: 0
 X-RateLimit-Window: 60000

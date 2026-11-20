@@ -145,7 +145,7 @@ MCP server 适用于 `Free`、`Advanced` 和 `Pro`。
 
 ### External API Rate
 
-下表按 tier 列出的限额适用于使用 account token 验证身份的外部 API 请求。
+下表按 tier 列出的限额适用于使用 account token 验证身份的外部 API 请求。`DELETE /api/token` 和 `DELETE /api/tokens` 均不受 account 请求限额约束，因此即使 account 已用完配额，仍可撤销 token。
 
 | Tier | External API requests |
 | --- | ---: |
