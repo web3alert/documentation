@@ -140,9 +140,9 @@ def verify_webhook(raw_body, headers, secret, now=None):
 
 `2xx` 响应表示接收端已接受投递。请尽快响应，因为请求默认在 4 秒后超时。遇到 HTTP `429`、任何 `5xx` 响应、请求超时或收到响应前的网络错误（例如连接重置、DNS 或 TLS 故障）时，Web3alert 会重试。其他结果会结束投递。测试投递不会重试。
 
-默认情况下，Web3alert 会跟随接收端返回的重定向，并根据最终响应决定投递结果。收到 `307` 或 `308` 响应时，Web3alert 会向新 URL 重新发送 `POST` 请求，已启用签名时会保留签名。收到 `303` 响应时，请求会改为不带请求体和签名的 `GET` 请求。如果该 `GET` 请求收到 `2xx` 响应，则视为投递成功。
+收到 HTTP `3xx` 响应时，Web3alert 会将该投递视为被拒绝，不会重试。该事件计入连续未送达的事件数，连续五个事件未送达会阻止订阅继续投递。
 
-请直接配置最终的 HTTPS URL，确保启用签名的 Webhook 每次都收到已签名的 `POST` 请求。
+请注册最终的 HTTPS URL。Web3alert 不会跟随重定向。
 
 如果安排的重试到期时 Web3alert 的 Webhook 发送服务不可用，Web3alert 会等待后再试，尝试编号保持不变。如果首次尝试时发送服务不可用，Web3alert 会安排第 2 次尝试，原因是 `webhook service unavailable`，原因代码是 `channel.webhook.retry_scheduled`。如果等待发送服务响应超时，本次尝试计为可重试的失败，原因是 `webhook service timed out`，并按重试计划处理。
 
@@ -176,7 +176,7 @@ def verify_webhook(raw_body, headers, secret, now=None):
 | `attempt` | 尝试次数编号，从 `1` 开始。 |
 | `nextAttemptAt` | 写入此条目时为下一次尝试安排的时间，采用 ISO 格式。如果条目未记录已安排的重试，REST 历史记录会省略此字段，MCP 工具 `get_delivery_log` 则返回 `null`。 |
 
-即使重试已经执行或取消，该时间戳也保持不变。要查看投递结果，请查找具有相同 `eventId` 的后续条目。
+即使重试已经执行或取消，该时间戳也保持不变。要查看投递结果，请查找具有相同 `eventId` 的后续条目。如果订阅被暂停或删除导致重试停止，或重试已过期，Web3alert 不会写入最终条目，因此缺少最终条目时，无法确定投递结果或重试是否仍待执行。
 
 | `reasonCode` | 含义 |
 | --- | --- |
@@ -188,7 +188,7 @@ def verify_webhook(raw_body, headers, secret, now=None):
 
 首条记录的状态反映该事件的所有投递渠道。如果其他渠道投递成功，但 Webhook 投递因可重试的错误而失败，则事件记录的状态为 `delivered`，其中 Webhook 渠道显示 `ok: false`。如果安排了重试，事件记录中 Webhook 渠道的 `reasonCode` 为 `channel.webhook.retry_scheduled`。如果重试队列无法接收投递（队列已满，或排队的投递连同事件数据超过 256 KB），事件记录中的 Webhook 渠道显示 `channel.webhook.retry_queue_full`。
 
-经过重试的投递的最终结果会单独记录，沿用相同的 `eventId`，且仅包含该 Webhook 渠道。成功时记录状态为 `delivered`，被拒绝或重试耗尽时为 `failed`，收到 HTTP `410` 时为 `blocked`。中途失败后仍会继续重试的尝试不会生成投递日志条目。
+Web3alert 记录重试投递的最终结果时，会另写一条记录，沿用相同的 `eventId`，且仅包含该 Webhook 渠道。成功时记录状态为 `delivered`，被拒绝或重试耗尽时为 `failed`，收到 HTTP `410` 时为 `blocked`。中途失败后仍会继续重试的尝试不会生成投递日志条目。
 
 如果后续尝试后重试队列无法接收投递，最终记录的状态为 `failed`，其 Webhook 渠道会显示 `channel.webhook.retry_queue_full`。
 

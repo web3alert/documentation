@@ -184,7 +184,7 @@ En ambas respuestas de historial, los registros de webhooks en `channels` pueden
 | `attempt` | `number` | Número de intento, a partir de `1`. |
 | `nextAttemptAt` | `string` | Marca de tiempo ISO para la que se había programado el siguiente intento al guardar el registro. Las rutas REST de historial omiten el campo si el registro no indica un reintento programado. |
 
-La marca de tiempo permanece fija aunque el reintento se ejecute o se cancele. Para conocer el resultado de la entrega, busca un registro posterior con el mismo `eventId`.
+La marca de tiempo permanece fija aunque el reintento se ejecute o se cancele. Para conocer el resultado de la entrega, busca un registro posterior con el mismo `eventId`. Si los reintentos se detienen porque se pausa o elimina la suscripción, o si un reintento caduca, Web3alert no guarda un registro final y, sin ese registro, se desconocen tanto el resultado de la entrega como el estado actual de los reintentos.
 
 El estado del primer registro refleja todos los canales de entrega del evento. Si otro canal entregó el evento y el webhook falló con un error que admite reintento, el registro del evento tiene estado `delivered` y su canal webhook tiene `ok: false`. El campo `reasonCode` del canal webhook del registro del evento indica `channel.webhook.retry_scheduled` si se programa un reintento, o `channel.webhook.retry_queue_full` si la cola de reintentos no puede aceptar la entrega (porque está llena o la entrega en cola, incluidos los datos del evento, supera los 256 KB).
 

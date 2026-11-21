@@ -28,7 +28,11 @@ Both endpoints share a default budget of 120 tool calls per minute per account o
 
 The `/mcp` endpoint now accepts the token only in the `Authorization: Bearer <token>` header on every request. Requests that supply the token only in the query string or request body receive HTTP `401`. The server is stateless and creates no sessions.
 
-Update your client to send the header and remove the token from the URL or request body. See the [remote endpoint configuration examples](#remote-mcp-endpoint).
+Update your client to send the header and remove the token from the URL or request body.
+
+In Claude Code, before running the add command, remove any existing entry with the same name using `claude mcp remove web3alert` or `claude mcp remove web3alert-agent`. If you added the entry with `--scope`, pass the same scope when removing it, for example `claude mcp remove --scope user web3alert`.
+
+In Claude Desktop, Cursor, and VS Code, edit the existing entry's URL and headers in place. See the [remote endpoint configuration examples](#remote-mcp-endpoint).
 
 ## Agent Endpoint
 
@@ -47,7 +51,7 @@ Agent tools act on the account's current workspace. To change which workspace th
 | `remove_subscription` | Deletes a subscription. Webhook retries stop within about 10 seconds. An attempt already due in that window can still be sent. |
 | `get_delivery_log` | Shows delivery outcomes for the workspace or a single subscription. Alert history uses the plan of the first account with the owner role in the workspace's access list. If there is no such account, the API checks the caller's plan. Without history on that plan, the tool returns `not_in_plan`. Webhook channel entries include `eventId` and `attempt`. `nextAttemptAt` is the ISO timestamp for which the next attempt was scheduled when the entry was written, or `null` if the entry records no scheduled retry. |
 
-The `nextAttemptAt` timestamp stays fixed even after the retry runs or is canceled. To find the delivery outcome, look for a later entry with the same `eventId`.
+The `nextAttemptAt` timestamp stays fixed even after the retry runs or is canceled. To find the delivery outcome, look for a later entry with the same `eventId`. If pausing or removing the subscription stops retries or a retry expires, Web3alert writes no final entry, so a missing final entry leaves both the delivery outcome and the current retry status unknown.
 
 `limits.maxSubscriptions` caps active subscriptions you created to non-Free projects across all workspaces. The cap is 5 on Free. Subscriptions to Free projects are exempt.
 

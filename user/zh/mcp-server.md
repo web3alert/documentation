@@ -28,7 +28,11 @@ Token 撤销后，API 会立即拒绝该 token。MCP 仍有验证缓存时，到
 
 `/mcp` 端点现在仅通过每个请求的 `Authorization: Bearer <token>` 请求头接收令牌。仅在查询字符串或请求体中提供令牌的请求会收到 HTTP `401` 响应。服务器采用无状态模式，不创建会话。
 
-请配置客户端以发送该请求头，并从 URL 或请求体中移除令牌。参见[远程端点配置示例](#remote-mcp-endpoint)。
+请配置客户端以发送该请求头，并从 URL 或请求体中移除令牌。
+
+在 Claude Code 中运行添加命令前，请先用 `claude mcp remove web3alert` 或 `claude mcp remove web3alert-agent` 移除同名条目。如果添加时指定了 `--scope`，移除时请使用相同的作用域，例如 `claude mcp remove --scope user web3alert`。
+
+在 Claude Desktop、Cursor 和 VS Code 中，直接修改现有条目的 URL 和请求头。参见[远程端点配置示例](#remote-mcp-endpoint)。
 
 ## Agent Endpoint
 
@@ -47,7 +51,7 @@ Agent 工具在 account 当前选中的 workspace 中执行操作。如需让下
 | `remove_subscription` | 删除订阅。Webhook 重试会在约 10 秒内停止。在此期间到期的尝试仍可能发出。 |
 | `get_delivery_log` | 查看工作区或单个订阅的投递结果。 告警历史按工作区访问列表中第一个具有所有者角色的账户的套餐检查。如果没有这样的账户，API 会检查请求方账户的套餐。如果该套餐不含历史记录，工具返回 `not_in_plan`。 Webhook 渠道条目包含 `eventId` 和 `attempt`。`nextAttemptAt` 是写入该条目时为下一次尝试安排的时间，采用 ISO 格式。如果条目未记录已安排的重试，则为 `null`。 |
 
-即使重试已经执行或取消，`nextAttemptAt` 也保持不变。要查看投递结果，请查找具有相同 `eventId` 的后续条目。
+即使重试已经执行或取消，`nextAttemptAt` 也保持不变。要查看投递结果，请查找具有相同 `eventId` 的后续条目。如果订阅被暂停或删除导致重试停止，或重试已过期，Web3alert 不会写入最终条目，因此缺少最终条目时，无法确定投递结果或重试是否仍待执行。
 
 `limits.maxSubscriptions` 限制账户在所有工作区内创建的非 Free 项目启用订阅数。Free 套餐的上限为 5 个。Free 项目的订阅不计入上限。
 

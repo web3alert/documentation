@@ -28,7 +28,11 @@ Por defecto, cada proceso del servidor permite 120 llamadas a herramientas por m
 
 El endpoint `/mcp` ahora solo acepta el token en la cabecera `Authorization: Bearer <token>` en cada solicitud. Las solicitudes que solo incluyen el token en la cadena de consulta o en el cuerpo reciben una respuesta HTTP `401`. El servidor funciona sin sesiones de MCP.
 
-Configura el cliente para que envíe la cabecera y elimina el token de la URL o del cuerpo de la solicitud. Consulta los [ejemplos de configuración del endpoint remoto](#remote-mcp-endpoint).
+Configura el cliente para que envíe la cabecera y elimina el token de la URL o del cuerpo de la solicitud.
+
+En Claude Code, antes de ejecutar el comando para añadir el servidor, elimina cualquier entrada que tenga el mismo nombre con `claude mcp remove web3alert` o `claude mcp remove web3alert-agent`. Si añadiste la entrada con `--scope`, usa el mismo ámbito al eliminarla, por ejemplo `claude mcp remove --scope user web3alert`.
+
+En Claude Desktop, Cursor y VS Code, edita la URL y las cabeceras de la entrada existente. Consulta los [ejemplos de configuración del endpoint remoto](#remote-mcp-endpoint).
 
 ## Endpoint para agentes
 
@@ -47,7 +51,7 @@ Las herramientas para agentes actúan sobre el workspace actual del account. Par
 | `remove_subscription` | Elimina una suscripción. Los reintentos de webhook se detienen en unos 10 segundos. Todavía puede enviarse un intento previsto para ese intervalo. |
 | `get_delivery_log` | Muestra los resultados de entrega del espacio de trabajo o de una suscripción. El historial de alertas usa el plan de la primera cuenta con rol de propietario en la lista de acceso del espacio de trabajo. Si no existe esa cuenta, la API comprueba el plan de la cuenta que hace la solicitud. Si ese plan no incluye el historial, la herramienta devuelve `not_in_plan`. Los registros de canales webhook incluyen `eventId` y `attempt`. `nextAttemptAt` es la marca de tiempo ISO para la que se había programado el siguiente intento al guardar el registro, o `null` si el registro no indica un reintento programado. |
 
-La marca de tiempo `nextAttemptAt` permanece fija aunque el reintento se ejecute o se cancele. Para conocer el resultado de la entrega, busca un registro posterior con el mismo `eventId`.
+La marca de tiempo `nextAttemptAt` permanece fija aunque el reintento se ejecute o se cancele. Para conocer el resultado de la entrega, busca un registro posterior con el mismo `eventId`. Si los reintentos se detienen porque se pausa o elimina la suscripción, o si un reintento caduca, Web3alert no guarda un registro final y, sin ese registro, se desconocen tanto el resultado de la entrega como el estado actual de los reintentos.
 
 `limits.maxSubscriptions` limita las suscripciones activas que has creado a proyectos que no sean Free, sumadas entre todos los espacios de trabajo. El límite de Free es de 5. Las suscripciones a proyectos Free quedan fuera del límite.
 

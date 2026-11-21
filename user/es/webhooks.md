@@ -140,9 +140,9 @@ Al transferir un proyecto a otro espacio de trabajo, se eliminan los secretos de
 
 Una respuesta `2xx` indica que el receptor aceptó la entrega. Responde rápido porque las solicitudes tienen un tiempo de espera predeterminado de 4 segundos. Web3alert reintenta las entregas ante HTTP `429`, cualquier respuesta `5xx`, un tiempo de espera agotado o un error de red antes de recibir una respuesta, como un corte de conexión o un fallo de DNS o TLS. Los demás resultados dan por terminada la entrega. Las entregas de prueba nunca se reintentan.
 
-De forma predeterminada, Web3alert sigue las redirecciones del receptor y usa la respuesta final para determinar el resultado. Una respuesta `307` o `308` repite el `POST` firmado en la nueva URL si la firma está habilitada. Una respuesta `303` cambia la solicitud a un `GET` sin cuerpo ni firma. Si ese `GET` recibe una respuesta `2xx`, la entrega se considera completada.
+Web3alert considera una respuesta HTTP `3xx` un rechazo de la entrega y no la reintenta. El rechazo cuenta para el bloqueo de la suscripción tras cinco eventos consecutivos sin entregar.
 
-Configura directamente la URL HTTPS final para que cada entrega a tu webhook con firma habilitada sea un `POST` firmado.
+Registra la URL HTTPS final. Web3alert no sigue las redirecciones.
 
 Si el servicio de envío de webhooks de Web3alert no está disponible cuando toca reintentar, Web3alert espera y vuelve a intentarlo sin aumentar el número de intentos. Si el servicio no está disponible en el primer intento, Web3alert programa el intento 2 con el motivo `webhook service unavailable` y el código `channel.webhook.retry_scheduled`. Si se agota el tiempo de espera del servicio de envío, el intento cuenta como un fallo que admite reintento, con el motivo `webhook service timed out`, y se reintenta según el calendario.
 
@@ -176,7 +176,7 @@ El historial de entregas se conserva en los planes de pago. Las [rutas de histor
 | `attempt` | Número de intento, a partir de `1`. |
 | `nextAttemptAt` | Marca de tiempo ISO para la que se había programado el siguiente intento al guardar el registro. Si el registro no indica un reintento programado, el historial REST omite el campo y la herramienta MCP `get_delivery_log` devuelve `null`. |
 
-La marca de tiempo permanece fija aunque el reintento se ejecute o se cancele. Para conocer el resultado de la entrega, busca un registro posterior con el mismo `eventId`.
+La marca de tiempo permanece fija aunque el reintento se ejecute o se cancele. Para conocer el resultado de la entrega, busca un registro posterior con el mismo `eventId`. Si los reintentos se detienen porque se pausa o elimina la suscripción, o si un reintento caduca, Web3alert no guarda un registro final y, sin ese registro, se desconocen tanto el resultado de la entrega como el estado actual de los reintentos.
 
 | `reasonCode` | Significado |
 | --- | --- |
@@ -188,7 +188,7 @@ La marca de tiempo permanece fija aunque el reintento se ejecute o se cancele. P
 
 El estado del primer registro refleja todos los canales de entrega del evento. Si otro canal entregó el evento y el webhook falló con un error que admite reintento, el registro del evento tiene estado `delivered` y su canal webhook tiene `ok: false`. El campo `reasonCode` del canal webhook del registro del evento indica `channel.webhook.retry_scheduled` si se programa un reintento, o `channel.webhook.retry_queue_full` si la cola de reintentos no puede aceptar la entrega (porque está llena o la entrega en cola, incluidos los datos del evento, supera los 256 KB).
 
-El resultado final de una entrega con reintentos se guarda en un registro aparte con el mismo `eventId` y solo el canal webhook. El estado del registro es `delivered` si se entrega, `failed` si se rechaza o agota los reintentos, o `blocked` si recibe HTTP `410`. Los fallos intermedios seguidos de otro reintento no generan un registro de entrega.
+Cuando Web3alert guarda el resultado final de una entrega con reintentos, usa un registro aparte con el mismo `eventId` y solo el canal webhook. El estado del registro es `delivered` si se entrega, `failed` si se rechaza o agota los reintentos, o `blocked` si recibe HTTP `410`. Los fallos intermedios seguidos de otro reintento no generan un registro de entrega.
 
 Si la cola de reintentos no puede aceptar la entrega tras un intento posterior, el registro final tiene estado `failed` y muestra `channel.webhook.retry_queue_full` en su canal webhook.
 

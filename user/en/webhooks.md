@@ -140,9 +140,9 @@ Transferring a project to another workspace removes the signing secrets of the w
 
 A `2xx` response means the receiver accepted the delivery. Respond quickly because requests time out after 4 seconds by default. Web3alert retries HTTP `429`, any `5xx` response, timeouts, and network errors that occur before a response, such as a connection reset or a DNS or TLS failure. All other outcomes end the delivery. Test deliveries are never retried.
 
-By default, Web3alert follows redirects from the receiver and uses the final response to decide the outcome. A `307` or `308` repeats the signed `POST` at the new URL when signing is enabled. A `303` changes the request to a `GET` without a body or signature. A `2xx` response to that `GET` counts as delivered.
+Web3alert treats an HTTP `3xx` response as a rejected delivery without retrying it. The rejection counts toward the five consecutive undelivered events that block the subscription.
 
-Configure the final HTTPS URL directly so every delivery to your signing-enabled webhook is a signed `POST`.
+Register the final HTTPS URL; Web3alert does not follow redirects.
 
 When a retry is due and Web3alert's webhook sender is unavailable, Web3alert waits and tries again without advancing the attempt count. If the sender is unavailable on the first attempt, Web3alert schedules attempt 2 with the reason `webhook service unavailable` and the code `channel.webhook.retry_scheduled`. A sender timeout counts as a retryable failure with the reason `webhook service timed out` and follows the retry schedule.
 
@@ -176,7 +176,7 @@ Delivery history is kept on paid plans. The [subscription history routes](api-su
 | `attempt` | Attempt number, starting at `1`. |
 | `nextAttemptAt` | The ISO timestamp for which the next attempt was scheduled when this entry was written. If the entry records no scheduled retry, REST history omits the field and MCP `get_delivery_log` returns `null`. |
 
-The timestamp stays fixed even after the retry runs or is canceled. To find the delivery outcome, look for a later entry with the same `eventId`.
+The timestamp stays fixed even after the retry runs or is canceled. To find the delivery outcome, look for a later entry with the same `eventId`. If pausing or removing the subscription stops retries or a retry expires, Web3alert writes no final entry, so a missing final entry leaves both the delivery outcome and the current retry status unknown.
 
 | `reasonCode` | Meaning |
 | --- | --- |
@@ -188,7 +188,7 @@ The timestamp stays fixed even after the retry runs or is canceled. To find the 
 
 The first entry's status reflects all delivery channels for the event. If another channel delivered and the webhook failed with a retryable error, the event's entry has status `delivered` and its webhook channel has `ok: false`. The webhook channel of the event's entry has `reasonCode` set to `channel.webhook.retry_scheduled` when a retry is scheduled, or `channel.webhook.retry_queue_full` when the retry queue cannot accept the delivery (it is full, or the queued delivery, including its event data, exceeds 256 KB).
 
-The final outcome of a retried delivery is recorded in a separate entry with the same `eventId` and only the webhook channel. The entry status is `delivered` on success, `failed` for a rejection or exhausted retries, or `blocked` for HTTP `410`. Intermediate failures followed by another retry produce no delivery-log entry.
+When Web3alert records a final outcome for a retried delivery, it uses a separate entry with the same `eventId` and only the webhook channel. The entry status is `delivered` on success, `failed` for a rejection or exhausted retries, or `blocked` for HTTP `410`. Intermediate failures followed by another retry produce no delivery-log entry.
 
 If the retry queue cannot accept the delivery after a later attempt, the final entry has status `failed` and shows `channel.webhook.retry_queue_full` on its webhook channel.
 

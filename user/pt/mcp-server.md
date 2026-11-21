@@ -28,7 +28,11 @@ Por predefinição, cada processo do servidor permite 120 chamadas a ferramentas
 
 O endpoint `/mcp` passa a aceitar o token apenas no cabeçalho `Authorization: Bearer <token>` em cada pedido. Os pedidos que enviam o token apenas na cadeia de consulta ou no corpo recebem uma resposta HTTP `401`. O servidor não mantém estado nem cria sessões.
 
-Configure o cliente para enviar o cabeçalho e retire o token do URL ou do corpo do pedido. Consulte os [exemplos de configuração do endpoint remoto](#remote-mcp-endpoint).
+Configure o cliente para enviar o cabeçalho e retire o token do URL ou do corpo do pedido.
+
+No Claude Code, antes de executar o comando para adicionar o servidor, remova qualquer entrada com o mesmo nome usando `claude mcp remove web3alert` ou `claude mcp remove web3alert-agent`. Se adicionou a entrada com `--scope`, indique o mesmo âmbito ao removê-la, por exemplo `claude mcp remove --scope user web3alert`.
+
+No Claude Desktop, no Cursor e no VS Code, edite o URL e os cabeçalhos da entrada existente. Consulte os [exemplos de configuração do endpoint remoto](#remote-mcp-endpoint).
 
 ## Endpoint para agentes
 
@@ -47,7 +51,7 @@ As ferramentas para agentes atuam no workspace atual do account. Para usar outro
 | `remove_subscription` | Elimina uma subscrição. As novas tentativas de webhook param em cerca de 10 segundos. Uma tentativa prevista para esse intervalo ainda pode ser enviada. |
 | `get_delivery_log` | Mostra os resultados de entrega do espaço de trabalho ou de uma subscrição. O histórico de alertas usa o plano da primeira conta com a função de proprietário na lista de acesso do espaço de trabalho. Se essa conta não existir, a API verifica o plano da conta que faz o pedido. Se esse plano não incluir histórico, a ferramenta devolve `not_in_plan`. As entradas dos canais webhook incluem `eventId` e `attempt`. `nextAttemptAt` indica a data e hora em formato ISO para as quais estava agendada a próxima tentativa quando a entrada foi registada, ou `null` se a entrada não registar uma nova tentativa agendada. |
 
-O valor de `nextAttemptAt` mantém-se fixo mesmo depois de a tentativa ocorrer ou ser cancelada. Para saber o resultado da entrega, procure uma entrada posterior com o mesmo `eventId`.
+O valor de `nextAttemptAt` mantém-se fixo mesmo depois de a tentativa ocorrer ou ser cancelada. Para saber o resultado da entrega, procure uma entrada posterior com o mesmo `eventId`. Se as novas tentativas pararem porque a subscrição foi pausada ou removida, ou se uma tentativa expirar, o Web3alert não escreve uma entrada final e, sem essa entrada, ficam por determinar o resultado da entrega e o estado atual das tentativas.
 
 `limits.maxSubscriptions` limita as subscrições ativas que criou para projetos que não sejam Free, somadas entre todos os espaços de trabalho. O limite de Free é de 5. As subscrições de projetos Free ficam fora do limite.
 

@@ -140,9 +140,9 @@ Transferir um projeto para outro espaço de trabalho remove os segredos de assin
 
 Uma resposta `2xx` indica que o recetor aceitou a entrega. Responda rapidamente porque por predefinição, o pedido expira após 4 segundos. O Web3alert volta a tentar a entrega perante HTTP `429`, qualquer resposta `5xx`, um pedido que exceda o tempo limite ou um erro de rede antes de receber uma resposta, como uma ligação interrompida ou uma falha de DNS ou TLS. Os restantes resultados terminam a entrega. As entregas de teste nunca são repetidas.
 
-Por predefinição, o Web3alert segue os redirecionamentos do recetor e usa a resposta final para determinar o resultado. Uma resposta `307` ou `308` repete o `POST` assinado no novo URL se a assinatura estiver ativa. Uma resposta `303` transforma o pedido num `GET` sem corpo nem assinatura. Uma resposta `2xx` a esse `GET` conta como uma entrega bem-sucedida.
+O Web3alert trata uma resposta HTTP `3xx` como uma rejeição e não volta a tentar a entrega. A rejeição conta para o bloqueio da subscrição após cinco eventos consecutivos por entregar.
 
-Configure diretamente o URL HTTPS final para que cada entrega ao seu webhook com assinatura ativa seja um `POST` assinado.
+Registe o URL HTTPS final. O Web3alert não segue redirecionamentos.
 
 Se o serviço de envio de webhooks do Web3alert estiver indisponível quando chegar a altura de uma nova tentativa, o Web3alert aguarda e volta a tentar sem avançar o número da tentativa. Se o serviço estiver indisponível na primeira tentativa, o Web3alert agenda a tentativa 2 com o motivo `webhook service unavailable` e o código `channel.webhook.retry_scheduled`. Se o serviço de envio exceder o tempo limite, a tentativa conta como uma falha que permite nova tentativa, com o motivo `webhook service timed out`, e é repetida de acordo com o calendário.
 
@@ -176,7 +176,7 @@ O histórico de entregas é guardado nos planos pagos. As [rotas de histórico d
 | `attempt` | Número da tentativa, a começar em `1`. |
 | `nextAttemptAt` | Data e hora em formato ISO para as quais estava agendada a próxima tentativa quando esta entrada foi registada. Se a entrada não registar uma nova tentativa agendada, o histórico REST omite o campo e a ferramenta MCP `get_delivery_log` devolve `null`. |
 
-O valor mantém-se fixo mesmo depois de a tentativa ocorrer ou ser cancelada. Para saber o resultado da entrega, procure uma entrada posterior com o mesmo `eventId`.
+O valor mantém-se fixo mesmo depois de a tentativa ocorrer ou ser cancelada. Para saber o resultado da entrega, procure uma entrada posterior com o mesmo `eventId`. Se as novas tentativas pararem porque a subscrição foi pausada ou removida, ou se uma tentativa expirar, o Web3alert não escreve uma entrada final e, sem essa entrada, ficam por determinar o resultado da entrega e o estado atual das tentativas.
 
 | `reasonCode` | Significado |
 | --- | --- |
@@ -188,7 +188,7 @@ O valor mantém-se fixo mesmo depois de a tentativa ocorrer ou ser cancelada. Pa
 
 O estado da primeira entrada reflete todos os canais de entrega do evento. Se outro canal entregou o evento e o webhook falhou com um erro que permita nova tentativa, a entrada do evento tem o estado `delivered` e o canal webhook tem `ok: false`. O campo `reasonCode` do canal webhook da entrada do evento indica `channel.webhook.retry_scheduled` quando é agendada uma nova tentativa, ou `channel.webhook.retry_queue_full` quando a fila de novas tentativas não pode aceitar a entrega (por estar cheia ou por a entrega em fila, incluindo os dados do evento, exceder 256 KB).
 
-O resultado final de uma entrega com novas tentativas fica numa entrada separada com o mesmo `eventId` e apenas o canal webhook. O estado da entrada é `delivered` se for entregue, `failed` se for rejeitada ou esgotar as tentativas, ou `blocked` se receber HTTP `410`. As falhas intermédias seguidas de outra tentativa não geram uma entrada no registo.
+Quando o Web3alert regista o resultado final de uma entrega com novas tentativas, usa uma entrada separada com o mesmo `eventId` e apenas o canal webhook. O estado da entrada é `delivered` se for entregue, `failed` se for rejeitada ou esgotar as tentativas, ou `blocked` se receber HTTP `410`. As falhas intermédias seguidas de outra tentativa não geram uma entrada no registo.
 
 Se a fila de novas tentativas não puder aceitar a entrega após uma tentativa posterior, a entrada final tem o estado `failed` e indica `channel.webhook.retry_queue_full` no canal webhook.
 

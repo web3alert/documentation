@@ -184,7 +184,7 @@ Em ambas as respostas de histórico, as entradas de webhooks em `channels` podem
 | `attempt` | `number` | Número da tentativa, a começar em `1`. |
 | `nextAttemptAt` | `string` | Data e hora em formato ISO para as quais estava agendada a próxima tentativa quando esta entrada foi registada. As rotas REST de histórico omitem o campo se a entrada não registar uma nova tentativa agendada. |
 
-O valor mantém-se fixo mesmo depois de a tentativa ocorrer ou ser cancelada. Para saber o resultado da entrega, procure uma entrada posterior com o mesmo `eventId`.
+O valor mantém-se fixo mesmo depois de a tentativa ocorrer ou ser cancelada. Para saber o resultado da entrega, procure uma entrada posterior com o mesmo `eventId`. Se as novas tentativas pararem porque a subscrição foi pausada ou removida, ou se uma tentativa expirar, o Web3alert não escreve uma entrada final e, sem essa entrada, ficam por determinar o resultado da entrega e o estado atual das tentativas.
 
 O estado da primeira entrada reflete todos os canais de entrega do evento. Se outro canal entregou o evento e o webhook falhou com um erro que permita nova tentativa, a entrada do evento tem o estado `delivered` e o canal webhook tem `ok: false`. O campo `reasonCode` do canal webhook da entrada do evento indica `channel.webhook.retry_scheduled` quando é agendada uma nova tentativa, ou `channel.webhook.retry_queue_full` quando a fila de novas tentativas não pode aceitar a entrega (por estar cheia ou por a entrega em fila, incluindo os dados do evento, exceder 256 KB).
 
