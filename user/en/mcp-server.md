@@ -38,8 +38,10 @@ Agent tools act on the account's current workspace. To change which workspace th
 | `create_subscription` | Subscribes to one trigger with delivery to one webhook. Supply any required inputs and optional `conditions` to filter events. |
 | `list_subscriptions` | Lists subscription IDs, titles, states, triggers, webhooks, and creation times. |
 | `set_subscription_state` | Pauses (`off`) or resumes (`on`) a subscription. |
-| `remove_subscription` | Deletes a subscription and stops delivery. |
-| `get_delivery_log` | Shows delivery outcomes for the workspace or a single subscription. Alert history uses the plan of the first account with the owner role in the workspace's access list. If there is no such account, the API checks the caller's plan. Without history on that plan, the tool returns `not_in_plan`. Webhook channel entries expose `eventId`, `attempt`, and `nextAttemptAt` when a retry is scheduled. |
+| `remove_subscription` | Deletes a subscription. Webhook retries stop within about 10 seconds. An attempt already due in that window can still be sent. |
+| `get_delivery_log` | Shows delivery outcomes for the workspace or a single subscription. Alert history uses the plan of the first account with the owner role in the workspace's access list. If there is no such account, the API checks the caller's plan. Without history on that plan, the tool returns `not_in_plan`. Webhook channel entries include `eventId` and `attempt`. `nextAttemptAt` is an ISO timestamp only when a retry is scheduled and is `null` otherwise, including when the webhook succeeds on its first attempt. |
+
+If you lose the `add_webhook` reply, call `list_webhooks`. If the endpoint exists and you did not receive its secret, use its `fullname` and the same token to rotate the secret with [`POST /api/resources/{fullname}/signing-secret`](api-resources.md#post-api-resources-fullname-signing-secret).
 
 `limits.maxSubscriptions` caps active subscriptions you created to non-Free projects across all workspaces. The cap is 5 on Free. Subscriptions to Free projects are exempt.
 

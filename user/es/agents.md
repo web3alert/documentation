@@ -75,6 +75,9 @@ En esta sesión de ejemplo, sustituye los valores entre ángulos por los resulta
 2. `find_triggers({"kind":"event","limit":5})` → Disparadores coincidentes del catálogo publicado y de tu espacio de trabajo, con el `fullname` de cada uno.
 3. `get_trigger({"trigger":"<trigger-fullname>"})` → Entradas de ejecución del disparador, campos del evento y campos disponibles para filtrar.
 4. `add_webhook({"name":"agent-events","url":"https://example.com/webhooks/web3alert"})` → `fullname`, nombre y URL del webhook registrado. Guarda el `signingSecret` devuelto para tu receptor. La herramienta lo devuelve una sola vez.
+
+   Si pierdes la respuesta de `add_webhook`, llama a `list_webhooks`. Si el endpoint existe y no recibiste su secreto, usa su `fullname` y el mismo token para rotar el secreto mediante [`POST /api/resources/{fullname}/signing-secret`](api-resources.md#post-api-resources-fullname-signing-secret).
+
 5. `create_subscription({"trigger":"<trigger-fullname>","webhook":"<webhook-fullname>","state":"on"})` → ID, título, estado resultante, disparador y webhook de la suscripción.
 6. `get_delivery_log({"subscriptionId":"<subscription-id>"})` → Resultados de entrega y `nextCursor` si hay más resultados. El historial de alertas usa el plan de la primera cuenta con rol de propietario en la lista de acceso del espacio de trabajo. Si no existe esa cuenta, la API comprueba el plan de la cuenta que hace la solicitud. Si ese plan no incluye el historial, la herramienta devuelve `not_in_plan`.
 

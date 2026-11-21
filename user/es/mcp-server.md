@@ -38,8 +38,10 @@ Las herramientas para agentes actúan sobre el workspace actual del account. Par
 | `create_subscription` | Crea una subscription a un trigger con entrega a un webhook. Proporciona los inputs requeridos y, si quieres filtrar eventos, `conditions`. |
 | `list_subscriptions` | Lista los IDs, títulos, estados, triggers, webhooks y fechas de creación de las subscriptions. |
 | `set_subscription_state` | Pausa (`off`) o reanuda (`on`) una subscription. |
-| `remove_subscription` | Elimina una subscription y detiene la entrega. |
-| `get_delivery_log` | Muestra los resultados de entrega del espacio de trabajo o de una suscripción. El historial de alertas usa el plan de la primera cuenta con rol de propietario en la lista de acceso del espacio de trabajo. Si no existe esa cuenta, la API comprueba el plan de la cuenta que hace la solicitud. Si ese plan no incluye el historial, la herramienta devuelve `not_in_plan`. Los registros de canales webhook incluyen `eventId`, `attempt` y, si se programa un reintento, `nextAttemptAt`. |
+| `remove_subscription` | Elimina una suscripción. Los reintentos de webhook se detienen en unos 10 segundos. Todavía puede enviarse un intento previsto para ese intervalo. |
+| `get_delivery_log` | Muestra los resultados de entrega del espacio de trabajo o de una suscripción. El historial de alertas usa el plan de la primera cuenta con rol de propietario en la lista de acceso del espacio de trabajo. Si no existe esa cuenta, la API comprueba el plan de la cuenta que hace la solicitud. Si ese plan no incluye el historial, la herramienta devuelve `not_in_plan`. Los registros de canales webhook incluyen `eventId` y `attempt`. `nextAttemptAt` es una marca de tiempo ISO solo si se programa un reintento. En los demás casos es `null`, incluso si el webhook recibe la entrega en el primer intento. |
+
+Si pierdes la respuesta de `add_webhook`, llama a `list_webhooks`. Si el endpoint existe y no recibiste su secreto, usa su `fullname` y el mismo token para rotar el secreto mediante [`POST /api/resources/{fullname}/signing-secret`](api-resources.md#post-api-resources-fullname-signing-secret).
 
 `limits.maxSubscriptions` limita las suscripciones activas que has creado a proyectos que no sean Free, sumadas entre todos los espacios de trabajo. El límite de Free es de 5. Las suscripciones a proyectos Free quedan fuera del límite.
 

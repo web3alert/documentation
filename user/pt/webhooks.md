@@ -131,7 +131,9 @@ Gere ou rode o segredo na aplicação ou através da [`POST /api/resources/{full
 
 ## Novas tentativas
 
-Uma resposta `2xx` indica que o recetor aceitou a entrega. Responda rapidamente porque o pedido expira após 4 segundos. O Web3alert volta a tentar a entrega perante HTTP `429`, qualquer resposta `5xx`, um pedido que exceda o tempo limite ou um erro de rede antes de receber uma resposta, como uma ligação interrompida ou uma falha de DNS ou TLS. Os restantes resultados terminam a entrega. As entregas de teste nunca são repetidas.
+Uma resposta `2xx` indica que o recetor aceitou a entrega. Responda rapidamente porque por predefinição, o pedido expira após 4 segundos. O Web3alert volta a tentar a entrega perante HTTP `429`, qualquer resposta `5xx`, um pedido que exceda o tempo limite ou um erro de rede antes de receber uma resposta, como uma ligação interrompida ou uma falha de DNS ou TLS. Os restantes resultados terminam a entrega. As entregas de teste nunca são repetidas.
+
+O Web3alert segue os redirecionamentos, envia o pedido assinado para o destino do redirecionamento se a assinatura estiver ativa e usa a resposta final para determinar o resultado. Se o serviço de envio de webhooks do Web3alert ficar brevemente indisponível, a entrega aguarda e é repetida sem gastar uma tentativa, exceto na primeira, que conta e regista `webhook service unavailable` com `channel.webhook.retry_scheduled`.
 
 | Após a tentativa falhada | Espera mínima até à tentativa seguinte |
 | --- | --- |
@@ -143,11 +145,11 @@ Uma resposta `2xx` indica que o recetor aceitou a entrega. Responda rapidamente 
 
 Cada entrega tem no máximo seis tentativas. Com estes intervalos, seis tentativas decorrem ao longo de cerca de 7 horas e 11 minutos, mais o tempo de entrega. As novas tentativas mantêm o mesmo corpo e `webhook-id`. Cada tentativa usa o URL em vigor e um novo `webhook-timestamp`, e o Web3alert assina-a com o segredo em vigor, se estiver configurado. A entrega é feita pelo menos uma vez, pelo que deve usar `webhook-id` para evitar processar o mesmo evento novamente. As novas tentativas não contam para o limite de frequência de notificações da subscrição.
 
-As novas tentativas param se suspender ou remover a subscrição, retirar o webhook da subscrição ou remover o recurso webhook. Se a fila de novas tentativas estiver cheia, uma entrega falhada não é repetida e conta como não entregue.
+Se suspender ou remover a subscrição, as novas tentativas param em cerca de 10 segundos. Uma tentativa prevista para esse intervalo ainda pode ser enviada. As novas tentativas também param se retirar o webhook da subscrição ou remover o recurso webhook. Se a fila de novas tentativas não puder aceitar a entrega (por estar cheia ou por a entrega exceder 256 KB), a entrega falhada não é repetida e conta como não entregue.
 
 ## Bloqueio
 
-Uma resposta HTTP `410 Gone` em qualquer tentativa bloqueia a subscrição imediatamente. Cinco eventos consecutivos por entregar para a mesma subscrição e o mesmo recurso webhook também bloqueiam a subscrição. Um evento conta como não entregue se esgotar as tentativas, se não puder entrar na fila de novas tentativas ou se for rejeitado. URLs inválidos, segredos de assinatura malformados e estados HTTP diferentes de `2xx`, `410`, `429` e `5xx` levam à rejeição. A contagem exclui entregas a aguardar uma nova tentativa. Uma entrega bem-sucedida repõe a contagem para essa subscrição e esse webhook. Um bloqueio também repõe a zero a contagem dessa subscrição e desse webhook, pelo que a contagem recomeça quando retomar a subscrição.
+Uma resposta HTTP `410 Gone` em qualquer tentativa bloqueia a subscrição imediatamente. Cinco eventos consecutivos por entregar para a mesma subscrição e o mesmo recurso webhook também bloqueiam a subscrição. Um evento conta como não entregue se esgotar as tentativas, se não puder entrar na fila de novas tentativas ou se for rejeitado. URLs inválidos, segredos de assinatura malformados e estados HTTP diferentes de `2xx`, `410`, `429` e `5xx` levam à rejeição. A contagem exclui entregas a aguardar uma nova tentativa. Uma entrega bem-sucedida repõe a contagem para essa subscrição e esse webhook. Um bloqueio também repõe a zero a contagem dessa subscrição e desse webhook, pelo que a contagem recomeça quando retomar a subscrição. A contagem expira após 30 dias sem um novo evento não entregue.
 
 Para retomar as entregas, defina o estado da subscrição como `on` na aplicação, com `PUT /api/subscriptions/:id/state` ou com a ferramenta MCP `set_subscription_state`.
 
@@ -159,7 +161,7 @@ O histórico de entregas é guardado nos planos pagos. As [rotas de histórico d
 | --- | --- |
 | `eventId` | O `webhook-id` da entrega. |
 | `attempt` | Número da tentativa, a começar em `1`. |
-| `nextAttemptAt` | Marca temporal em formato ISO na primeira entrada, quando é agendada uma nova tentativa. |
+| `nextAttemptAt` | Marca temporal em formato ISO apenas quando é agendada uma nova tentativa para o webhook. Nos restantes casos é `null`, incluindo quando a entrega ao webhook tem êxito na primeira tentativa. |
 
 | `reasonCode` | Significado |
 | --- | --- |
@@ -167,8 +169,10 @@ O histórico de entregas é guardado nos planos pagos. As [rotas de histórico d
 | `channel.webhook.rejected` | A entrega do webhook foi rejeitada. |
 | `channel.webhook.gone` | O endpoint devolveu HTTP `410`. |
 | `channel.webhook.retries_exhausted` | A sexta tentativa falhou com um erro que permitiria uma nova tentativa. |
-| `channel.webhook.retry_queue_full` | A fila de novas tentativas estava cheia, pelo que a entrega não foi repetida e conta como não entregue. |
+| `channel.webhook.retry_queue_full` | A fila de novas tentativas não pôde aceitar a entrega por estar cheia ou porque a entrega excedia 256 KB. A entrega não é repetida e conta como não entregue. |
 
-Se uma tentativa falhar com um erro que permita nova tentativa e a fila estiver cheia quando se tenta agendar a próxima, o canal webhook da entrada com estado `failed` inclui `reasonCode: "channel.webhook.retry_queue_full"`. É a primeira entrada se a primeira tentativa falhar, ou a entrada final se falhar uma tentativa posterior.
+O estado da primeira entrada reflete todos os canais de entrega do evento. Se outro canal entregou o evento e o webhook falhou com um erro que permita nova tentativa, a entrada do evento tem o estado `delivered` e o canal webhook tem `ok: false`. O campo `reasonCode` do canal webhook da entrada do evento indica `channel.webhook.retry_scheduled` quando é agendada uma nova tentativa, ou `channel.webhook.retry_queue_full` quando a fila de novas tentativas não pode aceitar a entrega (por estar cheia ou por a entrega exceder 256 KB).
 
-Quando uma entrega com novas tentativas chega a um resultado final, uma segunda entrada regista esse resultado com o mesmo `eventId` e apenas o canal webhook. O estado da entrada é `delivered` se for entregue, `failed` se for rejeitada, esgotar as tentativas ou a fila de novas tentativas estiver cheia, ou `blocked` se receber HTTP `410`. As falhas intermédias seguidas de outra tentativa não geram uma entrada no registo.
+Quando uma entrega com novas tentativas chega a um resultado final, uma segunda entrada regista esse resultado com o mesmo `eventId` e apenas o canal webhook. O estado da entrada é `delivered` se for entregue, `failed` se for rejeitada ou esgotar as tentativas, ou `blocked` se receber HTTP `410`. As falhas intermédias seguidas de outra tentativa não geram uma entrada no registo.
+
+Se a fila de novas tentativas não puder aceitar a entrega após uma tentativa posterior, a entrada final tem o estado `failed` e indica `channel.webhook.retry_queue_full` no canal webhook.

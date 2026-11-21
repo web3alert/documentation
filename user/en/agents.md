@@ -75,6 +75,9 @@ In this example session, replace the values in angle brackets with results from 
 2. `find_triggers({"kind":"event","limit":5})` → Matching triggers from the published catalog and your workspace, including each trigger's `fullname`.
 3. `get_trigger({"trigger":"<trigger-fullname>"})` → The trigger's runtime inputs, event fields, and fields available for filtering.
 4. `add_webhook({"name":"agent-events","url":"https://example.com/webhooks/web3alert"})` → The registered webhook's `fullname`, name, and URL. Store the returned `signingSecret` for your receiver. The tool returns it only once.
+
+   If you lose the `add_webhook` reply, call `list_webhooks`. If the endpoint exists and you did not receive its secret, use its `fullname` and the same token to rotate the secret with [`POST /api/resources/{fullname}/signing-secret`](api-resources.md#post-api-resources-fullname-signing-secret).
+
 5. `create_subscription({"trigger":"<trigger-fullname>","webhook":"<webhook-fullname>","state":"on"})` → The subscription's ID, title, resulting state, trigger, and webhook.
 6. `get_delivery_log({"subscriptionId":"<subscription-id>"})` → Delivery outcomes and `nextCursor` when there are more results. Alert history uses the plan of the first account with the owner role in the workspace's access list. If there is no such account, the API checks the caller's plan. Without history on that plan, the tool returns `not_in_plan`.
 

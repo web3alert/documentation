@@ -131,7 +131,9 @@ Genera o rota el secreto en la aplicación o mediante [`POST /api/resources/{ful
 
 ## Reintentos
 
-Una respuesta `2xx` indica que el receptor aceptó la entrega. Responde rápido porque las solicitudes caducan después de 4 segundos. Web3alert reintenta las entregas ante HTTP `429`, cualquier respuesta `5xx`, un tiempo de espera agotado o un error de red antes de recibir una respuesta, como un corte de conexión o un fallo de DNS o TLS. Los demás resultados dan por terminada la entrega. Las entregas de prueba nunca se reintentan.
+Una respuesta `2xx` indica que el receptor aceptó la entrega. Responde rápido porque las solicitudes tienen un tiempo de espera predeterminado de 4 segundos. Web3alert reintenta las entregas ante HTTP `429`, cualquier respuesta `5xx`, un tiempo de espera agotado o un error de red antes de recibir una respuesta, como un corte de conexión o un fallo de DNS o TLS. Los demás resultados dan por terminada la entrega. Las entregas de prueba nunca se reintentan.
+
+Web3alert sigue las redirecciones, envía la solicitud firmada al destino de la redirección si la firma está habilitada y usa la respuesta final para decidir el resultado. Si el servicio de envío de webhooks de Web3alert no está disponible durante un breve periodo, la entrega espera y se reintenta sin consumir un intento, salvo el primero, que cuenta y registra `webhook service unavailable` con `channel.webhook.retry_scheduled`.
 
 | Después del intento fallido | Espera mínima hasta el siguiente intento |
 | --- | --- |
@@ -143,11 +145,11 @@ Una respuesta `2xx` indica que el receptor aceptó la entrega. Responde rápido 
 
 Cada entrega tiene un máximo de seis intentos. Con estos intervalos, seis intentos abarcan unas 7 horas y 11 minutos más el tiempo de entrega. Los reintentos conservan el cuerpo y el `webhook-id`. Cada intento usa la URL vigente y un nuevo `webhook-timestamp`, y Web3alert lo firma con el secreto vigente si está configurado. La entrega es al menos una vez, así que usa `webhook-id` para evitar procesar el mismo evento de nuevo. Los reintentos no consumen el límite de frecuencia de notificaciones de la suscripción.
 
-Los reintentos se detienen si pausas o eliminas la suscripción, desvinculas el webhook de la suscripción o eliminas el recurso webhook. Si la cola de reintentos está llena, una entrega fallida no se reintenta y cuenta como no entregada.
+Si pausas o eliminas la suscripción, los reintentos se detienen en unos 10 segundos. Todavía puede enviarse un intento previsto para ese intervalo. Los reintentos también se detienen si desvinculas el webhook de la suscripción o eliminas el recurso webhook. Si la cola de reintentos no puede aceptar la entrega (porque está llena o la entrega supera los 256 KB), la entrega fallida no se reintenta y cuenta como no entregada.
 
 ## Bloqueo
 
-Una respuesta HTTP `410 Gone` en cualquier intento bloquea la suscripción de inmediato. Cinco eventos consecutivos sin entregar para la misma suscripción y el mismo recurso webhook también bloquean la suscripción. Un evento cuenta como no entregado si agota sus reintentos, no puede entrar en la cola de reintentos o se rechaza. Las URL inválidas, los secretos de firma mal formados y los estados HTTP distintos de `2xx`, `410`, `429` y `5xx` provocan un rechazo. El recuento excluye las entregas pendientes de reintento. Una entrega correcta reinicia el recuento de esa suscripción y ese webhook. Un bloqueo también pone a cero el recuento de esa suscripción y ese webhook, que vuelve a empezar al reanudar la suscripción.
+Una respuesta HTTP `410 Gone` en cualquier intento bloquea la suscripción de inmediato. Cinco eventos consecutivos sin entregar para la misma suscripción y el mismo recurso webhook también bloquean la suscripción. Un evento cuenta como no entregado si agota sus reintentos, no puede entrar en la cola de reintentos o se rechaza. Las URL inválidas, los secretos de firma mal formados y los estados HTTP distintos de `2xx`, `410`, `429` y `5xx` provocan un rechazo. El recuento excluye las entregas pendientes de reintento. Una entrega correcta reinicia el recuento de esa suscripción y ese webhook. Un bloqueo también pone a cero el recuento de esa suscripción y ese webhook, que vuelve a empezar al reanudar la suscripción. El recuento caduca después de 30 días sin un nuevo evento no entregado.
 
 Para reanudar las entregas, cambia el estado de la suscripción a `on` en la aplicación, mediante `PUT /api/subscriptions/:id/state` o con la herramienta MCP `set_subscription_state`.
 
@@ -159,7 +161,7 @@ El historial de entregas se conserva en los planes de pago. Las [rutas de histor
 | --- | --- |
 | `eventId` | El `webhook-id` de la entrega. |
 | `attempt` | Número de intento, a partir de `1`. |
-| `nextAttemptAt` | Marca de tiempo ISO en el primer registro cuando se programa un reintento. |
+| `nextAttemptAt` | Marca de tiempo ISO solo si se programa un reintento para el webhook. En los demás casos es `null`, incluso si el webhook recibe la entrega en el primer intento. |
 
 | `reasonCode` | Significado |
 | --- | --- |
@@ -167,8 +169,10 @@ El historial de entregas se conserva en los planes de pago. Las [rutas de histor
 | `channel.webhook.rejected` | La entrega del webhook se rechazó. |
 | `channel.webhook.gone` | El endpoint devolvió HTTP `410`. |
 | `channel.webhook.retries_exhausted` | El sexto intento falló con un error que admite reintentos. |
-| `channel.webhook.retry_queue_full` | La cola de reintentos estaba llena, así que la entrega no se reintentó y cuenta como no entregada. |
+| `channel.webhook.retry_queue_full` | La cola de reintentos no pudo aceptar la entrega porque estaba llena o la entrega superaba los 256 KB. La entrega no se reintenta y cuenta como no entregada. |
 
-Si un intento falla con un error que admite reintento y la cola está demasiado llena para programar el siguiente intento, el canal webhook del registro con estado `failed` incluye `reasonCode: "channel.webhook.retry_queue_full"`. Es el primer registro si falló el primer intento, o el registro final si falló un intento posterior.
+El estado del primer registro refleja todos los canales de entrega del evento. Si otro canal entregó el evento y el webhook falló con un error que admite reintento, el registro del evento tiene estado `delivered` y su canal webhook tiene `ok: false`. El campo `reasonCode` del canal webhook del registro del evento indica `channel.webhook.retry_scheduled` si se programa un reintento, o `channel.webhook.retry_queue_full` si la cola de reintentos no puede aceptar la entrega (porque está llena o la entrega supera los 256 KB).
 
-Cuando una entrega con reintentos llega a un resultado final, un segundo registro recoge ese resultado con el mismo `eventId` y solo el canal webhook. El estado del registro es `delivered` si se entrega, `failed` si se rechaza, agota los reintentos o la cola de reintentos está llena, o `blocked` si recibe HTTP `410`. Los fallos intermedios seguidos de otro reintento no generan un registro de entrega.
+Cuando una entrega con reintentos llega a un resultado final, un segundo registro recoge ese resultado con el mismo `eventId` y solo el canal webhook. El estado del registro es `delivered` si se entrega, `failed` si se rechaza o agota los reintentos, o `blocked` si recibe HTTP `410`. Los fallos intermedios seguidos de otro reintento no generan un registro de entrega.
+
+Si la cola de reintentos no puede aceptar la entrega tras un intento posterior, el registro final tiene estado `failed` y muestra `channel.webhook.retry_queue_full` en su canal webhook.
