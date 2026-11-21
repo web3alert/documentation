@@ -54,6 +54,8 @@ function verifyWebhook(rawBody, headers, secret, now = Math.floor(Date.now() / 1
   const timestamp = headers['webhook-timestamp']
   const signatures = headers['webhook-signature']
   if (!id || !timestamp || !signatures || !secret.startsWith('whsec_')) return false
+  // Un punto en el ID permite dividir de otra forma los mismos bytes firmados de id.timestamp.body.
+  if (!/^[A-Za-z0-9_-]{1,256}$/.test(id)) return false
   if (!/^[0-9]{1,16}$/.test(timestamp) || Math.abs(now - Number(timestamp)) > 300) return false
 
   const encodedKey = secret.slice(6)
@@ -88,6 +90,9 @@ def verify_webhook(raw_body, headers, secret, now=None):
     timestamp = headers.get("webhook-timestamp")
     signatures = headers.get("webhook-signature")
     if not id_ or not timestamp or not signatures or not secret.startswith("whsec_"):
+        return False
+    # Un punto en el ID permite dividir de otra forma los mismos bytes firmados de id.timestamp.body.
+    if not re.fullmatch(r"^[A-Za-z0-9_-]{1,256}$", id_):
         return False
     if now is None:
         now = int(time.time())
@@ -149,7 +154,9 @@ Si el servicio de envío de webhooks de Web3alert no está disponible cuando toc
 
 Cada entrega tiene un máximo de seis intentos. Con estos intervalos, seis intentos abarcan unas 7 horas y 11 minutos más el tiempo de entrega. Los reintentos conservan el cuerpo y el `webhook-id`. Cada intento usa la URL vigente y un nuevo `webhook-timestamp`, y Web3alert lo firma con el secreto vigente si está configurado. La entrega es al menos una vez, así que usa `webhook-id` para evitar procesar el mismo evento de nuevo. Los reintentos no consumen el límite de frecuencia de notificaciones de la suscripción.
 
-Si pausas o eliminas la suscripción, los reintentos se detienen en unos 10 segundos. Todavía puede enviarse un intento previsto para ese intervalo. Los reintentos también se detienen si desvinculas el webhook de la suscripción o eliminas el recurso webhook. Si la cola de reintentos no puede aceptar la entrega (porque está llena o la entrega supera los 256 KB), la entrega fallida no se reintenta y cuenta como no entregada.
+Si pausas o eliminas la suscripción, los reintentos se detienen en unos 10 segundos. Todavía puede enviarse un intento previsto para ese intervalo. Los reintentos también se detienen si desvinculas el webhook de la suscripción o eliminas el recurso webhook. Si la cola de reintentos no puede aceptar la entrega (porque está llena o la entrega en cola, incluidos los datos del evento, supera los 256 KB), la entrega fallida no se reintenta y cuenta como no entregada.
+
+Un reintento permanece en la cola como máximo 8 horas. Si el servicio de envío de Web3alert sigue sin estar disponible al superar ese límite, el reintento caduca sin un registro final de entrega.
 
 ## Bloqueo
 
@@ -165,7 +172,7 @@ El historial de entregas se conserva en los planes de pago. Las [rutas de histor
 | --- | --- |
 | `eventId` | El `webhook-id` de la entrega. |
 | `attempt` | Número de intento, a partir de `1`. |
-| `nextAttemptAt` | Marca de tiempo ISO solo si se programa un reintento para el webhook. En los demás casos es `null`, incluso si el webhook recibe la entrega en el primer intento. |
+| `nextAttemptAt` | Marca de tiempo ISO si hay un reintento pendiente para el webhook. Si no hay ninguno pendiente, el historial REST omite el campo y la herramienta MCP `get_delivery_log` le asigna `null`. |
 
 | `reasonCode` | Significado |
 | --- | --- |
@@ -173,9 +180,9 @@ El historial de entregas se conserva en los planes de pago. Las [rutas de histor
 | `channel.webhook.rejected` | La entrega del webhook se rechazó. |
 | `channel.webhook.gone` | El endpoint devolvió HTTP `410`. |
 | `channel.webhook.retries_exhausted` | El sexto intento falló con un error que admite reintentos. |
-| `channel.webhook.retry_queue_full` | La cola de reintentos no pudo aceptar la entrega porque estaba llena o la entrega superaba los 256 KB. La entrega no se reintenta y cuenta como no entregada. |
+| `channel.webhook.retry_queue_full` | La cola de reintentos no pudo aceptar la entrega porque estaba llena o la entrega en cola, incluidos los datos del evento, superaba los 256 KB. La entrega no se reintenta y cuenta como no entregada. |
 
-El estado del primer registro refleja todos los canales de entrega del evento. Si otro canal entregó el evento y el webhook falló con un error que admite reintento, el registro del evento tiene estado `delivered` y su canal webhook tiene `ok: false`. El campo `reasonCode` del canal webhook del registro del evento indica `channel.webhook.retry_scheduled` si se programa un reintento, o `channel.webhook.retry_queue_full` si la cola de reintentos no puede aceptar la entrega (porque está llena o la entrega supera los 256 KB).
+El estado del primer registro refleja todos los canales de entrega del evento. Si otro canal entregó el evento y el webhook falló con un error que admite reintento, el registro del evento tiene estado `delivered` y su canal webhook tiene `ok: false`. El campo `reasonCode` del canal webhook del registro del evento indica `channel.webhook.retry_scheduled` si se programa un reintento, o `channel.webhook.retry_queue_full` si la cola de reintentos no puede aceptar la entrega (porque está llena o la entrega en cola, incluidos los datos del evento, supera los 256 KB).
 
 El resultado final de una entrega con reintentos se guarda en un registro aparte con el mismo `eventId` y solo el canal webhook. El estado del registro es `delivered` si se entrega, `failed` si se rechaza o agota los reintentos, o `blocked` si recibe HTTP `410`. Los fallos intermedios seguidos de otro reintento no generan un registro de entrega.
 

@@ -74,10 +74,7 @@ claude mcp add --transport http web3alert-agent https://web3alert.io/mcp/agent \
 1. `get_account({})` → 账户、套餐、当前工作区、以 EUR 计的余额、套餐限制以及可用的订阅计数。
 2. `find_triggers({"kind":"event","limit":5})` → 已发布目录和当前工作区中符合条件的触发器，包括各自的 `fullname`。
 3. `get_trigger({"trigger":"<trigger-fullname>"})` → 触发器的运行时输入、事件字段和可用于筛选的字段。
-4. `add_webhook({"name":"agent-events","url":"https://example.com/webhooks/web3alert"})` → 已注册 Webhook 的 `fullname`、名称和 URL。 请保存返回的 `signingSecret` 供接收端使用。工具仅返回一次密钥。
-
-   如果没有收到 `add_webhook` 的回复，请调用 `list_webhooks`。如果该端点已存在且你没有收到密钥，请用该端点的 `fullname` 和同一令牌，通过 [`POST /api/resources/{fullname}/signing-secret`](api-resources.md#post-api-resources-fullname-signing-secret) 轮换密钥。
-
+4. `add_webhook({"name":"agent-events","url":"https://example.com/webhooks/web3alert"})` → 已注册 Webhook 的 `fullname`、名称和 URL。 签名密钥仅在 `add_webhook` 的回复中以 `signingSecret` 字段显示。之后轮换密钥会替换该端点所有接收方使用的密钥。请保存密钥供接收端使用。
 5. `create_subscription({"trigger":"<trigger-fullname>","webhook":"<webhook-fullname>","state":"on"})` → 订阅的 ID、标题、最终状态、触发器和 Webhook。
 6. `get_delivery_log({"subscriptionId":"<subscription-id>"})` → 投递结果，以及有更多结果时返回的 `nextCursor`。告警历史按工作区访问列表中第一个具有所有者角色的账户的套餐检查。如果没有这样的账户，API 会检查请求方账户的套餐。如果该套餐不含历史记录，工具返回 `not_in_plan`。
 

@@ -54,6 +54,8 @@ function verifyWebhook(rawBody, headers, secret, now = Math.floor(Date.now() / 1
   const timestamp = headers['webhook-timestamp']
   const signatures = headers['webhook-signature']
   if (!id || !timestamp || !signatures || !secret.startsWith('whsec_')) return false
+  // ID 中的点会让相同的已签名 id.timestamp.body 字节序列有不同的拆分方式。
+  if (!/^[A-Za-z0-9_-]{1,256}$/.test(id)) return false
   if (!/^[0-9]{1,16}$/.test(timestamp) || Math.abs(now - Number(timestamp)) > 300) return false
 
   const encodedKey = secret.slice(6)
@@ -88,6 +90,9 @@ def verify_webhook(raw_body, headers, secret, now=None):
     timestamp = headers.get("webhook-timestamp")
     signatures = headers.get("webhook-signature")
     if not id_ or not timestamp or not signatures or not secret.startswith("whsec_"):
+        return False
+    # ID 中的点会让相同的已签名 id.timestamp.body 字节序列有不同的拆分方式。
+    if not re.fullmatch(r"^[A-Za-z0-9_-]{1,256}$", id_):
         return False
     if now is None:
         now = int(time.time())
@@ -149,7 +154,9 @@ Web3alert 会跟随重定向，在启用签名时向重定向目标发送已签�
 
 每次投递最多尝试六次。按上述间隔，六次尝试约需 7 小时 11 分钟，另加投递耗时。重试沿用相同的请求体和 `webhook-id`。每次尝试使用当前生效的 URL 和新的 `webhook-timestamp`，并在已配置密钥时由 Web3alert 使用当前密钥签名。投递采用至少一次语义，请使用 `webhook-id` 去重，避免重复处理同一事件。重试不会占用订阅的通知速率额度。
 
-暂停或删除订阅后，重试会在约 10 秒内停止。在此期间到期的尝试仍可能发出。从订阅中移除 Webhook 或删除 Webhook 资源也会停止重试。 如果重试队列无法接收投递（队列已满或投递超过 256 KB），失败的投递不会重试，并计为未投递。
+暂停或删除订阅后，重试会在约 10 秒内停止。在此期间到期的尝试仍可能发出。从订阅中移除 Webhook 或删除 Webhook 资源也会停止重试。 如果重试队列无法接收投递（队列已满，或排队的投递连同事件数据超过 256 KB），失败的投递不会重试，并计为未投递。
+
+排队的重试最多保留 8 小时。如果超过该时限后 Web3alert 的发送服务仍不可用，重试将过期，且不会生成最终投递记录。
 
 ## 阻止投递
 
@@ -165,7 +172,7 @@ Web3alert 会跟随重定向，在启用签名时向重定向目标发送已签�
 | --- | --- |
 | `eventId` | 本次投递的 `webhook-id`。 |
 | `attempt` | 尝试次数编号，从 `1` 开始。 |
-| `nextAttemptAt` | 仅在为 Webhook 安排重试时才是 ISO 格式的时间戳。其他情况下为 `null`，包括 Webhook 首次尝试即成功时。 |
+| `nextAttemptAt` | 有待处理的 Webhook 重试时，值为 ISO 格式的时间戳。没有待处理的重试时，REST 历史记录会省略此字段，MCP 工具 `get_delivery_log` 则将此字段设为 `null`。 |
 
 | `reasonCode` | 含义 |
 | --- | --- |
@@ -173,9 +180,9 @@ Web3alert 会跟随重定向，在启用签名时向重定向目标发送已签�
 | `channel.webhook.rejected` | Webhook 投递被拒绝。 |
 | `channel.webhook.gone` | 端点返回了 HTTP `410`。 |
 | `channel.webhook.retries_exhausted` | 第六次尝试因可重试错误而失败。 |
-| `channel.webhook.retry_queue_full` | 重试队列已满或投递超过 256 KB，队列无法接收该投递。该投递不会重试，并计为未投递。 |
+| `channel.webhook.retry_queue_full` | 重试队列已满，或排队的投递连同事件数据超过 256 KB，队列无法接收该投递。该投递不会重试，并计为未投递。 |
 
-首条记录的状态反映该事件的所有投递渠道。如果其他渠道投递成功，但 Webhook 投递因可重试的错误而失败，则事件记录的状态为 `delivered`，其中 Webhook 渠道显示 `ok: false`。如果安排了重试，事件记录中 Webhook 渠道的 `reasonCode` 为 `channel.webhook.retry_scheduled`。如果重试队列无法接收投递（队列已满或投递超过 256 KB），事件记录中的 Webhook 渠道显示 `channel.webhook.retry_queue_full`。
+首条记录的状态反映该事件的所有投递渠道。如果其他渠道投递成功，但 Webhook 投递因可重试的错误而失败，则事件记录的状态为 `delivered`，其中 Webhook 渠道显示 `ok: false`。如果安排了重试，事件记录中 Webhook 渠道的 `reasonCode` 为 `channel.webhook.retry_scheduled`。如果重试队列无法接收投递（队列已满，或排队的投递连同事件数据超过 256 KB），事件记录中的 Webhook 渠道显示 `channel.webhook.retry_queue_full`。
 
 经过重试的投递的最终结果会单独记录，沿用相同的 `eventId`，且仅包含该 Webhook 渠道。成功时记录状态为 `delivered`，被拒绝或重试耗尽时为 `failed`，收到 HTTP `410` 时为 `blocked`。中途失败后仍会继续重试的尝试不会生成投递日志条目。
 

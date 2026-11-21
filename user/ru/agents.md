@@ -74,10 +74,7 @@ claude mcp add --transport http web3alert-agent https://web3alert.io/mcp/agent \
 1. `get_account({})` → Аккаунт, тариф, текущий воркспейс, баланс кошелька в EUR, лимиты тарифа и счётчики подписок, если они доступны.
 2. `find_triggers({"kind":"event","limit":5})` → Подходящие триггеры из опубликованного каталога и текущего воркспейса, включая `fullname` каждого триггера.
 3. `get_trigger({"trigger":"<trigger-fullname>"})` → Входные параметры триггера, поля события и поля для фильтрации.
-4. `add_webhook({"name":"agent-events","url":"https://example.com/webhooks/web3alert"})` → `fullname`, имя и URL зарегистрированного вебхука. Сохраните полученный `signingSecret` для принимающей стороны. Инструмент возвращает его один раз.
-
-   Если ответ `add_webhook` потерян, вызовите `list_webhooks`. Если эндпоинт существует, а его секрет вы не получили, используйте его `fullname` и тот же токен, чтобы заменить секрет через [`POST /api/resources/{fullname}/signing-secret`](api-resources.md#post-api-resources-fullname-signing-secret).
-
+4. `add_webhook({"name":"agent-events","url":"https://example.com/webhooks/web3alert"})` → `fullname`, имя и URL зарегистрированного вебхука. Секрет подписи доступен только в ответе `add_webhook` в поле `signingSecret`. Если заменить его позже, секрет изменится для всех получателей этого эндпоинта. Сохраните секрет для принимающей стороны.
 5. `create_subscription({"trigger":"<trigger-fullname>","webhook":"<webhook-fullname>","state":"on"})` → ID, название, итоговое состояние, триггер и вебхук подписки.
 6. `get_delivery_log({"subscriptionId":"<subscription-id>"})` → Результаты доставки и `nextCursor`, если есть ещё результаты. Для истории оповещений используется тариф первого аккаунта с ролью владельца в списке доступа воркспейса. Если такого аккаунта нет, API проверяет тариф аккаунта, который сделал запрос. Если в тариф не входит история, инструмент возвращает `not_in_plan`.
 

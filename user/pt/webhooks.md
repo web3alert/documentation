@@ -54,6 +54,8 @@ function verifyWebhook(rawBody, headers, secret, now = Math.floor(Date.now() / 1
   const timestamp = headers['webhook-timestamp']
   const signatures = headers['webhook-signature']
   if (!id || !timestamp || !signatures || !secret.startsWith('whsec_')) return false
+  // Um ponto no ID permite separar de outra forma os mesmos bytes assinados de id.timestamp.body.
+  if (!/^[A-Za-z0-9_-]{1,256}$/.test(id)) return false
   if (!/^[0-9]{1,16}$/.test(timestamp) || Math.abs(now - Number(timestamp)) > 300) return false
 
   const encodedKey = secret.slice(6)
@@ -88,6 +90,9 @@ def verify_webhook(raw_body, headers, secret, now=None):
     timestamp = headers.get("webhook-timestamp")
     signatures = headers.get("webhook-signature")
     if not id_ or not timestamp or not signatures or not secret.startswith("whsec_"):
+        return False
+    # Um ponto no ID permite separar de outra forma os mesmos bytes assinados de id.timestamp.body.
+    if not re.fullmatch(r"^[A-Za-z0-9_-]{1,256}$", id_):
         return False
     if now is None:
         now = int(time.time())
@@ -149,7 +154,9 @@ Se o serviço de envio de webhooks do Web3alert estiver indisponível quando che
 
 Cada entrega tem no máximo seis tentativas. Com estes intervalos, seis tentativas decorrem ao longo de cerca de 7 horas e 11 minutos, mais o tempo de entrega. As novas tentativas mantêm o mesmo corpo e `webhook-id`. Cada tentativa usa o URL em vigor e um novo `webhook-timestamp`, e o Web3alert assina-a com o segredo em vigor, se estiver configurado. A entrega é feita pelo menos uma vez, pelo que deve usar `webhook-id` para evitar processar o mesmo evento novamente. As novas tentativas não contam para o limite de frequência de notificações da subscrição.
 
-Se suspender ou remover a subscrição, as novas tentativas param em cerca de 10 segundos. Uma tentativa prevista para esse intervalo ainda pode ser enviada. As novas tentativas também param se retirar o webhook da subscrição ou remover o recurso webhook. Se a fila de novas tentativas não puder aceitar a entrega (por estar cheia ou por a entrega exceder 256 KB), a entrega falhada não é repetida e conta como não entregue.
+Se suspender ou remover a subscrição, as novas tentativas param em cerca de 10 segundos. Uma tentativa prevista para esse intervalo ainda pode ser enviada. As novas tentativas também param se retirar o webhook da subscrição ou remover o recurso webhook. Se a fila de novas tentativas não puder aceitar a entrega (por estar cheia ou por a entrega em fila, incluindo os dados do evento, exceder 256 KB), a entrega falhada não é repetida e conta como não entregue.
+
+Uma nova tentativa fica na fila durante, no máximo, 8 horas. Se o serviço de envio do Web3alert continuar indisponível para lá desse limite, a tentativa expira sem uma entrada final no registo de entregas.
 
 ## Bloqueio
 
@@ -165,7 +172,7 @@ O histórico de entregas é guardado nos planos pagos. As [rotas de histórico d
 | --- | --- |
 | `eventId` | O `webhook-id` da entrega. |
 | `attempt` | Número da tentativa, a começar em `1`. |
-| `nextAttemptAt` | Marca temporal em formato ISO apenas quando é agendada uma nova tentativa para o webhook. Nos restantes casos é `null`, incluindo quando a entrega ao webhook tem êxito na primeira tentativa. |
+| `nextAttemptAt` | Marca temporal em formato ISO quando há uma nova tentativa pendente para o webhook. Quando não há nenhuma pendente, o histórico REST omite o campo e a ferramenta MCP `get_delivery_log` atribui-lhe `null`. |
 
 | `reasonCode` | Significado |
 | --- | --- |
@@ -173,9 +180,9 @@ O histórico de entregas é guardado nos planos pagos. As [rotas de histórico d
 | `channel.webhook.rejected` | A entrega do webhook foi rejeitada. |
 | `channel.webhook.gone` | O endpoint devolveu HTTP `410`. |
 | `channel.webhook.retries_exhausted` | A sexta tentativa falhou com um erro que permitiria uma nova tentativa. |
-| `channel.webhook.retry_queue_full` | A fila de novas tentativas não pôde aceitar a entrega por estar cheia ou porque a entrega excedia 256 KB. A entrega não é repetida e conta como não entregue. |
+| `channel.webhook.retry_queue_full` | A fila de novas tentativas não pôde aceitar a entrega por estar cheia ou porque a entrega em fila, incluindo os dados do evento, excedia 256 KB. A entrega não é repetida e conta como não entregue. |
 
-O estado da primeira entrada reflete todos os canais de entrega do evento. Se outro canal entregou o evento e o webhook falhou com um erro que permita nova tentativa, a entrada do evento tem o estado `delivered` e o canal webhook tem `ok: false`. O campo `reasonCode` do canal webhook da entrada do evento indica `channel.webhook.retry_scheduled` quando é agendada uma nova tentativa, ou `channel.webhook.retry_queue_full` quando a fila de novas tentativas não pode aceitar a entrega (por estar cheia ou por a entrega exceder 256 KB).
+O estado da primeira entrada reflete todos os canais de entrega do evento. Se outro canal entregou o evento e o webhook falhou com um erro que permita nova tentativa, a entrada do evento tem o estado `delivered` e o canal webhook tem `ok: false`. O campo `reasonCode` do canal webhook da entrada do evento indica `channel.webhook.retry_scheduled` quando é agendada uma nova tentativa, ou `channel.webhook.retry_queue_full` quando a fila de novas tentativas não pode aceitar a entrega (por estar cheia ou por a entrega em fila, incluindo os dados do evento, exceder 256 KB).
 
 O resultado final de uma entrega com novas tentativas fica numa entrada separada com o mesmo `eventId` e apenas o canal webhook. O estado da entrada é `delivered` se for entregue, `failed` se for rejeitada ou esgotar as tentativas, ou `blocked` se receber HTTP `410`. As falhas intermédias seguidas de outra tentativa não geram uma entrada no registo.
 

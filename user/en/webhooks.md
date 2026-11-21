@@ -54,6 +54,8 @@ function verifyWebhook(rawBody, headers, secret, now = Math.floor(Date.now() / 1
   const timestamp = headers['webhook-timestamp']
   const signatures = headers['webhook-signature']
   if (!id || !timestamp || !signatures || !secret.startsWith('whsec_')) return false
+  // A dot in the ID lets the same signed id.timestamp.body bytes be split differently.
+  if (!/^[A-Za-z0-9_-]{1,256}$/.test(id)) return false
   if (!/^[0-9]{1,16}$/.test(timestamp) || Math.abs(now - Number(timestamp)) > 300) return false
 
   const encodedKey = secret.slice(6)
@@ -88,6 +90,9 @@ def verify_webhook(raw_body, headers, secret, now=None):
     timestamp = headers.get("webhook-timestamp")
     signatures = headers.get("webhook-signature")
     if not id_ or not timestamp or not signatures or not secret.startswith("whsec_"):
+        return False
+    # A dot in the ID lets the same signed id.timestamp.body bytes be split differently.
+    if not re.fullmatch(r"^[A-Za-z0-9_-]{1,256}$", id_):
         return False
     if now is None:
         now = int(time.time())
@@ -149,7 +154,9 @@ When a retry is due and Web3alert's webhook sender is unavailable, Web3alert wai
 
 A delivery gets at most six attempts. At these intervals, six attempts span about 7 hours and 11 minutes, plus delivery time. Retries keep the same body and `webhook-id`. Each attempt uses the current URL and a fresh `webhook-timestamp`, and Web3alert signs it with the current secret if one is configured. Delivery is at least once, so deduplicate on `webhook-id` before processing the event again. Retries do not count against the subscription's notification rate limit.
 
-If you pause or remove the subscription, retries stop within about 10 seconds. An attempt already due in that window can still be sent. Retries also stop if you detach the webhook from the subscription or remove the webhook resource. When the retry queue cannot accept the delivery (it is full or the delivery exceeds 256 KB), the failed delivery is not retried and counts as undelivered.
+If you pause or remove the subscription, retries stop within about 10 seconds. An attempt already due in that window can still be sent. Retries also stop if you detach the webhook from the subscription or remove the webhook resource. When the retry queue cannot accept the delivery (it is full, or the queued delivery, including its event data, exceeds 256 KB), the failed delivery is not retried and counts as undelivered.
+
+A queued retry is kept for at most 8 hours. If Web3alert's sender stays unavailable past that limit, the retry expires without a final delivery-log entry.
 
 ## Blocking
 
@@ -165,7 +172,7 @@ Delivery history is kept on paid plans. The [subscription history routes](api-su
 | --- | --- |
 | `eventId` | The delivery's `webhook-id`. |
 | `attempt` | Attempt number, starting at `1`. |
-| `nextAttemptAt` | ISO timestamp only when a webhook retry is scheduled. Otherwise `null`, including when the webhook succeeds on its first attempt. |
+| `nextAttemptAt` | ISO timestamp when a webhook retry is pending. With no retry pending, REST history omits the field and MCP `get_delivery_log` sets it to `null`. |
 
 | `reasonCode` | Meaning |
 | --- | --- |
@@ -173,9 +180,9 @@ Delivery history is kept on paid plans. The [subscription history routes](api-su
 | `channel.webhook.rejected` | The webhook delivery was rejected. |
 | `channel.webhook.gone` | The endpoint returned HTTP `410`. |
 | `channel.webhook.retries_exhausted` | The sixth attempt failed with a retryable error. |
-| `channel.webhook.retry_queue_full` | The retry queue could not accept the delivery because it was full or the delivery exceeded 256 KB. The delivery is not retried and counts as undelivered. |
+| `channel.webhook.retry_queue_full` | The retry queue could not accept the delivery because it was full or the queued delivery, including its event data, exceeded 256 KB. The delivery is not retried and counts as undelivered. |
 
-The first entry's status reflects all delivery channels for the event. If another channel delivered and the webhook failed with a retryable error, the event's entry has status `delivered` and its webhook channel has `ok: false`. The webhook channel of the event's entry has `reasonCode` set to `channel.webhook.retry_scheduled` when a retry is scheduled, or `channel.webhook.retry_queue_full` when the retry queue cannot accept the delivery (it is full or the delivery exceeds 256 KB).
+The first entry's status reflects all delivery channels for the event. If another channel delivered and the webhook failed with a retryable error, the event's entry has status `delivered` and its webhook channel has `ok: false`. The webhook channel of the event's entry has `reasonCode` set to `channel.webhook.retry_scheduled` when a retry is scheduled, or `channel.webhook.retry_queue_full` when the retry queue cannot accept the delivery (it is full, or the queued delivery, including its event data, exceeds 256 KB).
 
 The final outcome of a retried delivery is recorded in a separate entry with the same `eventId` and only the webhook channel. The entry status is `delivered` on success, `failed` for a rejection or exhausted retries, or `blocked` for HTTP `410`. Intermediate failures followed by another retry produce no delivery-log entry.
 

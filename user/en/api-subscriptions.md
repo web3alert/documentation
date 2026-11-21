@@ -182,8 +182,8 @@ In both history responses, webhook entries in `channels` can include the followi
 | --- | --- | --- |
 | `eventId` | `string` | Delivery ID, equal to the `webhook-id` header. |
 | `attempt` | `number` | Attempt number, starting at `1`. |
-| `nextAttemptAt` | `string \| null` | ISO timestamp only when a webhook retry is scheduled. Otherwise `null`, including when the webhook succeeds on its first attempt. |
+| `nextAttemptAt` | `string` | ISO timestamp when a webhook retry is pending. The REST history routes omit this field when no retry is pending. |
 
-The first entry's status reflects all delivery channels for the event. If another channel delivered and the webhook failed with a retryable error, the event's entry has status `delivered` and its webhook channel has `ok: false`. The webhook channel of the event's entry has `reasonCode` set to `channel.webhook.retry_scheduled` when a retry is scheduled, or `channel.webhook.retry_queue_full` when the retry queue cannot accept the delivery (it is full or the delivery exceeds 256 KB).
+The first entry's status reflects all delivery channels for the event. If another channel delivered and the webhook failed with a retryable error, the event's entry has status `delivered` and its webhook channel has `ok: false`. The webhook channel of the event's entry has `reasonCode` set to `channel.webhook.retry_scheduled` when a retry is scheduled, or `channel.webhook.retry_queue_full` when the retry queue cannot accept the delivery (it is full, or the queued delivery, including its event data, exceeds 256 KB).
 
 If the retry queue cannot accept the delivery after a later attempt, the final entry has status `failed` and shows `channel.webhook.retry_queue_full` on its webhook channel.
