@@ -30,7 +30,11 @@ The `/mcp` endpoint now accepts the token only in the `Authorization: Bearer <to
 
 Update your client to send the header and remove the token from the URL or request body.
 
-In Claude Code, before running the add command, remove any existing entry with the same name using `claude mcp remove web3alert` or `claude mcp remove web3alert-agent`. If you added the entry with `--scope`, pass the same scope when removing it, for example `claude mcp remove --scope user web3alert`.
+In Claude Code, run these commands from the project where you use Web3alert.
+
+1. Run `claude mcp list` to check for the name you are replacing. To see the listed entry's scope, run `claude mcp get web3alert` or `claude mcp get web3alert-agent`.
+2. Remove the entry by scope, for example with `claude mcp remove --scope user web3alert` or `claude mcp remove --scope local web3alert`. A same-name entry in another scope can appear after removal. Repeat steps 1 and 2 until the name no longer appears.
+3. Run the `claude mcp add` example for your endpoint to add the new entry.
 
 In Claude Desktop, Cursor, and VS Code, edit the existing entry's URL and headers in place. See the [remote endpoint configuration examples](#remote-mcp-endpoint).
 
@@ -41,7 +45,7 @@ Agent tools act on the account's current workspace. To change which workspace th
 | Tool | What it does |
 | --- | --- |
 | `get_account` | Returns the account ID, name, tier, EUR wallet balance, tier limits, and active and total subscription counts for the current workspace when available. |
-| `find_triggers` | Searches the published catalog and the current workspace's triggers. |
+| `find_triggers` | Searches the public catalog for triggers from EVM and Substrate chains. It also searches the current workspace's triggers. |
 | `get_trigger` | Shows a trigger's runtime inputs, delivered event fields, and fields you can use in `conditions`. |
 | `list_webhooks` | Lists the `fullname`, name, and URL of each registered workspace webhook. The `signed` field indicates whether a webhook has a signing secret. |
 | `add_webhook` | Registers a webhook with an HTTPS URL without credentials. If the workspace already has a resource with that name when checked, the tool refuses the request with `webhook_exists`. The signing secret appears only in the `add_webhook` reply as `signingSecret`. Rotating it later replaces it for every receiver of that endpoint. |

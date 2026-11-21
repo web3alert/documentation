@@ -142,7 +142,7 @@ def verify_webhook(raw_body, headers, secret, now=None):
 
 收到 HTTP `3xx` 响应时，Web3alert 会将该投递视为被拒绝，不会重试。该事件计入连续未送达的事件数，连续五个事件未送达会阻止订阅继续投递。
 
-请注册最终的 HTTPS URL。Web3alert 不会跟随重定向。
+请注册最终的 HTTPS URL。Web3alert 不会跟随重定向，测试投递也一样。
 
 如果安排的重试到期时 Web3alert 的 Webhook 发送服务不可用，Web3alert 会等待后再试，尝试编号保持不变。如果首次尝试时发送服务不可用，Web3alert 会安排第 2 次尝试，原因是 `webhook service unavailable`，原因代码是 `channel.webhook.retry_scheduled`。如果等待发送服务响应超时，本次尝试计为可重试的失败，原因是 `webhook service timed out`，并按重试计划处理。
 

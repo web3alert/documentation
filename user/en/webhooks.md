@@ -142,7 +142,7 @@ A `2xx` response means the receiver accepted the delivery. Respond quickly becau
 
 Web3alert treats an HTTP `3xx` response as a rejected delivery without retrying it. The rejection counts toward the five consecutive undelivered events that block the subscription.
 
-Register the final HTTPS URL; Web3alert does not follow redirects.
+Register the final HTTPS URL. Web3alert does not follow redirects, including for test deliveries.
 
 When a retry is due and Web3alert's webhook sender is unavailable, Web3alert waits and tries again without advancing the attempt count. If the sender is unavailable on the first attempt, Web3alert schedules attempt 2 with the reason `webhook service unavailable` and the code `channel.webhook.retry_scheduled`. A sender timeout counts as a retryable failure with the reason `webhook service timed out` and follows the retry schedule.
 

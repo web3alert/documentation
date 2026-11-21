@@ -1,6 +1,6 @@
 # For agents
 
-Find decoded EVM, Substrate, Solana, and HyperCore on-chain events in the Web3alert catalog. Your agent can use the [10 MCP tools](mcp-server.md#agent-endpoint) to find a trigger, subscribe to it, and receive matching events as JSON at its webhook.
+Find decoded on-chain events from EVM and Substrate chains, including Ethereum, Polkadot and Kusama, in the Web3alert catalog. Your agent can use the [10 MCP tools](mcp-server.md#agent-endpoint) to find a trigger, subscribe to it, and receive matching events as JSON at its webhook.
 
 ## Coming soon
 

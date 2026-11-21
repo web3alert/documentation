@@ -30,7 +30,11 @@ Token 撤销后，API 会立即拒绝该 token。MCP 仍有验证缓存时，到
 
 请配置客户端以发送该请求头，并从 URL 或请求体中移除令牌。
 
-在 Claude Code 中运行添加命令前，请先用 `claude mcp remove web3alert` 或 `claude mcp remove web3alert-agent` 移除同名条目。如果添加时指定了 `--scope`，移除时请使用相同的作用域，例如 `claude mcp remove --scope user web3alert`。
+在使用 Web3alert 的 Claude Code 项目中运行以下命令。
+
+1. 运行 `claude mcp list`，查看列表中是否有要替换的名称。运行 `claude mcp get web3alert` 或 `claude mcp get web3alert-agent` 查看所列条目的作用域。
+2. 指定作用域来移除条目，例如运行 `claude mcp remove --scope user web3alert` 或 `claude mcp remove --scope local web3alert`。移除后，其他作用域的同名条目可能会出现在列表中。重复步骤 1 和 2，直到列表中不再出现该名称。
+3. 运行对应端点的 `claude mcp add` 示例命令，添加新条目。
 
 在 Claude Desktop、Cursor 和 VS Code 中，直接修改现有条目的 URL 和请求头。参见[远程端点配置示例](#remote-mcp-endpoint)。
 
@@ -41,7 +45,7 @@ Agent 工具在 account 当前选中的 workspace 中执行操作。如需让下
 | 工具 | 用途 |
 | --- | --- |
 | `get_account` | 返回账户 ID、名称、套餐、以 EUR 计的余额、套餐限制，以及可用的当前工作区启用订阅数和订阅总数。 |
-| `find_triggers` | 搜索已发布的目录和当前 workspace 中的 triggers。 |
+| `find_triggers` | 在公开目录中搜索 EVM 和 Substrate 链的触发器，也会搜索当前工作区中的触发器。 |
 | `get_trigger` | 查看 trigger 的运行时 inputs、投递的事件字段以及可在 `conditions` 中使用的字段。 |
 | `list_webhooks` | 列出 workspace 中已注册的 webhooks 的 `fullname`、名称和 URL。 `signed` 字段表示该 Webhook 是否有签名密钥。 |
 | `add_webhook` | 注册使用 HTTPS 且不含凭据的 Webhook。如果检查时发现工作区已有同名资源，工具会拒绝请求并返回 `webhook_exists`。 签名密钥仅在 `add_webhook` 的回复中以 `signingSecret` 字段显示。之后轮换密钥会替换该端点所有接收方使用的密钥。 |

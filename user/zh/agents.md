@@ -1,6 +1,6 @@
 # 面向智能体
 
-Web3alert 目录提供 EVM、Substrate、Solana 和 HyperCore 上已解码的链上事件。智能体可以通过 [10 个 MCP 工具](mcp-server.md#agent-endpoint) 查找并订阅触发器，然后在自己的 Webhook 上接收符合条件的 JSON 事件。
+Web3alert 目录提供来自 EVM 和 Substrate 链的已解码链上事件，涵盖以太坊（Ethereum）、Polkadot 和 Kusama 等链。智能体可以通过 [10 个 MCP 工具](mcp-server.md#agent-endpoint) 查找并订阅触发器，然后在自己的 Webhook 上接收符合条件的 JSON 事件。
 
 ## 即将推出
 

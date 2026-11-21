@@ -30,7 +30,11 @@ O endpoint `/mcp` passa a aceitar o token apenas no cabeçalho `Authorization: B
 
 Configure o cliente para enviar o cabeçalho e retire o token do URL ou do corpo do pedido.
 
-No Claude Code, antes de executar o comando para adicionar o servidor, remova qualquer entrada com o mesmo nome usando `claude mcp remove web3alert` ou `claude mcp remove web3alert-agent`. Se adicionou a entrada com `--scope`, indique o mesmo âmbito ao removê-la, por exemplo `claude mcp remove --scope user web3alert`.
+No Claude Code, execute estes comandos a partir do projeto onde usa o Web3alert.
+
+1. Execute `claude mcp list` para verificar se aparece o nome que pretende substituir. Para ver o âmbito da entrada apresentada, execute `claude mcp get web3alert` ou `claude mcp get web3alert-agent`.
+2. Remova a entrada indicando o respetivo âmbito, por exemplo com `claude mcp remove --scope user web3alert` ou `claude mcp remove --scope local web3alert`. Depois de a remover, pode aparecer outra entrada com o mesmo nome noutro âmbito. Repita os passos 1 e 2 até que o nome deixe de aparecer.
+3. Execute o exemplo de `claude mcp add` do seu endpoint para adicionar a nova entrada.
 
 No Claude Desktop, no Cursor e no VS Code, edite o URL e os cabeçalhos da entrada existente. Consulte os [exemplos de configuração do endpoint remoto](#remote-mcp-endpoint).
 
@@ -41,7 +45,7 @@ As ferramentas para agentes atuam no workspace atual do account. Para usar outro
 | Ferramenta | O que faz |
 | --- | --- |
 | `get_account` | Devolve o ID, o nome e o plano da conta, o saldo em EUR, os limites do plano e as contagens de subscrições ativas e totais do espaço de trabalho atual, quando disponíveis. |
-| `find_triggers` | Pesquisa no catálogo publicado e nos triggers do workspace atual. |
+| `find_triggers` | Pesquisa gatilhos de redes EVM e Substrate no catálogo público. Também pesquisa os gatilhos do espaço de trabalho atual. |
 | `get_trigger` | Mostra os inputs de execução do trigger, os campos dos eventos entregues e os campos que pode usar em `conditions`. |
 | `list_webhooks` | Lista o `fullname`, o nome e o URL de cada webhook registado no workspace. O campo `signed` indica se o webhook tem um segredo de assinatura. |
 | `add_webhook` | Regista um webhook com um URL HTTPS sem credenciais. Se, ao verificar o nome, já existir um recurso com esse nome no espaço de trabalho, a ferramenta recusa o pedido com `webhook_exists`. O segredo de assinatura só aparece na resposta de `add_webhook` como `signingSecret`. Substituí-lo mais tarde altera o segredo para todos os recetores desse endpoint. |

@@ -142,7 +142,7 @@ Una respuesta `2xx` indica que el receptor aceptó la entrega. Responde rápido 
 
 Web3alert considera una respuesta HTTP `3xx` un rechazo de la entrega y no la reintenta. El rechazo cuenta para el bloqueo de la suscripción tras cinco eventos consecutivos sin entregar.
 
-Registra la URL HTTPS final. Web3alert no sigue las redirecciones.
+Registra la URL HTTPS final. Web3alert no sigue las redirecciones, ni siquiera en las entregas de prueba.
 
 Si el servicio de envío de webhooks de Web3alert no está disponible cuando toca reintentar, Web3alert espera y vuelve a intentarlo sin aumentar el número de intentos. Si el servicio no está disponible en el primer intento, Web3alert programa el intento 2 con el motivo `webhook service unavailable` y el código `channel.webhook.retry_scheduled`. Si se agota el tiempo de espera del servicio de envío, el intento cuenta como un fallo que admite reintento, con el motivo `webhook service timed out`, y se reintenta según el calendario.
 
