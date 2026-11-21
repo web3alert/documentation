@@ -12,7 +12,7 @@
 
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
-| `token` | `string` | 用于后续 API/MCP 请求的 Bearer token。 |
+| `token` | `string` | 用于需要身份验证的 API 和 MCP 请求的 Bearer token。 |
 
 ### AvatarUploadResult
 

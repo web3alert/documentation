@@ -5,19 +5,21 @@ MCP está disponible para los tiers `Free`, `Advanced` y `Pro`.
 - Usa `https://web3alert.io/mcp/agent` para suscribirte a eventos on-chain decodificados y recibirlos en un webhook.
 - Usa `https://web3alert.io/mcp` para acceder al conjunto completo de herramientas con las que puedes crear y editar projects, triggers, templates, subscriptions, resources y data sources del marketplace de Web3alert, y consultar datos de diagnóstico.
 
+La entrada `io.web3alert/agent` del MCP Registry indica que el header `Authorization` es opcional. Consulta el [repositorio público de MCP](https://github.com/web3alert/mcp) para más detalles sobre el servidor.
+
 ## Token
 
-Para conectarse, se necesita un personal access token de [Account parameters](account.md#personal-access-token).
+Sin token, `/mcp/agent` solo responde a `initialize`, `ping`, las notificaciones y `tools/list`. Cualquier otra solicitud sin token, incluido un lote (un array de solicitudes), recibe una respuesta HTTP `401` con instrucciones para enviar un token. Cada lote admite hasta 20 mensajes. Las llamadas a herramientas (`tools/call`) requieren `Authorization: Bearer <token>`.
 
-El token da al MCP server acceso a Web3alert API en nombre del account actual. El nivel de acciones disponibles depende del account tier y de los roles del usuario en workspace.
+El endpoint `/mcp` para crear y editar requiere `Authorization: Bearer <token>` en cada solicitud. Ambos endpoints aceptan tokens solo en ese header. El servidor verifica el token enviado antes de responder, incluso en el caso de las notificaciones. Ambos endpoints devuelven HTTP `401` en cada solicitud con un token inválido.
 
-Envía el token en cada solicitud HTTP en el header `Authorization: Bearer <token>`. El servidor no acepta tokens en la query string ni en el cuerpo de la solicitud.
+Obtén un personal access token en [Account parameters](account.md#personal-access-token). El token da al MCP server acceso a Web3alert API en nombre del account actual. El nivel de acciones disponibles depende del account tier y de los roles del usuario en workspace.
 
-Tras la revocación, la API rechaza el token de inmediato. Mientras MCP conserve la verificación en caché, una llamada de una herramienta para agentes que llegue a la API devuelve `access_denied`. `initialize` y `tools/list` pueden seguir respondiendo durante un máximo de 30 segundos gracias a la verificación en caché. Cuando MCP vuelve a comprobar el token revocado, devuelve HTTP `401`.
+Tras la revocación, la API rechaza el token de inmediato. Mientras MCP conserve la verificación en caché, una llamada de una herramienta para agentes que llegue a la API devuelve `access_denied`. Las solicitudes `initialize` y `tools/list` que envíen el token revocado pueden seguir funcionando durante un máximo de 30 segundos gracias a la verificación en caché. Cuando MCP vuelve a comprobar el token revocado, devuelve HTTP `401`.
 
 | Estado HTTP | Qué hacer |
 | --- | --- |
-| `401` | Falta el Bearer token o es inválido, desconocido o revocado. Envía el header con un token válido. Obtén uno nuevo si no tienes token o el servidor ya no lo reconoce. |
+| `401` | Falta un Bearer token obligatorio o el token enviado es inválido, desconocido o revocado. Envía el header con un token válido. Obtén uno nuevo si no tienes token o el servidor ya no lo reconoce. |
 | `403` | El servidor rechazó el origen del cliente (`forbidden_origin`) o el account no superó la comprobación de acceso a MCP (`mcp_access_denied`). Revisa el header `Origin` del cliente o los datos del account, según el error. |
 | `429` | La API limitó la verificación del token. Espera el tiempo indicado en `Retry-After` antes de volver a intentarlo. |
 | `503` | La verificación del token no está disponible temporalmente. Espera el tiempo indicado en `Retry-After` y vuelve a intentarlo con el mismo token. |

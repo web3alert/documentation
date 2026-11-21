@@ -14,7 +14,7 @@ Uma pessoa inicia sessão na [Web3alert](https://web3alert.io) e copia o token d
 
 ## 2. Ligue o cliente MCP
 
-Use Streamable HTTP em `https://web3alert.io/mcp/agent` e envie `Authorization: Bearer <token>` em cada pedido.
+Use Streamable HTTP em `https://web3alert.io/mcp/agent`. Pode consultar a lista de ferramentas sem um token e precisa de enviar `Authorization: Bearer <token>` para chamar uma ferramenta.
 
 ### Claude Code
 

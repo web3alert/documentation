@@ -14,7 +14,7 @@
 
 ## 2. Подключите MCP-клиент
 
-Используйте Streamable HTTP по адресу `https://web3alert.io/mcp/agent` и передавайте заголовок `Authorization: Bearer <token>` в каждом запросе.
+Используйте Streamable HTTP по адресу `https://web3alert.io/mcp/agent`. Список инструментов доступен без токена, а для вызова инструментов нужен заголовок `Authorization: Bearer <token>`.
 
 ### Claude Code
 

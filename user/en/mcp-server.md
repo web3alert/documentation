@@ -5,13 +5,13 @@ MCP is available on `Free`, `Advanced`, and `Pro`.
 - Use `https://web3alert.io/mcp/agent` to subscribe to decoded on-chain events and receive them on a webhook.
 - Use `https://web3alert.io/mcp` for the full set of tools to create and edit Web3alert marketplace projects, triggers, templates, subscriptions, resources, and data sources, and to read diagnostic data.
 
-The agent endpoint is listed in the MCP Registry as `io.web3alert/agent`. See the [public MCP repository](https://github.com/web3alert/mcp) for server details.
+The MCP Registry entry for the agent endpoint, `io.web3alert/agent`, marks the `Authorization` header as optional. See the [public MCP repository](https://github.com/web3alert/mcp) for server details.
 
 ## Token
 
-The agent endpoint (`/mcp/agent`) accepts `initialize`, `ping`, notifications, and `tools/list` without a token. Tool calls (`tools/call`) require `Authorization: Bearer <token>`. A tool call without the header returns HTTP `401` with instructions for providing a token.
+Without a token, `/mcp/agent` answers only `initialize`, `ping`, notifications, and `tools/list`. Any other request without a token, including a batch (an array of requests), gets HTTP `401` with instructions for providing a token. A batch can contain up to 20 messages. Tool calls (`tools/call`) require `Authorization: Bearer <token>`.
 
-The authoring endpoint (`/mcp`) requires `Authorization: Bearer <token>` on every request. Both endpoints accept tokens only in that header. Either endpoint returns HTTP `401` if you send an invalid token, including on agent discovery requests.
+The authoring endpoint (`/mcp`) requires `Authorization: Bearer <token>` on every request. Both endpoints accept tokens only in that header. The server verifies any supplied token before responding, including to notifications. Either endpoint returns HTTP `401` on every request that carries an invalid token.
 
 Get a personal access token from [Account parameters](account.md#personal-access-token). The token gives MCP server access to Web3alert API on behalf of the current account. The level of available actions depends on the account tier and the user's roles in workspace.
 

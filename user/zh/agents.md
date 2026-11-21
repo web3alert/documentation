@@ -14,7 +14,7 @@ Web3alert 目录提供来自 EVM 和 Substrate 链的已解码链上事件，涵
 
 ## 2. 连接 MCP 客户端
 
-通过 Streamable HTTP 连接 `https://web3alert.io/mcp/agent`，并在每次请求中发送 `Authorization: Bearer <token>`。
+通过 Streamable HTTP 连接 `https://web3alert.io/mcp/agent`。无需令牌即可查看工具列表，调用工具时需要发送 `Authorization: Bearer <token>`。
 
 ### Claude Code
 

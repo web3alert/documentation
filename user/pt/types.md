@@ -12,7 +12,7 @@
 
 | Campo | Tipo | Descrição |
 | --- | --- | --- |
-| `token` | `string` | Bearer token para solicitações API/MCP posteriores. |
+| `token` | `string` | Bearer token para pedidos autenticados à API e ao MCP. |
 
 ### AvatarUploadResult
 
