@@ -111,6 +111,8 @@ Response:
 | `state` | Yes | Effective subscription state: `on`, `off`, or `blocked`. |
 | `issue` | No | Current-state issue or status reason, when available. |
 
+After an automatic webhook block, resuming the subscription starts with zero consecutive undelivered events for that webhook.
+
 ## POST /api/subscriptions/test
 
 Tests an existing subscription or a draft subscription.
@@ -150,6 +152,8 @@ Payload: none.
 
 Response: [SubscriptionAlertLog[]](types.md#subscriptionalertlog).
 
+See [Webhook channel fields](#webhook-channel-fields).
+
 ## GET /api/subscriptions/:id/alerts/history
 
 Returns logs for a specific subscription.
@@ -167,3 +171,17 @@ Arguments:
 Payload: none.
 
 Response: [SubscriptionAlertLog[]](types.md#subscriptionalertlog).
+
+See [Webhook channel fields](#webhook-channel-fields).
+
+## Webhook channel fields {#webhook-channel-fields}
+
+In both history responses, webhook entries in `channels` can include the following fields.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `eventId` | `string` | Delivery ID, equal to the `webhook-id` header. |
+| `attempt` | `number` | Attempt number, starting at `1`. |
+| `nextAttemptAt` | `string` | ISO timestamp on the first entry when a retry is scheduled. |
+
+If an attempt fails with a retryable error and the next attempt cannot be queued because the retry queue is full, the webhook channel of the `failed` entry has `reasonCode: "channel.webhook.retry_queue_full"`. This is the first entry if the first attempt failed, or the final entry if a later attempt failed.

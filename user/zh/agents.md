@@ -4,7 +4,6 @@ Web3alert 目录提供 EVM、Substrate、Solana 和 HyperCore 上已解码的链
 
 ## 即将推出
 
-- 支持签名和自动重试的 Webhook。
 - 支持钱包登录，让智能体自行开设账户。
 - 通过 x402 充值 USDC。
 - 用于查看错过事件的收件箱。
@@ -75,30 +74,17 @@ claude mcp add --transport http web3alert-agent https://web3alert.io/mcp/agent \
 1. `get_account({})` → 账户、套餐、当前工作区、以 EUR 计的余额、套餐限制以及可用的订阅计数。
 2. `find_triggers({"kind":"event","limit":5})` → 已发布目录和当前工作区中符合条件的触发器，包括各自的 `fullname`。
 3. `get_trigger({"trigger":"<trigger-fullname>"})` → 触发器的运行时输入、事件字段和可用于筛选的字段。
-4. `add_webhook({"name":"agent-events","url":"https://example.com/webhooks/web3alert"})` → 已注册 Webhook 的 `fullname`、名称和 URL。
+4. `add_webhook({"name":"agent-events","url":"https://example.com/webhooks/web3alert"})` → 已注册 Webhook 的 `fullname`、名称和 URL。 请保存返回的 `signingSecret` 供接收端使用。工具仅返回一次密钥。
 5. `create_subscription({"trigger":"<trigger-fullname>","webhook":"<webhook-fullname>","state":"on"})` → 订阅的 ID、标题、最终状态、触发器和 Webhook。
 6. `get_delivery_log({"subscriptionId":"<subscription-id>"})` → 投递结果，以及有更多结果时返回的 `nextCursor`。告警历史按工作区访问列表中第一个具有所有者角色的账户的套餐检查。如果没有这样的账户，API 会检查请求方账户的套餐。如果该套餐不含历史记录，工具返回 `not_in_plan`。
 
-   如果有超过 500 条投递记录使用同一时间戳，导致游标无法继续翻页，工具会返回 `api_error`。请缩小筛选范围，例如按状态筛选，然后不带游标重新查询。
+   如果有 500 条或更多投递记录使用同一时间戳，导致游标无法继续翻页，工具会返回 `api_error`。请缩小筛选范围，例如按状态筛选，然后不带游标重新查询。
 
 确认返回的订阅 `state` 为 `on`。之后，符合条件的事件即可投递。请使用新的 Webhook 名称，或通过 `list_webhooks` 查找已注册的 Webhook。
 
 ## Webhook 请求体
 
-Web3alert 使用 HTTP POST 发送以下格式的 JSON。`header` 是项目标题或名称，`message` 是告警的长文本或短文本，`object` 是事件数据或空对象。`icon`、`cover` 和 `links` 在有对应内容时出现。
-
-```json
-{
-  "header": "Example project",
-  "icon": "https://example.com/icon.png",
-  "cover": "https://example.com/cover.png",
-  "message": "Example alert",
-  "links": [{ "text": "View event", "url": "https://example.com/event" }],
-  "object": {}
-}
-```
-
-Webhook 签名和自动重试即将推出。
+你的 Webhook 会收到包含事件 ID 的 JSON 请求体。新建的 Webhook 会收到已签名的投递，Web3alert 会自动重试符合条件的失败投递。请求体格式、签名验证、重试和去重方式，请参阅 [Webhook](webhooks.md)。
 
 ## 限制
 

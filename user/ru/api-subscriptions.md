@@ -111,6 +111,8 @@ Endpoints Subscriptions управляют subscriptions workspace, их сос�
 | `state` | Да | Фактическое состояние subscription: `on`, `off` или `blocked`. |
 | `issue` | Нет | Проблема или причина текущего состояния, если она доступна. |
 
+При возобновлении подписки после автоматической блокировки из-за вебхука счётчик последовательных недоставленных событий для этого вебхука начинается с нуля.
+
 ## POST /api/subscriptions/test
 
 Тестирует существующую subscription или draft subscription.
@@ -150,6 +152,8 @@ Endpoints Subscriptions управляют subscriptions workspace, их сос�
 
 Ответ: [SubscriptionAlertLog[]](types.md#subscriptionalertlog).
 
+См. [Поля каналов вебхуков](#webhook-channel-fields).
+
 ## GET /api/subscriptions/:id/alerts/history
 
 Возвращает logs конкретной subscription.
@@ -167,3 +171,17 @@ Endpoints Subscriptions управляют subscriptions workspace, их сос�
 Тело запроса: нет.
 
 Ответ: [SubscriptionAlertLog[]](types.md#subscriptionalertlog).
+
+См. [Поля каналов вебхуков](#webhook-channel-fields).
+
+## Поля каналов вебхуков {#webhook-channel-fields}
+
+В обоих ответах с историей записи вебхуков в `channels` могут содержать следующие поля.
+
+| Поле | Тип | Описание |
+| --- | --- | --- |
+| `eventId` | `string` | ID доставки, совпадает с заголовком `webhook-id`. |
+| `attempt` | `number` | Номер попытки, начиная с `1`. |
+| `nextAttemptAt` | `string` | Время в формате ISO в первой записи, если запланирована повторная попытка. |
+
+Если попытка завершилась ошибкой, допускающей повтор, а следующую попытку нельзя поставить в заполненную очередь, канал вебхука в записи со статусом `failed` содержит `reasonCode: "channel.webhook.retry_queue_full"`. Это первая запись при сбое первой попытки или итоговая запись при сбое более поздней попытки.

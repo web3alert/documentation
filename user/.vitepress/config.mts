@@ -29,6 +29,7 @@ type LocaleMeta = {
     subscriptions: string;
     subscriptionWizard: string;
     resources: string;
+    webhooks: string;
     dataSources: string;
     addresses: string;
     guides: string;
@@ -81,6 +82,7 @@ const locales: Record<LocaleKey, LocaleMeta> = {
       subscriptions: 'Subscriptions',
       subscriptionWizard: 'Create subscription',
       resources: 'Resources',
+      webhooks: 'Webhooks',
       dataSources: 'Data sources',
       addresses: 'Addresses',
       guides: 'Guides',
@@ -131,6 +133,7 @@ const locales: Record<LocaleKey, LocaleMeta> = {
       subscriptions: 'Подписки',
       subscriptionWizard: 'Создание подписки',
       resources: 'Ресурсы',
+      webhooks: 'Вебхуки',
       dataSources: 'Источники данных',
       addresses: 'Адреса',
       guides: 'Гайды',
@@ -181,6 +184,7 @@ const locales: Record<LocaleKey, LocaleMeta> = {
       subscriptions: 'Subscriptions',
       subscriptionWizard: 'Create subscription',
       resources: 'Resources',
+      webhooks: 'Webhooks',
       dataSources: 'Data sources',
       addresses: 'Addresses',
       guides: 'Guides',
@@ -231,6 +235,7 @@ const locales: Record<LocaleKey, LocaleMeta> = {
       subscriptions: 'Suscripciones',
       subscriptionWizard: 'Crear suscripción',
       resources: 'Recursos',
+      webhooks: 'Webhooks',
       dataSources: 'Fuentes de datos',
       addresses: 'Direcciones',
       guides: 'Guías',
@@ -281,6 +286,7 @@ const locales: Record<LocaleKey, LocaleMeta> = {
       subscriptions: 'Subscrições',
       subscriptionWizard: 'Criar subscrição',
       resources: 'Recursos',
+      webhooks: 'Webhooks',
       dataSources: 'Fontes de dados',
       addresses: 'Endereços',
       guides: 'Guias',
@@ -331,6 +337,7 @@ const locales: Record<LocaleKey, LocaleMeta> = {
       subscriptions: '订阅',
       subscriptionWizard: '创建订阅',
       resources: '资源',
+      webhooks: 'Webhook',
       dataSources: '数据源',
       addresses: '地址',
       guides: '指南',
@@ -398,6 +405,7 @@ const createThemeConfig = (locale: LocaleMeta) => {
           ],
         },
         { text: locale.sections.resources, link: linkFor(locale, '/resources') },
+        { text: locale.sections.webhooks, link: linkFor(locale, '/webhooks') },
         { text: locale.sections.dataSources, link: linkFor(locale, '/data-sources') },
         { text: locale.sections.addresses, link: linkFor(locale, '/addresses') },
       ],

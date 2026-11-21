@@ -29,6 +29,7 @@ const expectedApiFiles = [
   'api-builder-registry.md',
   'api-data-sources.md',
   'api-links.md',
+  'api-openapi.md',
   'api-project-transfers.md',
   'api-projects.md',
   'api-resources.md',
@@ -44,6 +45,7 @@ const expectedApiFiles = [
 // Any runtime route addition must be explicitly classified before it becomes
 // part of the public documentation contract.
 const publicCanonicalRoutes = [
+  'GET /api/openapi.json',
   'POST /api/token',
   'DELETE /api/token',
   'DELETE /api/tokens',
@@ -129,6 +131,7 @@ const publicCanonicalRoutes = [
   'GET /api/resources',
   'GET /api/resources/:fullname',
   'PUT /api/resources/:fullname',
+  'POST /api/resources/:fullname/signing-secret',
   'DELETE /api/resources/:fullname',
   'POST /api/resources/:fullname/setup-sessions',
   'GET /api/resources/:fullname/setup-sessions/:id',
@@ -2591,11 +2594,11 @@ for (const [name, section] of [
   }
 }
 
-if (expectedApiFiles.length != 15) {
-  issues.push(`API file manifest must contain 15 files, found ${expectedApiFiles.length}`);
+if (expectedApiFiles.length != 16) {
+  issues.push(`API file manifest must contain 16 files, found ${expectedApiFiles.length}`);
 }
-if (publicCanonicalRoutes.length != 140) {
-  issues.push(`public canonical manifest must contain 140 routes, found ${publicCanonicalRoutes.length}`);
+if (publicCanonicalRoutes.length != 142) {
+  issues.push(`public canonical manifest must contain 142 routes, found ${publicCanonicalRoutes.length}`);
 }
 if (new Set(publicCanonicalRoutes).size != publicCanonicalRoutes.length) {
   issues.push(`public canonical manifest contains duplicates: ${duplicates(publicCanonicalRoutes).join(', ')}`);
@@ -2603,8 +2606,8 @@ if (new Set(publicCanonicalRoutes).size != publicCanonicalRoutes.length) {
 if (excludedCanonicalRoutes.size != 8) {
   issues.push(`canonical exclusion manifest must contain 8 routes, found ${excludedCanonicalRoutes.size}`);
 }
-if (expectedPublicRoutes.length != 140) {
-  issues.push(`public route manifest must contain 140 routes, found ${expectedPublicRoutes.length}`);
+if (expectedPublicRoutes.length != 142) {
+  issues.push(`public route manifest must contain 142 routes, found ${expectedPublicRoutes.length}`);
 }
 for (const [excludedRoute, reason] of excludedCanonicalRoutes) {
   if (publicCanonicalRoutes.includes(excludedRoute)) {

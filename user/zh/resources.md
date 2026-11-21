@@ -80,6 +80,8 @@ Webhook resource 用于向任意 HTTP endpoint 发送 alerts。
 
 表单中填写 `URL`，Web3alert 会向该地址发送 notification payload。如果 alerts 需要传给自己的 backend、automation system 或其他外部服务，这种类型很有用。
 
+签名验证、重试和阻止投递的规则，请参阅 [Webhook](webhooks.md)。
+
 ## Resources 列表
 
 `Resources` section 显示当前 workspace 的 resources。

@@ -11,6 +11,12 @@ https://web3alert.io
 所有公开客户端 endpoints 都使用规范的 `/api/*` 路径。服务间 endpoints
 不属于此公开 API 文档。
 
+## OpenAPI
+
+| Method | Endpoint | Purpose |
+| --- | --- | --- |
+| `GET` | `/api/openapi.json` | [面向智能体的 API 的 OpenAPI 3.1 JSON 文档。](api-openapi.md) |
+
 ## Auth
 
 用户请求使用 personal access token：
@@ -212,6 +218,7 @@ X-RateLimit-Window: 60000
 | `GET` | `/api/resources` | resources 列表。 |
 | `GET` | `/api/resources/:fullname` | 获取 resource。 |
 | `PUT` | `/api/resources/:fullname` | 创建或更新 resource。 |
+| `POST` | `/api/resources/:fullname/signing-secret` | 生成或轮换 Webhook 签名密钥。 |
 | `DELETE` | `/api/resources/:fullname` | 删除 resource。 |
 | `POST` | `/api/resources/:fullname/setup-sessions` | 启动 Telegram destination setup session。 |
 | `GET` | `/api/resources/:fullname/setup-sessions/:id` | 获取 setup session 状态。 |

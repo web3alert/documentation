@@ -4,7 +4,6 @@ Find decoded EVM, Substrate, Solana, and HyperCore on-chain events in the Web3al
 
 ## Coming soon
 
-- Signed webhooks with automatic retries.
 - Wallet sign-in so agents can open their own accounts.
 - USDC top-ups over x402.
 - An inbox to catch up on missed events.
@@ -75,30 +74,17 @@ In this example session, replace the values in angle brackets with results from 
 1. `get_account({})` → Your account, tier, current workspace, EUR wallet balance, tier limits, and subscription counts when available.
 2. `find_triggers({"kind":"event","limit":5})` → Matching triggers from the published catalog and your workspace, including each trigger's `fullname`.
 3. `get_trigger({"trigger":"<trigger-fullname>"})` → The trigger's runtime inputs, event fields, and fields available for filtering.
-4. `add_webhook({"name":"agent-events","url":"https://example.com/webhooks/web3alert"})` → The registered webhook's `fullname`, name, and URL.
+4. `add_webhook({"name":"agent-events","url":"https://example.com/webhooks/web3alert"})` → The registered webhook's `fullname`, name, and URL. Store the returned `signingSecret` for your receiver. The tool returns it only once.
 5. `create_subscription({"trigger":"<trigger-fullname>","webhook":"<webhook-fullname>","state":"on"})` → The subscription's ID, title, resulting state, trigger, and webhook.
 6. `get_delivery_log({"subscriptionId":"<subscription-id>"})` → Delivery outcomes and `nextCursor` when there are more results. Alert history uses the plan of the first account with the owner role in the workspace's access list. If there is no such account, the API checks the caller's plan. Without history on that plan, the tool returns `not_in_plan`.
 
-   If the cursor cannot advance because more than 500 deliveries share a timestamp, the tool returns `api_error`. Narrow the filter, for example by status, and start again without the cursor.
+   If the cursor cannot advance because 500 or more deliveries share a timestamp, the tool returns `api_error`. Narrow the filter, for example by status, and start again without the cursor.
 
 Use the subscription's returned `state` to confirm it is `on`. Matching events can arrive after that. Use a new webhook name or look up an existing webhook with `list_webhooks`.
 
 ## Webhook payload
 
-Web3alert sends an HTTP POST with a JSON body in this format. `header` is the project title or name, `message` is the long or short alert text, and `object` contains the event data or an empty object. `icon`, `cover`, and `links` appear when supplied.
-
-```json
-{
-  "header": "Example project",
-  "icon": "https://example.com/icon.png",
-  "cover": "https://example.com/cover.png",
-  "message": "Example alert",
-  "links": [{ "text": "View event", "url": "https://example.com/event" }],
-  "object": {}
-}
-```
-
-Webhook signatures and automatic retries are coming soon.
+Your webhook receives a JSON body with an event ID. New webhooks receive signed deliveries, and Web3alert automatically retries eligible failures. See [Webhooks](webhooks.md) for the payload, signature verification, retries, and deduplication.
 
 ## Limits
 

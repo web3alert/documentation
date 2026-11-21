@@ -88,6 +88,8 @@ Webhook resource используется для отправки alerts на п
 
 В форме указывается `URL`, на который Web3alert будет отправлять notification payload. Этот тип удобен, если alerts нужно передавать в собственный backend, automation system или другой внешний сервис.
 
+Проверка подписи, повторные попытки и блокировка описаны в разделе [Вебхуки](webhooks.md).
+
 ## Список resources
 
 В разделе `Resources` отображаются resources текущего workspace.

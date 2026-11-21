@@ -88,6 +88,8 @@ Webhook resource is used to send alerts to any HTTP endpoint.
 
 The form contains `URL` where Web3alert will send notification payload. This type is useful when alerts need to be passed to your own backend, automation system, or another external service.
 
+See [Webhooks](webhooks.md) for signature verification, retries, and blocking.
+
 ## Resource list
 
 The `Resources` section shows resources of the current workspace.

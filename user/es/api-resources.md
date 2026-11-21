@@ -3,6 +3,8 @@
 Los endpoints Resources gestionan delivery resources y sus flujos públicos de
 setup. Todas las rutas de esta página usan el namespace canónico `/api`.
 
+Los recursos webhook incluyen `signing: { enabled: boolean, createdAt: string | null }` en la lista, en la vista de un recurso y en la respuesta de PUT. `enabled` indica si la firma está habilitada. `createdAt` indica cuándo se creó el secreto de firma actual, o es `null` si el webhook no está firmado.
+
 ## GET /api/resources
 
 Devuelve resources.
@@ -57,6 +59,22 @@ Payload:
 | `meta.title` | No | Título visible. |
 
 Respuesta: [ResourceView](types.md#resourceview).
+
+Al crear un webhook, la respuesta también devuelve `signingSecret` una sola vez. Las actualizaciones de recursos existentes devuelven solo la vista del recurso.
+
+## POST /api/resources/:fullname/signing-secret
+
+Genera un secreto de firma para un webhook sin firma o sustituye el secreto existente. El solicitante debe tener control sobre el espacio de trabajo del recurso.
+
+Devuelve `signingSecret` una sola vez y `createdAt` como marca de tiempo ISO. Consulta [Webhooks](webhooks.md) para saber cuándo entra en vigor el nuevo secreto.
+
+Estos errores de rotación devuelven HTTP `400` con un cuerpo JSON con el formato `{ "error": { "message": "..." } }`.
+
+| Mensaje | Cuándo se devuelve |
+| --- | --- |
+| `access denied` | El solicitante no tiene control sobre el espacio de trabajo del recurso. |
+| `resource not found` | El recurso no existe. |
+| `not a webhook resource` | El recurso no es un webhook. |
 
 ## DELETE /api/resources/:fullname
 

@@ -33,13 +33,13 @@ Agent tools act on the account's current workspace. To change which workspace th
 | `get_account` | Returns the account ID, name, tier, EUR wallet balance, tier limits, and active and total subscription counts for the current workspace when available. |
 | `find_triggers` | Searches the published catalog and the current workspace's triggers. |
 | `get_trigger` | Shows a trigger's runtime inputs, delivered event fields, and fields you can use in `conditions`. |
-| `list_webhooks` | Lists the `fullname`, name, and URL of each registered workspace webhook. |
-| `add_webhook` | Registers a webhook with an HTTPS URL without credentials. If the workspace already has a resource with that name when checked, the tool refuses the request with `webhook_exists`. |
+| `list_webhooks` | Lists the `fullname`, name, and URL of each registered workspace webhook. The `signed` field indicates whether a webhook has a signing secret. |
+| `add_webhook` | Registers a webhook with an HTTPS URL without credentials. If the workspace already has a resource with that name when checked, the tool refuses the request with `webhook_exists`. Returns `signingSecret` once on creation. |
 | `create_subscription` | Subscribes to one trigger with delivery to one webhook. Supply any required inputs and optional `conditions` to filter events. |
 | `list_subscriptions` | Lists subscription IDs, titles, states, triggers, webhooks, and creation times. |
 | `set_subscription_state` | Pauses (`off`) or resumes (`on`) a subscription. |
 | `remove_subscription` | Deletes a subscription and stops delivery. |
-| `get_delivery_log` | Shows delivery outcomes for the workspace or a single subscription. Alert history uses the plan of the first account with the owner role in the workspace's access list. If there is no such account, the API checks the caller's plan. Without history on that plan, the tool returns `not_in_plan`. |
+| `get_delivery_log` | Shows delivery outcomes for the workspace or a single subscription. Alert history uses the plan of the first account with the owner role in the workspace's access list. If there is no such account, the API checks the caller's plan. Without history on that plan, the tool returns `not_in_plan`. Webhook channel entries expose `eventId`, `attempt`, and `nextAttemptAt` when a retry is scheduled. |
 
 `limits.maxSubscriptions` caps active subscriptions you created to non-Free projects across all workspaces. The cap is 5 on Free. Subscriptions to Free projects are exempt.
 

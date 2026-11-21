@@ -2,6 +2,8 @@
 
 Resources endpoints 用于管理 delivery resources 及其公开 setup flows。本页所有路由都使用规范的 `/api` namespace。
 
+Webhook 资源在列表、单个资源视图和 PUT 响应中包含 `signing: { enabled: boolean, createdAt: string | null }`。`enabled` 表示是否启用签名。`createdAt` 是当前签名密钥的创建时间，未签名的 Webhook 则为 `null`。
+
 ## GET /api/resources
 
 返回 resources。
@@ -56,6 +58,22 @@ Payload:
 | `meta.title` | 否 | 可见标题。 |
 
 响应：[ResourceView](types.md#resourceview)。
+
+创建 Webhook 时，响应还会返回一次 `signingSecret`。更新现有资源时只返回资源视图。
+
+## POST /api/resources/:fullname/signing-secret
+
+为未签名的 Webhook 生成签名密钥，或替换现有密钥。请求方必须有权管理该资源所属的工作区。
+
+仅返回一次 `signingSecret`，并返回 ISO 格式的 `createdAt` 时间戳。有关新密钥何时生效，请参阅 [Webhook](webhooks.md)。
+
+以下轮换错误均返回 HTTP `400`，响应体为 `{ "error": { "message": "..." } }` 格式的 JSON。
+
+| 消息 | 返回条件 |
+| --- | --- |
+| `access denied` | 请求方无权管理该资源所属的工作区。 |
+| `resource not found` | 资源不存在。 |
+| `not a webhook resource` | 资源不是 Webhook。 |
 
 ## DELETE /api/resources/:fullname
 

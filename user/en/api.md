@@ -11,6 +11,12 @@ https://web3alert.io
 All public client endpoints use canonical `/api/*` paths. Service-to-service
 endpoints are not part of this public API reference.
 
+## OpenAPI
+
+| Method | Endpoint | Purpose |
+| --- | --- | --- |
+| `GET` | `/api/openapi.json` | [OpenAPI 3.1 JSON document for the agent-facing API.](api-openapi.md) |
+
 ## Auth
 
 User requests use personal access token:
@@ -212,6 +218,7 @@ Details: [Resources API](api-resources.md).
 | `GET` | `/api/resources` | List resources. |
 | `GET` | `/api/resources/:fullname` | Get resource. |
 | `PUT` | `/api/resources/:fullname` | Create or update resource. |
+| `POST` | `/api/resources/:fullname/signing-secret` | Generate or rotate a webhook signing secret. |
 | `DELETE` | `/api/resources/:fullname` | Delete resource. |
 | `POST` | `/api/resources/:fullname/setup-sessions` | Start a Telegram destination setup session. |
 | `GET` | `/api/resources/:fullname/setup-sessions/:id` | Get setup-session status. |

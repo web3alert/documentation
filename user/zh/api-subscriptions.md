@@ -111,6 +111,8 @@ Payload:
 | `state` | 是 | subscription 的实际状态：`on`、`off` 或 `blocked`。 |
 | `issue` | 否 | 当前状态的问题或状态原因（如有）。 |
 
+Webhook 导致自动阻止投递后，恢复订阅时，该 Webhook 连续未投递的事件计数从零开始。
+
 ## POST /api/subscriptions/test
 
 测试现有 subscription 或 draft subscription。
@@ -150,6 +152,8 @@ Payload: 无。
 
 响应：[SubscriptionAlertLog[]](types.md#subscriptionalertlog)。
 
+请参阅 [Webhook 渠道字段](#webhook-channel-fields)。
+
 ## GET /api/subscriptions/:id/alerts/history
 
 返回指定 subscription 的 logs。
@@ -167,3 +171,17 @@ Payload: 无。
 Payload: 无。
 
 响应：[SubscriptionAlertLog[]](types.md#subscriptionalertlog)。
+
+请参阅 [Webhook 渠道字段](#webhook-channel-fields)。
+
+## Webhook 渠道字段 {#webhook-channel-fields}
+
+这两个历史记录响应中的 `channels` 数组都可能在 Webhook 条目中包含以下字段。
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `eventId` | `string` | 投递 ID，与 `webhook-id` 请求头相同。 |
+| `attempt` | `number` | 尝试次数编号，从 `1` 开始。 |
+| `nextAttemptAt` | `string` | 安排重试时，首条记录中的 ISO 格式时间戳。 |
+
+尝试因可重试错误而失败，且下一次尝试因重试队列已满而无法排队时，状态为 `failed` 的记录会在 Webhook 渠道条目中包含 `reasonCode: "channel.webhook.retry_queue_full"`。首次尝试失败时记在首条记录中，后续尝试失败时记在最终记录中。

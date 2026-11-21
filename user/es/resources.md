@@ -89,6 +89,8 @@ Webhook resource se usa para enviar alerts a cualquier HTTP endpoint.
 
 En el formulario se indica `URL` a la que Web3alert enviará notification payload. Este tipo es útil si alerts deben pasarse a un backend propio, automation system u otro servicio externo.
 
+Consulta [Webhooks](webhooks.md) para saber cómo verificar firmas y cómo funcionan los reintentos y el bloqueo.
+
 ## Lista de resources
 
 En la sección `Resources` se muestran resources del workspace actual.

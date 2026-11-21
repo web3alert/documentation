@@ -111,6 +111,8 @@ Resposta:
 | `state` | Sim | Estado efetivo da subscription: `on`, `off` ou `blocked`. |
 | `issue` | Não | Problema ou motivo do estado atual, quando disponível. |
 
+Após um bloqueio automático por um webhook, a contagem de eventos consecutivos não entregues para esse webhook recomeça a zero quando retomar a subscrição.
+
 ## POST /api/subscriptions/test
 
 Testa uma subscription existente ou uma draft subscription.
@@ -150,6 +152,8 @@ Payload: nenhum.
 
 Resposta: [SubscriptionAlertLog[]](types.md#subscriptionalertlog).
 
+Consulte [Campos dos canais webhook](#webhook-channel-fields).
+
 ## GET /api/subscriptions/:id/alerts/history
 
 Devolve logs de uma subscription específica.
@@ -167,3 +171,17 @@ Argumentos:
 Payload: nenhum.
 
 Resposta: [SubscriptionAlertLog[]](types.md#subscriptionalertlog).
+
+Consulte [Campos dos canais webhook](#webhook-channel-fields).
+
+## Campos dos canais webhook {#webhook-channel-fields}
+
+Em ambas as respostas de histórico, as entradas de webhooks em `channels` podem incluir os campos seguintes.
+
+| Campo | Tipo | Descrição |
+| --- | --- | --- |
+| `eventId` | `string` | ID da entrega, igual ao do cabeçalho `webhook-id`. |
+| `attempt` | `number` | Número da tentativa, a começar em `1`. |
+| `nextAttemptAt` | `string` | Marca temporal em formato ISO na primeira entrada, quando é agendada uma nova tentativa. |
+
+Se uma tentativa falhar com um erro que permita nova tentativa e a fila estiver cheia quando se tenta agendar a próxima, o canal webhook da entrada com estado `failed` inclui `reasonCode: "channel.webhook.retry_queue_full"`. É a primeira entrada se a primeira tentativa falhar, ou a entrada final se falhar uma tentativa posterior.

@@ -33,13 +33,13 @@ Las herramientas para agentes actúan sobre el workspace actual del account. Par
 | `get_account` | Devuelve el ID, nombre y plan de la cuenta, el saldo en EUR, los límites del plan y los recuentos de suscripciones activas y totales del espacio de trabajo actual si están disponibles. |
 | `find_triggers` | Busca en el catálogo publicado y en los triggers del workspace actual. |
 | `get_trigger` | Muestra los inputs de ejecución del trigger, los campos de los eventos entregados y los campos que puedes usar en `conditions`. |
-| `list_webhooks` | Muestra el `fullname`, el nombre y la URL de cada webhook registrado en el workspace. |
-| `add_webhook` | Registra un webhook con una URL HTTPS sin credenciales. Si al comprobar el nombre ya existe un recurso con ese nombre en el espacio de trabajo, la herramienta rechaza la solicitud con `webhook_exists`. |
+| `list_webhooks` | Muestra el `fullname`, el nombre y la URL de cada webhook registrado en el workspace. El campo `signed` indica si el webhook tiene un secreto de firma. |
+| `add_webhook` | Registra un webhook con una URL HTTPS sin credenciales. Si al comprobar el nombre ya existe un recurso con ese nombre en el espacio de trabajo, la herramienta rechaza la solicitud con `webhook_exists`. Devuelve `signingSecret` una sola vez al crearlo. |
 | `create_subscription` | Crea una subscription a un trigger con entrega a un webhook. Proporciona los inputs requeridos y, si quieres filtrar eventos, `conditions`. |
 | `list_subscriptions` | Lista los IDs, títulos, estados, triggers, webhooks y fechas de creación de las subscriptions. |
 | `set_subscription_state` | Pausa (`off`) o reanuda (`on`) una subscription. |
 | `remove_subscription` | Elimina una subscription y detiene la entrega. |
-| `get_delivery_log` | Muestra los resultados de entrega del espacio de trabajo o de una suscripción. El historial de alertas usa el plan de la primera cuenta con rol de propietario en la lista de acceso del espacio de trabajo. Si no existe esa cuenta, la API comprueba el plan de la cuenta que hace la solicitud. Si ese plan no incluye el historial, la herramienta devuelve `not_in_plan`. |
+| `get_delivery_log` | Muestra los resultados de entrega del espacio de trabajo o de una suscripción. El historial de alertas usa el plan de la primera cuenta con rol de propietario en la lista de acceso del espacio de trabajo. Si no existe esa cuenta, la API comprueba el plan de la cuenta que hace la solicitud. Si ese plan no incluye el historial, la herramienta devuelve `not_in_plan`. Los registros de canales webhook incluyen `eventId`, `attempt` y, si se programa un reintento, `nextAttemptAt`. |
 
 `limits.maxSubscriptions` limita las suscripciones activas que has creado a proyectos que no sean Free, sumadas entre todos los espacios de trabajo. El límite de Free es de 5. Las suscripciones a proyectos Free quedan fuera del límite.
 

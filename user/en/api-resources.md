@@ -3,6 +3,8 @@
 Resources endpoints manage delivery resources and their public setup flows. All
 routes on this page use the canonical `/api` namespace.
 
+Webhook resources include `signing: { enabled: boolean, createdAt: string | null }` in the list, single-resource view, and PUT response. `enabled` shows whether signing is enabled. `createdAt` is the time the current signing secret was created, or `null` for an unsigned webhook.
+
 ## GET /api/resources
 
 Returns resources.
@@ -57,6 +59,22 @@ Payload:
 | `meta.title` | No | Visible title. |
 
 Response: [ResourceView](types.md#resourceview).
+
+When this request creates a webhook, the response also returns `signingSecret` once. Updates of existing resources return only the resource view.
+
+## POST /api/resources/:fullname/signing-secret
+
+Generates a signing secret for an unsigned webhook or replaces its existing secret. The caller must control the resource's workspace.
+
+Returns `signingSecret` once and `createdAt` as an ISO timestamp. See [Webhooks](webhooks.md) for when the new secret takes effect.
+
+These rotation errors return HTTP `400` with a JSON body of the form `{ "error": { "message": "..." } }`.
+
+| Message | When it occurs |
+| --- | --- |
+| `access denied` | The caller does not control the resource’s workspace. |
+| `resource not found` | The resource does not exist. |
+| `not a webhook resource` | The resource is not a webhook. |
 
 ## DELETE /api/resources/:fullname
 

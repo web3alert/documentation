@@ -111,6 +111,8 @@ Respuesta:
 | `state` | Sí | Estado efectivo de la subscription: `on`, `off` o `blocked`. |
 | `issue` | No | Incidencia o motivo del estado actual, cuando esté disponible. |
 
+Tras un bloqueo automático por un webhook, al reanudar la suscripción el recuento de eventos consecutivos no entregados para ese webhook empieza en cero.
+
 ## POST /api/subscriptions/test
 
 Prueba una subscription existente o una draft subscription.
@@ -150,6 +152,8 @@ Payload: ninguno.
 
 Respuesta: [SubscriptionAlertLog[]](types.md#subscriptionalertlog).
 
+Consulta [Campos de los canales webhook](#webhook-channel-fields).
+
 ## GET /api/subscriptions/:id/alerts/history
 
 Devuelve logs de una subscription concreta.
@@ -167,3 +171,17 @@ Argumentos:
 Payload: ninguno.
 
 Respuesta: [SubscriptionAlertLog[]](types.md#subscriptionalertlog).
+
+Consulta [Campos de los canales webhook](#webhook-channel-fields).
+
+## Campos de los canales webhook {#webhook-channel-fields}
+
+En ambas respuestas de historial, los registros de webhooks en `channels` pueden incluir los siguientes campos.
+
+| Campo | Tipo | Descripción |
+| --- | --- | --- |
+| `eventId` | `string` | ID de la entrega, igual al de la cabecera `webhook-id`. |
+| `attempt` | `number` | Número de intento, a partir de `1`. |
+| `nextAttemptAt` | `string` | Marca de tiempo ISO en el primer registro cuando se programa un reintento. |
+
+Si un intento falla con un error que admite reintento y la cola está demasiado llena para programar el siguiente intento, el canal webhook del registro con estado `failed` incluye `reasonCode: "channel.webhook.retry_queue_full"`. Es el primer registro si falló el primer intento, o el registro final si falló un intento posterior.

@@ -11,6 +11,12 @@ https://web3alert.io
 Все публичные клиентские ручки используют канонические пути `/api/*`.
 Межсервисные ручки не входят в эту публичную документацию.
 
+## OpenAPI
+
+| Метод | Endpoint | Назначение |
+| --- | --- | --- |
+| `GET` | `/api/openapi.json` | [Документ OpenAPI 3.1 в формате JSON для API агентов.](api-openapi.md) |
+
 ## Auth
 
 Для пользовательских запросов используется personal access token:
@@ -212,6 +218,7 @@ X-RateLimit-Window: 60000
 | `GET` | `/api/resources` | Список resources. |
 | `GET` | `/api/resources/:fullname` | Получить resource. |
 | `PUT` | `/api/resources/:fullname` | Создать или обновить resource. |
+| `POST` | `/api/resources/:fullname/signing-secret` | Создать или заменить секрет подписи вебхука. |
 | `DELETE` | `/api/resources/:fullname` | Удалить resource. |
 | `POST` | `/api/resources/:fullname/setup-sessions` | Создать Telegram destination setup session. |
 | `GET` | `/api/resources/:fullname/setup-sessions/:id` | Получить статус setup session. |

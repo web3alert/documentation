@@ -33,13 +33,13 @@ Agent 工具在 account 当前选中的 workspace 中执行操作。如需让下
 | `get_account` | 返回账户 ID、名称、套餐、以 EUR 计的余额、套餐限制，以及可用的当前工作区启用订阅数和订阅总数。 |
 | `find_triggers` | 搜索已发布的目录和当前 workspace 中的 triggers。 |
 | `get_trigger` | 查看 trigger 的运行时 inputs、投递的事件字段以及可在 `conditions` 中使用的字段。 |
-| `list_webhooks` | 列出 workspace 中已注册的 webhooks 的 `fullname`、名称和 URL。 |
-| `add_webhook` | 注册使用 HTTPS 且不含凭据的 Webhook。如果检查时发现工作区已有同名资源，工具会拒绝请求并返回 `webhook_exists`。 |
+| `list_webhooks` | 列出 workspace 中已注册的 webhooks 的 `fullname`、名称和 URL。 `signed` 字段表示该 Webhook 是否有签名密钥。 |
+| `add_webhook` | 注册使用 HTTPS 且不含凭据的 Webhook。如果检查时发现工作区已有同名资源，工具会拒绝请求并返回 `webhook_exists`。 创建时仅返回一次 `signingSecret`。 |
 | `create_subscription` | 创建 subscription，将一个 trigger 的事件投递到一个 webhook。请提供必需的 inputs，也可通过 `conditions` 筛选事件。 |
 | `list_subscriptions` | 列出 subscriptions 的 ID、标题、状态、triggers、webhooks 和创建时间。 |
 | `set_subscription_state` | 暂停（`off`）或恢复（`on`）subscription。 |
 | `remove_subscription` | 删除 subscription 并停止投递。 |
-| `get_delivery_log` | 查看工作区或单个订阅的投递结果。 告警历史按工作区访问列表中第一个具有所有者角色的账户的套餐检查。如果没有这样的账户，API 会检查请求方账户的套餐。如果该套餐不含历史记录，工具返回 `not_in_plan`。 |
+| `get_delivery_log` | 查看工作区或单个订阅的投递结果。 告警历史按工作区访问列表中第一个具有所有者角色的账户的套餐检查。如果没有这样的账户，API 会检查请求方账户的套餐。如果该套餐不含历史记录，工具返回 `not_in_plan`。 Webhook 渠道条目包含 `eventId` 和 `attempt`，安排重试时还包含 `nextAttemptAt`。 |
 
 `limits.maxSubscriptions` 限制账户在所有工作区内创建的非 Free 项目启用订阅数。Free 套餐的上限为 5 个。Free 项目的订阅不计入上限。
 

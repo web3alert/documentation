@@ -4,7 +4,6 @@ Encontre eventos on-chain descodificados de EVM, Substrate, Solana e HyperCore n
 
 ## Em breve
 
-- Webhooks assinados com novas tentativas automáticas.
 - Início de sessão com carteira para os agentes poderem abrir as suas próprias contas.
 - Carregamentos em USDC através de x402.
 - Uma caixa de entrada para recuperar eventos perdidos.
@@ -75,30 +74,17 @@ Nesta sessão de exemplo, substitua os valores entre parênteses angulares pelos
 1. `get_account({})` → A conta, o plano, o espaço de trabalho atual, o saldo da carteira em EUR, os limites do plano e as contagens de subscrições, quando disponíveis.
 2. `find_triggers({"kind":"event","limit":5})` → Gatilhos correspondentes do catálogo publicado e do seu espaço de trabalho, com o `fullname` de cada um.
 3. `get_trigger({"trigger":"<trigger-fullname>"})` → Entradas de execução do gatilho, campos do evento e campos disponíveis para filtrar.
-4. `add_webhook({"name":"agent-events","url":"https://example.com/webhooks/web3alert"})` → `fullname`, nome e URL do webhook registado.
+4. `add_webhook({"name":"agent-events","url":"https://example.com/webhooks/web3alert"})` → `fullname`, nome e URL do webhook registado. Guarde o `signingSecret` devolvido para o seu recetor. A ferramenta devolve-o uma única vez.
 5. `create_subscription({"trigger":"<trigger-fullname>","webhook":"<webhook-fullname>","state":"on"})` → ID, título, estado resultante, gatilho e webhook da subscrição.
 6. `get_delivery_log({"subscriptionId":"<subscription-id>"})` → Resultados de entrega e `nextCursor` se houver mais resultados. O histórico de alertas usa o plano da primeira conta com a função de proprietário na lista de acesso do espaço de trabalho. Se essa conta não existir, a API verifica o plano da conta que faz o pedido. Se esse plano não incluir histórico, a ferramenta devolve `not_in_plan`.
 
-   Se o cursor não conseguir avançar porque mais de 500 entregas têm a mesma marca temporal, a ferramenta devolve `api_error`. Restrinja o filtro, por exemplo por estado, e comece de novo sem o cursor.
+   Se o cursor não conseguir avançar porque 500 ou mais entregas têm a mesma marca temporal, a ferramenta devolve `api_error`. Restrinja o filtro, por exemplo por estado, e comece de novo sem o cursor.
 
 Confirme que o `state` devolvido para a subscrição é `on`. A partir daí, podem chegar os eventos correspondentes. Use um nome de webhook novo ou procure um já registado com `list_webhooks`.
 
 ## Corpo do webhook
 
-A Web3alert envia um pedido HTTP POST com um corpo JSON neste formato. `header` contém o título ou nome do projeto, `message` contém o texto longo ou curto do alerta e `object` contém os dados do evento ou um objeto vazio. `icon`, `cover` e `links` aparecem quando são fornecidos.
-
-```json
-{
-  "header": "Example project",
-  "icon": "https://example.com/icon.png",
-  "cover": "https://example.com/cover.png",
-  "message": "Example alert",
-  "links": [{ "text": "View event", "url": "https://example.com/event" }],
-  "object": {}
-}
-```
-
-As assinaturas de webhook e as novas tentativas automáticas estarão disponíveis em breve.
+O seu webhook recebe um corpo JSON com um ID de evento. Os novos webhooks recebem entregas assinadas, e o Web3alert volta a tentar automaticamente as entregas nos casos previstos. Consulte [Webhooks](webhooks.md) para ver o formato do corpo e saber como verificar assinaturas, lidar com novas tentativas e evitar duplicados.
 
 ## Limites
 
