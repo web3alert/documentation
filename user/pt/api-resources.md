@@ -5,6 +5,8 @@ setup. Todas as rotas desta página usam o namespace canónico `/api`.
 
 Os recursos webhook incluem `signing: { enabled: boolean, createdAt: string | null }` na lista, na vista de um recurso e na resposta a PUT. `enabled` indica se a assinatura está ativa. `createdAt` indica quando foi criado o segredo de assinatura atual, ou é `null` se o webhook não estiver assinado.
 
+Transferir um projeto para outro espaço de trabalho remove os segredos de assinatura dos webhooks transferidos com o projeto. Esses webhooks apresentam `signing.enabled: false`. Quem controla o novo espaço de trabalho pode [gerar um novo segredo](#post-api-resources-fullname-signing-secret) para cada webhook transferido.
+
 ## GET /api/resources
 
 Devolve resources.

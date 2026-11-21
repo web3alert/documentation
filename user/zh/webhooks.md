@@ -129,11 +129,15 @@ def verify_webhook(raw_body, headers, secret, now=None):
 
 可以在应用中或通过[`POST /api/resources/{fullname}/signing-secret`](api-resources.md#post-api-resources-fullname-signing-secret)生成或轮换密钥。新密钥会在约 10 秒内应用于投递。在此之前，如果已有旧密钥，投递仍使用旧密钥。新密钥生效后，Web3alert 停止使用旧密钥签名。签名功能推出之前创建的端点会继续接收未签名的投递，直到生成密钥。
 
+将项目转移到另一个工作区时，随项目转移的 Webhook 的签名密钥会被删除。这些 Webhook 会显示为未签名。要重新为投递签名，有权管理新工作区的用户必须为每个转移的 Webhook 生成新密钥。
+
 ## 重试
 
 `2xx` 响应表示接收端已接受投递。请尽快响应，因为请求默认在 4 秒后超时。遇到 HTTP `429`、任何 `5xx` 响应、请求超时或收到响应前的网络错误（例如连接重置、DNS 或 TLS 故障）时，Web3alert 会重试。其他结果会结束投递。测试投递不会重试。
 
-Web3alert 会跟随重定向，在启用签名时向重定向目标发送已签名的请求，并根据最终响应决定投递结果。 如果 Web3alert 的 Webhook 发送服务短暂不可用，投递会等待并重试，且不消耗尝试次数，但首次尝试计入次数，并会在投递日志中记录原因 `webhook service unavailable` 和原因代码 `channel.webhook.retry_scheduled`。
+Web3alert 会跟随重定向，在启用签名时向重定向目标发送已签名的请求，并根据最终响应决定投递结果。
+
+如果安排的重试到期时 Web3alert 的 Webhook 发送服务不可用，Web3alert 会等待后再试，尝试编号保持不变。如果首次尝试时发送服务不可用，Web3alert 会安排第 2 次尝试，原因是 `webhook service unavailable`，原因代码是 `channel.webhook.retry_scheduled`。如果等待发送服务响应超时，本次尝试计为可重试的失败，原因是 `webhook service timed out`，并按重试计划处理。
 
 | 第几次尝试失败后 | 距离下一次尝试的最短等待时间 |
 | --- | --- |
@@ -173,6 +177,8 @@ Web3alert 会跟随重定向，在启用签名时向重定向目标发送已签�
 
 首条记录的状态反映该事件的所有投递渠道。如果其他渠道投递成功，但 Webhook 投递因可重试的错误而失败，则事件记录的状态为 `delivered`，其中 Webhook 渠道显示 `ok: false`。如果安排了重试，事件记录中 Webhook 渠道的 `reasonCode` 为 `channel.webhook.retry_scheduled`。如果重试队列无法接收投递（队列已满或投递超过 256 KB），事件记录中的 Webhook 渠道显示 `channel.webhook.retry_queue_full`。
 
-经过重试的投递得出最终结果时，第二条记录会记下该结果，沿用相同的 `eventId`，且仅包含该 Webhook 渠道。成功时记录状态为 `delivered`，被拒绝或重试耗尽时为 `failed`，收到 HTTP `410` 时为 `blocked`。中途失败后仍会继续重试的尝试不会生成投递日志条目。
+经过重试的投递的最终结果会单独记录，沿用相同的 `eventId`，且仅包含该 Webhook 渠道。成功时记录状态为 `delivered`，被拒绝或重试耗尽时为 `failed`，收到 HTTP `410` 时为 `blocked`。中途失败后仍会继续重试的尝试不会生成投递日志条目。
 
 如果后续尝试后重试队列无法接收投递，最终记录的状态为 `failed`，其 Webhook 渠道会显示 `channel.webhook.retry_queue_full`。
+
+最终结果写入后如果系统崩溃，同一次投递可能会新增另一条最终记录。投递采用至少一次语义，请按 `eventId` 对日志记录分组。

@@ -129,11 +129,15 @@ Ao criar um webhook na aplicação, o Web3alert mostra o segredo uma única vez.
 
 Gere ou rode o segredo na aplicação ou através da [`POST /api/resources/{fullname}/signing-secret`](api-resources.md#post-api-resources-fullname-signing-secret). O novo segredo aplica-se às entregas em cerca de 10 segundos. Até lá, as entregas usam o segredo anterior, se existir. Quando o novo entra em vigor, o Web3alert deixa de assinar com o anterior. Os endpoints criados antes de a assinatura estar disponível continuam sem assinatura até gerar um segredo.
 
+Transferir um projeto para outro espaço de trabalho remove os segredos de assinatura dos webhooks transferidos com o projeto. Esses webhooks passam a aparecer sem assinatura. Para voltar a assinar as entregas, alguém com controlo sobre o novo espaço de trabalho tem de gerar um novo segredo para cada webhook transferido.
+
 ## Novas tentativas
 
 Uma resposta `2xx` indica que o recetor aceitou a entrega. Responda rapidamente porque por predefinição, o pedido expira após 4 segundos. O Web3alert volta a tentar a entrega perante HTTP `429`, qualquer resposta `5xx`, um pedido que exceda o tempo limite ou um erro de rede antes de receber uma resposta, como uma ligação interrompida ou uma falha de DNS ou TLS. Os restantes resultados terminam a entrega. As entregas de teste nunca são repetidas.
 
-O Web3alert segue os redirecionamentos, envia o pedido assinado para o destino do redirecionamento se a assinatura estiver ativa e usa a resposta final para determinar o resultado. Se o serviço de envio de webhooks do Web3alert ficar brevemente indisponível, a entrega aguarda e é repetida sem gastar uma tentativa, exceto na primeira, que conta e regista `webhook service unavailable` com `channel.webhook.retry_scheduled`.
+O Web3alert segue os redirecionamentos, envia o pedido assinado para o destino do redirecionamento se a assinatura estiver ativa e usa a resposta final para determinar o resultado.
+
+Se o serviço de envio de webhooks do Web3alert estiver indisponível quando chegar a altura de uma nova tentativa, o Web3alert aguarda e volta a tentar sem avançar o número da tentativa. Se o serviço estiver indisponível na primeira tentativa, o Web3alert agenda a tentativa 2 com o motivo `webhook service unavailable` e o código `channel.webhook.retry_scheduled`. Se o serviço de envio exceder o tempo limite, a tentativa conta como uma falha que permite nova tentativa, com o motivo `webhook service timed out`, e é repetida de acordo com o calendário.
 
 | Após a tentativa falhada | Espera mínima até à tentativa seguinte |
 | --- | --- |
@@ -173,6 +177,8 @@ O histórico de entregas é guardado nos planos pagos. As [rotas de histórico d
 
 O estado da primeira entrada reflete todos os canais de entrega do evento. Se outro canal entregou o evento e o webhook falhou com um erro que permita nova tentativa, a entrada do evento tem o estado `delivered` e o canal webhook tem `ok: false`. O campo `reasonCode` do canal webhook da entrada do evento indica `channel.webhook.retry_scheduled` quando é agendada uma nova tentativa, ou `channel.webhook.retry_queue_full` quando a fila de novas tentativas não pode aceitar a entrega (por estar cheia ou por a entrega exceder 256 KB).
 
-Quando uma entrega com novas tentativas chega a um resultado final, uma segunda entrada regista esse resultado com o mesmo `eventId` e apenas o canal webhook. O estado da entrada é `delivered` se for entregue, `failed` se for rejeitada ou esgotar as tentativas, ou `blocked` se receber HTTP `410`. As falhas intermédias seguidas de outra tentativa não geram uma entrada no registo.
+O resultado final de uma entrega com novas tentativas fica numa entrada separada com o mesmo `eventId` e apenas o canal webhook. O estado da entrada é `delivered` se for entregue, `failed` se for rejeitada ou esgotar as tentativas, ou `blocked` se receber HTTP `410`. As falhas intermédias seguidas de outra tentativa não geram uma entrada no registo.
 
 Se a fila de novas tentativas não puder aceitar a entrega após uma tentativa posterior, a entrada final tem o estado `failed` e indica `channel.webhook.retry_queue_full` no canal webhook.
+
+Uma falha do sistema depois de o resultado final ser registado pode criar outra entrada final para a mesma entrega. A entrega é feita pelo menos uma vez, pelo que deve agrupar as entradas por `eventId`.

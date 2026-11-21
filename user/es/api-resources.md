@@ -5,6 +5,8 @@ setup. Todas las rutas de esta página usan el namespace canónico `/api`.
 
 Los recursos webhook incluyen `signing: { enabled: boolean, createdAt: string | null }` en la lista, en la vista de un recurso y en la respuesta de PUT. `enabled` indica si la firma está habilitada. `createdAt` indica cuándo se creó el secreto de firma actual, o es `null` si el webhook no está firmado.
 
+Al transferir un proyecto a otro espacio de trabajo, se eliminan los secretos de firma de los webhooks transferidos con el proyecto. Esos webhooks muestran `signing.enabled: false`. Quien controle el nuevo espacio de trabajo puede [generar un secreto nuevo](#post-api-resources-fullname-signing-secret) para cada webhook transferido.
+
 ## GET /api/resources
 
 Devuelve resources.

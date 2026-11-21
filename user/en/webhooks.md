@@ -129,11 +129,15 @@ Web3alert shows the secret once when you create a webhook in the app or returns 
 
 Generate or rotate the secret in the app or through [`POST /api/resources/{fullname}/signing-secret`](api-resources.md#post-api-resources-fullname-signing-secret). The new secret applies to deliveries within about 10 seconds. Until it takes effect, deliveries use the old secret if there was one. Once the new secret takes effect, Web3alert stops signing with the old one. Endpoints created before signing was available stay unsigned until you generate a secret.
 
+Transferring a project to another workspace removes the signing secrets of the webhooks that move with it. Those webhooks appear as unsigned. To sign deliveries again, someone who controls the new workspace must generate a fresh secret for each moved webhook.
+
 ## Retries
 
 A `2xx` response means the receiver accepted the delivery. Respond quickly because requests time out after 4 seconds by default. Web3alert retries HTTP `429`, any `5xx` response, timeouts, and network errors that occur before a response, such as a connection reset or a DNS or TLS failure. All other outcomes end the delivery. Test deliveries are never retried.
 
-Web3alert follows redirects, sends the signed request to the redirect target when signing is enabled, and uses the final response to decide the outcome. If Web3alert's webhook sender is briefly unavailable, the delivery waits and is retried without using an attempt, except on the first attempt, which counts and is logged with the reason `webhook service unavailable` and the code `channel.webhook.retry_scheduled`.
+Web3alert follows redirects, sends the signed request to the redirect target when signing is enabled, and uses the final response to decide the outcome.
+
+When a retry is due and Web3alert's webhook sender is unavailable, Web3alert waits and tries again without advancing the attempt count. If the sender is unavailable on the first attempt, Web3alert schedules attempt 2 with the reason `webhook service unavailable` and the code `channel.webhook.retry_scheduled`. A sender timeout counts as a retryable failure with the reason `webhook service timed out` and follows the retry schedule.
 
 | After failed attempt | Minimum wait before the next attempt |
 | --- | --- |
@@ -173,6 +177,8 @@ Delivery history is kept on paid plans. The [subscription history routes](api-su
 
 The first entry's status reflects all delivery channels for the event. If another channel delivered and the webhook failed with a retryable error, the event's entry has status `delivered` and its webhook channel has `ok: false`. The webhook channel of the event's entry has `reasonCode` set to `channel.webhook.retry_scheduled` when a retry is scheduled, or `channel.webhook.retry_queue_full` when the retry queue cannot accept the delivery (it is full or the delivery exceeds 256 KB).
 
-When a retried delivery reaches a final outcome, a second entry records that outcome and contains only the webhook channel, with the same `eventId`. The entry status is `delivered` on success, `failed` for a rejection or exhausted retries, or `blocked` for HTTP `410`. Intermediate failures followed by another retry produce no delivery-log entry.
+The final outcome of a retried delivery is recorded in a separate entry with the same `eventId` and only the webhook channel. The entry status is `delivered` on success, `failed` for a rejection or exhausted retries, or `blocked` for HTTP `410`. Intermediate failures followed by another retry produce no delivery-log entry.
 
 If the retry queue cannot accept the delivery after a later attempt, the final entry has status `failed` and shows `channel.webhook.retry_queue_full` on its webhook channel.
+
+A crash after a final outcome is logged can create another final entry for the same delivery. Delivery is at least once, so group log entries by `eventId`.

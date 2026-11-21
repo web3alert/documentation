@@ -129,11 +129,15 @@ Al crear un webhook en la aplicación, Web3alert muestra el secreto una sola vez
 
 Genera o rota el secreto en la aplicación o mediante [`POST /api/resources/{fullname}/signing-secret`](api-resources.md#post-api-resources-fullname-signing-secret). El secreto nuevo se aplica a las entregas en unos 10 segundos. Hasta entonces se usa el anterior, si lo había. Cuando el nuevo entra en vigor, Web3alert deja de firmar con el anterior. Los endpoints creados antes de que estuviera disponible la firma siguen sin firmar hasta que generes un secreto.
 
+Al transferir un proyecto a otro espacio de trabajo, se eliminan los secretos de firma de los webhooks transferidos con el proyecto. Esos webhooks aparecen sin firma. Para volver a firmar las entregas, alguien con control sobre el nuevo espacio de trabajo debe generar un secreto nuevo para cada webhook transferido.
+
 ## Reintentos
 
 Una respuesta `2xx` indica que el receptor aceptó la entrega. Responde rápido porque las solicitudes tienen un tiempo de espera predeterminado de 4 segundos. Web3alert reintenta las entregas ante HTTP `429`, cualquier respuesta `5xx`, un tiempo de espera agotado o un error de red antes de recibir una respuesta, como un corte de conexión o un fallo de DNS o TLS. Los demás resultados dan por terminada la entrega. Las entregas de prueba nunca se reintentan.
 
-Web3alert sigue las redirecciones, envía la solicitud firmada al destino de la redirección si la firma está habilitada y usa la respuesta final para decidir el resultado. Si el servicio de envío de webhooks de Web3alert no está disponible durante un breve periodo, la entrega espera y se reintenta sin consumir un intento, salvo el primero, que cuenta y registra `webhook service unavailable` con `channel.webhook.retry_scheduled`.
+Web3alert sigue las redirecciones, envía la solicitud firmada al destino de la redirección si la firma está habilitada y usa la respuesta final para decidir el resultado.
+
+Si el servicio de envío de webhooks de Web3alert no está disponible cuando toca reintentar, Web3alert espera y vuelve a intentarlo sin aumentar el número de intentos. Si el servicio no está disponible en el primer intento, Web3alert programa el intento 2 con el motivo `webhook service unavailable` y el código `channel.webhook.retry_scheduled`. Si se agota el tiempo de espera del servicio de envío, el intento cuenta como un fallo que admite reintento, con el motivo `webhook service timed out`, y se reintenta según el calendario.
 
 | Después del intento fallido | Espera mínima hasta el siguiente intento |
 | --- | --- |
@@ -173,6 +177,8 @@ El historial de entregas se conserva en los planes de pago. Las [rutas de histor
 
 El estado del primer registro refleja todos los canales de entrega del evento. Si otro canal entregó el evento y el webhook falló con un error que admite reintento, el registro del evento tiene estado `delivered` y su canal webhook tiene `ok: false`. El campo `reasonCode` del canal webhook del registro del evento indica `channel.webhook.retry_scheduled` si se programa un reintento, o `channel.webhook.retry_queue_full` si la cola de reintentos no puede aceptar la entrega (porque está llena o la entrega supera los 256 KB).
 
-Cuando una entrega con reintentos llega a un resultado final, un segundo registro recoge ese resultado con el mismo `eventId` y solo el canal webhook. El estado del registro es `delivered` si se entrega, `failed` si se rechaza o agota los reintentos, o `blocked` si recibe HTTP `410`. Los fallos intermedios seguidos de otro reintento no generan un registro de entrega.
+El resultado final de una entrega con reintentos se guarda en un registro aparte con el mismo `eventId` y solo el canal webhook. El estado del registro es `delivered` si se entrega, `failed` si se rechaza o agota los reintentos, o `blocked` si recibe HTTP `410`. Los fallos intermedios seguidos de otro reintento no generan un registro de entrega.
 
 Si la cola de reintentos no puede aceptar la entrega tras un intento posterior, el registro final tiene estado `failed` y muestra `channel.webhook.retry_queue_full` en su canal webhook.
+
+Un fallo del sistema tras registrar el resultado final puede generar otro registro final para la misma entrega. La entrega es al menos una vez, así que agrupa los registros por `eventId`.

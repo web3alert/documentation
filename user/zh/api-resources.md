@@ -4,6 +4,8 @@ Resources endpoints 用于管理 delivery resources 及其公开 setup flows。�
 
 Webhook 资源在列表、单个资源视图和 PUT 响应中包含 `signing: { enabled: boolean, createdAt: string | null }`。`enabled` 表示是否启用签名。`createdAt` 是当前签名密钥的创建时间，未签名的 Webhook 则为 `null`。
 
+将项目转移到另一个工作区时，随项目转移的 Webhook 的签名密钥会被删除。这些 Webhook 会返回 `signing.enabled: false`。有权管理新工作区的用户可以为每个转移的 Webhook [生成新密钥](#post-api-resources-fullname-signing-secret)。
+
 ## GET /api/resources
 
 返回 resources。

@@ -5,6 +5,8 @@ routes on this page use the canonical `/api` namespace.
 
 Webhook resources include `signing: { enabled: boolean, createdAt: string | null }` in the list, single-resource view, and PUT response. `enabled` shows whether signing is enabled. `createdAt` is the time the current signing secret was created, or `null` for an unsigned webhook.
 
+Transferring a project to another workspace removes the signing secrets of the webhooks that move with it. Those webhooks report `signing.enabled: false`. A controller of the new workspace can [generate a fresh secret](#post-api-resources-fullname-signing-secret) for each moved webhook.
+
 ## GET /api/resources
 
 Returns resources.
