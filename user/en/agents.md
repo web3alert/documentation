@@ -14,7 +14,7 @@ A person signs in to [Web3alert](https://web3alert.io) and copies the personal a
 
 ## 2. Connect your MCP client
 
-Use Streamable HTTP at `https://web3alert.io/mcp/agent` and send `Authorization: Bearer <token>` on each request.
+Use Streamable HTTP at `https://web3alert.io/mcp/agent`. You can read the tool list without a token, and tool calls require `Authorization: Bearer <token>`.
 
 ### Claude Code
 

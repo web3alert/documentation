@@ -5,19 +5,21 @@ MCP is available on `Free`, `Advanced`, and `Pro`.
 - Use `https://web3alert.io/mcp/agent` to subscribe to decoded on-chain events and receive them on a webhook.
 - Use `https://web3alert.io/mcp` for the full set of tools to create and edit Web3alert marketplace projects, triggers, templates, subscriptions, resources, and data sources, and to read diagnostic data.
 
+The agent endpoint is listed in the MCP Registry as `io.web3alert/agent`. See the [public MCP repository](https://github.com/web3alert/mcp) for server details.
+
 ## Token
 
-To connect, you need a personal access token from [Account parameters](account.md#personal-access-token).
+The agent endpoint (`/mcp/agent`) accepts `initialize`, `ping`, notifications, and `tools/list` without a token. Tool calls (`tools/call`) require `Authorization: Bearer <token>`. A tool call without the header returns HTTP `401` with instructions for providing a token.
 
-The token gives MCP server access to Web3alert API on behalf of the current account. The level of available actions depends on the account tier and the user's roles in workspace.
+The authoring endpoint (`/mcp`) requires `Authorization: Bearer <token>` on every request. Both endpoints accept tokens only in that header. Either endpoint returns HTTP `401` if you send an invalid token, including on agent discovery requests.
 
-Send the token on every HTTP request in the `Authorization: Bearer <token>` header. The server does not accept tokens in the query string or request body.
+Get a personal access token from [Account parameters](account.md#personal-access-token). The token gives MCP server access to Web3alert API on behalf of the current account. The level of available actions depends on the account tier and the user's roles in workspace.
 
-After revocation, the API rejects the token immediately. While MCP still has a cached verification, an agent tool call that reaches the API returns `access_denied`. `initialize` and `tools/list` may still succeed for up to 30 seconds on a cached verification. When MCP rechecks the revoked token, it returns HTTP `401`.
+After revocation, the API rejects the token immediately. While MCP still has a cached verification, an agent tool call that reaches the API returns `access_denied`. `initialize` and `tools/list` requests that carry the revoked token may still succeed for up to 30 seconds on a cached verification. When MCP rechecks the revoked token, it returns HTTP `401`.
 
 | HTTP status | What to do |
 | --- | --- |
-| `401` | The bearer token is missing, invalid, unknown, or revoked. Send the header with a valid token. Get a new token if you do not have one or the server no longer recognizes it. |
+| `401` | A required bearer token is missing, or the supplied token is invalid, unknown, or revoked. Send the header with a valid token. Get a new token if you do not have one or the server no longer recognizes it. |
 | `403` | The client origin was rejected (`forbidden_origin`) or the account failed MCP access checks (`mcp_access_denied`). Check the client's `Origin` header or your account details, respectively. |
 | `429` | The API rate-limited token verification. Wait for the delay in `Retry-After` before retrying. |
 | `503` | Token verification is temporarily unavailable. Wait for the delay in `Retry-After` and retry with the same token. |
