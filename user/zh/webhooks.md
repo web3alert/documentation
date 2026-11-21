@@ -140,7 +140,9 @@ def verify_webhook(raw_body, headers, secret, now=None):
 
 `2xx` 响应表示接收端已接受投递。请尽快响应，因为请求默认在 4 秒后超时。遇到 HTTP `429`、任何 `5xx` 响应、请求超时或收到响应前的网络错误（例如连接重置、DNS 或 TLS 故障）时，Web3alert 会重试。其他结果会结束投递。测试投递不会重试。
 
-Web3alert 会跟随重定向，在启用签名时向重定向目标发送已签名的请求，并根据最终响应决定投递结果。
+默认情况下，Web3alert 会跟随接收端返回的重定向，并根据最终响应决定投递结果。收到 `307` 或 `308` 响应时，Web3alert 会向新 URL 重新发送 `POST` 请求，已启用签名时会保留签名。收到 `303` 响应时，请求会改为不带请求体和签名的 `GET` 请求。如果该 `GET` 请求收到 `2xx` 响应，则视为投递成功。
+
+请直接配置最终的 HTTPS URL，确保启用签名的 Webhook 每次都收到已签名的 `POST` 请求。
 
 如果安排的重试到期时 Web3alert 的 Webhook 发送服务不可用，Web3alert 会等待后再试，尝试编号保持不变。如果首次尝试时发送服务不可用，Web3alert 会安排第 2 次尝试，原因是 `webhook service unavailable`，原因代码是 `channel.webhook.retry_scheduled`。如果等待发送服务响应超时，本次尝试计为可重试的失败，原因是 `webhook service timed out`，并按重试计划处理。
 
@@ -172,7 +174,9 @@ Web3alert 会跟随重定向，在启用签名时向重定向目标发送已签�
 | --- | --- |
 | `eventId` | 本次投递的 `webhook-id`。 |
 | `attempt` | 尝试次数编号，从 `1` 开始。 |
-| `nextAttemptAt` | 有待处理的 Webhook 重试时，值为 ISO 格式的时间戳。没有待处理的重试时，REST 历史记录会省略此字段，MCP 工具 `get_delivery_log` 则将此字段设为 `null`。 |
+| `nextAttemptAt` | 写入此条目时为下一次尝试安排的时间，采用 ISO 格式。如果条目未记录已安排的重试，REST 历史记录会省略此字段，MCP 工具 `get_delivery_log` 则返回 `null`。 |
+
+即使重试已经执行或取消，该时间戳也保持不变。要查看投递结果，请查找具有相同 `eventId` 的后续条目。
 
 | `reasonCode` | 含义 |
 | --- | --- |

@@ -69,6 +69,8 @@ claude mcp add --transport http web3alert-agent https://web3alert.io/mcp/agent \
 
 ## 3. 创建第一个订阅
 
+智能体需要一个可公开访问的 HTTPS 端点才能接收事件。没有此类端点的智能体需要等到收件箱上线后才能接收事件。
+
 在本示例中，将尖括号内的值替换为前面调用的结果。将示例地址替换为自己控制的 Webhook HTTPS 地址，地址中不能包含用户名或密码。选择事件触发器，并提供 `get_trigger` 返回的必填 `inputs`。此示例假设触发器没有必填输入。
 
 1. `get_account({})` → 账户、套餐、当前工作区、以 EUR 计的余额、套餐限制以及可用的订阅计数。

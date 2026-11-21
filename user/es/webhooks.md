@@ -140,7 +140,9 @@ Al transferir un proyecto a otro espacio de trabajo, se eliminan los secretos de
 
 Una respuesta `2xx` indica que el receptor aceptó la entrega. Responde rápido porque las solicitudes tienen un tiempo de espera predeterminado de 4 segundos. Web3alert reintenta las entregas ante HTTP `429`, cualquier respuesta `5xx`, un tiempo de espera agotado o un error de red antes de recibir una respuesta, como un corte de conexión o un fallo de DNS o TLS. Los demás resultados dan por terminada la entrega. Las entregas de prueba nunca se reintentan.
 
-Web3alert sigue las redirecciones, envía la solicitud firmada al destino de la redirección si la firma está habilitada y usa la respuesta final para decidir el resultado.
+De forma predeterminada, Web3alert sigue las redirecciones del receptor y usa la respuesta final para determinar el resultado. Una respuesta `307` o `308` repite el `POST` firmado en la nueva URL si la firma está habilitada. Una respuesta `303` cambia la solicitud a un `GET` sin cuerpo ni firma. Si ese `GET` recibe una respuesta `2xx`, la entrega se considera completada.
+
+Configura directamente la URL HTTPS final para que cada entrega a tu webhook con firma habilitada sea un `POST` firmado.
 
 Si el servicio de envío de webhooks de Web3alert no está disponible cuando toca reintentar, Web3alert espera y vuelve a intentarlo sin aumentar el número de intentos. Si el servicio no está disponible en el primer intento, Web3alert programa el intento 2 con el motivo `webhook service unavailable` y el código `channel.webhook.retry_scheduled`. Si se agota el tiempo de espera del servicio de envío, el intento cuenta como un fallo que admite reintento, con el motivo `webhook service timed out`, y se reintenta según el calendario.
 
@@ -172,7 +174,9 @@ El historial de entregas se conserva en los planes de pago. Las [rutas de histor
 | --- | --- |
 | `eventId` | El `webhook-id` de la entrega. |
 | `attempt` | Número de intento, a partir de `1`. |
-| `nextAttemptAt` | Marca de tiempo ISO si hay un reintento pendiente para el webhook. Si no hay ninguno pendiente, el historial REST omite el campo y la herramienta MCP `get_delivery_log` le asigna `null`. |
+| `nextAttemptAt` | Marca de tiempo ISO para la que se había programado el siguiente intento al guardar el registro. Si el registro no indica un reintento programado, el historial REST omite el campo y la herramienta MCP `get_delivery_log` devuelve `null`. |
+
+La marca de tiempo permanece fija aunque el reintento se ejecute o se cancele. Para conocer el resultado de la entrega, busca un registro posterior con el mismo `eventId`.
 
 | `reasonCode` | Significado |
 | --- | --- |

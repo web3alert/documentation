@@ -182,7 +182,9 @@ Payload: 无。
 | --- | --- | --- |
 | `eventId` | `string` | 投递 ID，与 `webhook-id` 请求头相同。 |
 | `attempt` | `number` | 尝试次数编号，从 `1` 开始。 |
-| `nextAttemptAt` | `string` | 有待处理的 Webhook 重试时，值为 ISO 格式的时间戳。没有待处理的重试时，REST 历史记录路由省略此字段。 |
+| `nextAttemptAt` | `string` | 写入此条目时为下一次尝试安排的时间，采用 ISO 格式。如果条目未记录已安排的重试，REST 历史记录路由会省略此字段。 |
+
+即使重试已经执行或取消，该时间戳也保持不变。要查看投递结果，请查找具有相同 `eventId` 的后续条目。
 
 首条记录的状态反映该事件的所有投递渠道。如果其他渠道投递成功，但 Webhook 投递因可重试的错误而失败，则事件记录的状态为 `delivered`，其中 Webhook 渠道显示 `ok: false`。如果安排了重试，事件记录中 Webhook 渠道的 `reasonCode` 为 `channel.webhook.retry_scheduled`。如果重试队列无法接收投递（队列已满，或排队的投递连同事件数据超过 256 KB），事件记录中的 Webhook 渠道显示 `channel.webhook.retry_queue_full`。
 

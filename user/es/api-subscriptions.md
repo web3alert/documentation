@@ -182,7 +182,9 @@ En ambas respuestas de historial, los registros de webhooks en `channels` pueden
 | --- | --- | --- |
 | `eventId` | `string` | ID de la entrega, igual al de la cabecera `webhook-id`. |
 | `attempt` | `number` | Número de intento, a partir de `1`. |
-| `nextAttemptAt` | `string` | Marca de tiempo ISO si hay un reintento pendiente para el webhook. Las rutas REST de historial omiten este campo si no hay ningún reintento pendiente. |
+| `nextAttemptAt` | `string` | Marca de tiempo ISO para la que se había programado el siguiente intento al guardar el registro. Las rutas REST de historial omiten el campo si el registro no indica un reintento programado. |
+
+La marca de tiempo permanece fija aunque el reintento se ejecute o se cancele. Para conocer el resultado de la entrega, busca un registro posterior con el mismo `eventId`.
 
 El estado del primer registro refleja todos los canales de entrega del evento. Si otro canal entregó el evento y el webhook falló con un error que admite reintento, el registro del evento tiene estado `delivered` y su canal webhook tiene `ok: false`. El campo `reasonCode` del canal webhook del registro del evento indica `channel.webhook.retry_scheduled` si se programa un reintento, o `channel.webhook.retry_queue_full` si la cola de reintentos no puede aceptar la entrega (porque está llena o la entrega en cola, incluidos los datos del evento, supera los 256 KB).
 

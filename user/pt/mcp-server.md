@@ -24,6 +24,12 @@ Após a revogação, a API rejeita o token imediatamente. Enquanto o MCP mantive
 
 Por predefinição, cada processo do servidor permite 120 chamadas a ferramentas por minuto e por account, partilhadas pelos dois endpoints e por todos os tokens do account. Quando esse limite é atingido, a ferramenta devolve `rate_limited` com `retryAfter` em segundos.
 
+## Atualizar clientes existentes
+
+O endpoint `/mcp` passa a aceitar o token apenas no cabeçalho `Authorization: Bearer <token>` em cada pedido. Os pedidos que enviam o token apenas na cadeia de consulta ou no corpo recebem uma resposta HTTP `401`. O servidor não mantém estado nem cria sessões.
+
+Configure o cliente para enviar o cabeçalho e retire o token do URL ou do corpo do pedido. Consulte os [exemplos de configuração do endpoint remoto](#remote-mcp-endpoint).
+
 ## Endpoint para agentes
 
 As ferramentas para agentes atuam no workspace atual do account. Para usar outro workspace na chamada seguinte, selecione-o na aplicação Web3alert.
@@ -39,7 +45,9 @@ As ferramentas para agentes atuam no workspace atual do account. Para usar outro
 | `list_subscriptions` | Lista os IDs, títulos, estados, triggers, webhooks e datas de criação das subscriptions. |
 | `set_subscription_state` | Pausa (`off`) ou retoma (`on`) uma subscription. |
 | `remove_subscription` | Elimina uma subscrição. As novas tentativas de webhook param em cerca de 10 segundos. Uma tentativa prevista para esse intervalo ainda pode ser enviada. |
-| `get_delivery_log` | Mostra os resultados de entrega do espaço de trabalho ou de uma subscrição. O histórico de alertas usa o plano da primeira conta com a função de proprietário na lista de acesso do espaço de trabalho. Se essa conta não existir, a API verifica o plano da conta que faz o pedido. Se esse plano não incluir histórico, a ferramenta devolve `not_in_plan`. As entradas dos canais webhook incluem `eventId` e `attempt`. `nextAttemptAt` é uma marca temporal em formato ISO quando há uma nova tentativa pendente para o webhook e `null` nos restantes casos. |
+| `get_delivery_log` | Mostra os resultados de entrega do espaço de trabalho ou de uma subscrição. O histórico de alertas usa o plano da primeira conta com a função de proprietário na lista de acesso do espaço de trabalho. Se essa conta não existir, a API verifica o plano da conta que faz o pedido. Se esse plano não incluir histórico, a ferramenta devolve `not_in_plan`. As entradas dos canais webhook incluem `eventId` e `attempt`. `nextAttemptAt` indica a data e hora em formato ISO para as quais estava agendada a próxima tentativa quando a entrada foi registada, ou `null` se a entrada não registar uma nova tentativa agendada. |
+
+O valor de `nextAttemptAt` mantém-se fixo mesmo depois de a tentativa ocorrer ou ser cancelada. Para saber o resultado da entrega, procure uma entrada posterior com o mesmo `eventId`.
 
 `limits.maxSubscriptions` limita as subscrições ativas que criou para projetos que não sejam Free, somadas entre todos os espaços de trabalho. O limite de Free é de 5. As subscrições de projetos Free ficam fora do limite.
 
@@ -50,8 +58,7 @@ Neste endpoint, os agentes não podem criar, editar ou eliminar triggers, projec
 ### Claude Code
 
 ```bash
-claude mcp add --transport http web3alert-agent https://web3alert.io/mcp/agent \
-  --header "Authorization: Bearer YOUR_PERSONAL_ACCESS_TOKEN"
+printf 'Web3alert token: ' && read -rs WEB3ALERT_TOKEN && echo && [ -n "$WEB3ALERT_TOKEN" ] && claude mcp add --scope user --transport http web3alert-agent https://web3alert.io/mcp/agent --header "Authorization: Bearer $WEB3ALERT_TOKEN"
 ```
 
 ### Claude Desktop e Cursor
@@ -97,6 +104,12 @@ Para uma ligação gerida pelo editor, adicione a entrada em `servers` em `.vsco
 ```
 
 ## Remote MCP Endpoint
+
+Para adicionar este endpoint ao Claude Code, execute o comando em Bash ou Zsh e introduza o token quando lhe for pedido. O token fica oculto enquanto o introduz.
+
+```bash
+printf 'Web3alert token: ' && read -rs WEB3ALERT_TOKEN && echo && [ -n "$WEB3ALERT_TOKEN" ] && claude mcp add --scope user --transport http web3alert https://web3alert.io/mcp --header "Authorization: Bearer $WEB3ALERT_TOKEN"
+```
 
 Use o mesmo ficheiro de configuração do Claude Desktop ou do Cursor. Para [VS Code](#vs-code), use o mesmo exemplo de `servers` com o URL `https://web3alert.io/mcp`.
 

@@ -24,6 +24,12 @@ After revocation, the API rejects the token immediately. While MCP still has a c
 
 Both endpoints share a default budget of 120 tool calls per minute per account on each server process, across all tokens for that account. If you use up this budget, the tool returns `rate_limited` with `retryAfter` in seconds.
 
+## Upgrading existing clients
+
+The `/mcp` endpoint now accepts the token only in the `Authorization: Bearer <token>` header on every request. Requests that supply the token only in the query string or request body receive HTTP `401`. The server is stateless and creates no sessions.
+
+Update your client to send the header and remove the token from the URL or request body. See the [remote endpoint configuration examples](#remote-mcp-endpoint).
+
 ## Agent Endpoint
 
 Agent tools act on the account's current workspace. To change which workspace the next call uses, select it in the Web3alert app.
@@ -39,7 +45,9 @@ Agent tools act on the account's current workspace. To change which workspace th
 | `list_subscriptions` | Lists subscription IDs, titles, states, triggers, webhooks, and creation times. |
 | `set_subscription_state` | Pauses (`off`) or resumes (`on`) a subscription. |
 | `remove_subscription` | Deletes a subscription. Webhook retries stop within about 10 seconds. An attempt already due in that window can still be sent. |
-| `get_delivery_log` | Shows delivery outcomes for the workspace or a single subscription. Alert history uses the plan of the first account with the owner role in the workspace's access list. If there is no such account, the API checks the caller's plan. Without history on that plan, the tool returns `not_in_plan`. Webhook channel entries include `eventId` and `attempt`. `nextAttemptAt` is an ISO timestamp when a webhook retry is pending and `null` otherwise. |
+| `get_delivery_log` | Shows delivery outcomes for the workspace or a single subscription. Alert history uses the plan of the first account with the owner role in the workspace's access list. If there is no such account, the API checks the caller's plan. Without history on that plan, the tool returns `not_in_plan`. Webhook channel entries include `eventId` and `attempt`. `nextAttemptAt` is the ISO timestamp for which the next attempt was scheduled when the entry was written, or `null` if the entry records no scheduled retry. |
+
+The `nextAttemptAt` timestamp stays fixed even after the retry runs or is canceled. To find the delivery outcome, look for a later entry with the same `eventId`.
 
 `limits.maxSubscriptions` caps active subscriptions you created to non-Free projects across all workspaces. The cap is 5 on Free. Subscriptions to Free projects are exempt.
 
@@ -50,8 +58,7 @@ Through this endpoint, agents cannot create, edit, or delete triggers, projects,
 ### Claude Code
 
 ```bash
-claude mcp add --transport http web3alert-agent https://web3alert.io/mcp/agent \
-  --header "Authorization: Bearer YOUR_PERSONAL_ACCESS_TOKEN"
+printf 'Web3alert token: ' && read -rs WEB3ALERT_TOKEN && echo && [ -n "$WEB3ALERT_TOKEN" ] && claude mcp add --scope user --transport http web3alert-agent https://web3alert.io/mcp/agent --header "Authorization: Bearer $WEB3ALERT_TOKEN"
 ```
 
 ### Claude Desktop and Cursor
@@ -97,6 +104,12 @@ For an editor-managed connection, add the entry under `servers` in `.vscode/mcp.
 ```
 
 ## Remote MCP Endpoint
+
+To add this endpoint to Claude Code, run the command in Bash or Zsh and enter your token at the hidden prompt.
+
+```bash
+printf 'Web3alert token: ' && read -rs WEB3ALERT_TOKEN && echo && [ -n "$WEB3ALERT_TOKEN" ] && claude mcp add --scope user --transport http web3alert https://web3alert.io/mcp --header "Authorization: Bearer $WEB3ALERT_TOKEN"
+```
 
 Use the same Claude Desktop or Cursor configuration file. For [VS Code](#vs-code), use the same `servers` example with the URL `https://web3alert.io/mcp`.
 

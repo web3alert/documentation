@@ -140,7 +140,9 @@ Transferir um projeto para outro espaço de trabalho remove os segredos de assin
 
 Uma resposta `2xx` indica que o recetor aceitou a entrega. Responda rapidamente porque por predefinição, o pedido expira após 4 segundos. O Web3alert volta a tentar a entrega perante HTTP `429`, qualquer resposta `5xx`, um pedido que exceda o tempo limite ou um erro de rede antes de receber uma resposta, como uma ligação interrompida ou uma falha de DNS ou TLS. Os restantes resultados terminam a entrega. As entregas de teste nunca são repetidas.
 
-O Web3alert segue os redirecionamentos, envia o pedido assinado para o destino do redirecionamento se a assinatura estiver ativa e usa a resposta final para determinar o resultado.
+Por predefinição, o Web3alert segue os redirecionamentos do recetor e usa a resposta final para determinar o resultado. Uma resposta `307` ou `308` repete o `POST` assinado no novo URL se a assinatura estiver ativa. Uma resposta `303` transforma o pedido num `GET` sem corpo nem assinatura. Uma resposta `2xx` a esse `GET` conta como uma entrega bem-sucedida.
+
+Configure diretamente o URL HTTPS final para que cada entrega ao seu webhook com assinatura ativa seja um `POST` assinado.
 
 Se o serviço de envio de webhooks do Web3alert estiver indisponível quando chegar a altura de uma nova tentativa, o Web3alert aguarda e volta a tentar sem avançar o número da tentativa. Se o serviço estiver indisponível na primeira tentativa, o Web3alert agenda a tentativa 2 com o motivo `webhook service unavailable` e o código `channel.webhook.retry_scheduled`. Se o serviço de envio exceder o tempo limite, a tentativa conta como uma falha que permite nova tentativa, com o motivo `webhook service timed out`, e é repetida de acordo com o calendário.
 
@@ -172,7 +174,9 @@ O histórico de entregas é guardado nos planos pagos. As [rotas de histórico d
 | --- | --- |
 | `eventId` | O `webhook-id` da entrega. |
 | `attempt` | Número da tentativa, a começar em `1`. |
-| `nextAttemptAt` | Marca temporal em formato ISO quando há uma nova tentativa pendente para o webhook. Quando não há nenhuma pendente, o histórico REST omite o campo e a ferramenta MCP `get_delivery_log` atribui-lhe `null`. |
+| `nextAttemptAt` | Data e hora em formato ISO para as quais estava agendada a próxima tentativa quando esta entrada foi registada. Se a entrada não registar uma nova tentativa agendada, o histórico REST omite o campo e a ferramenta MCP `get_delivery_log` devolve `null`. |
+
+O valor mantém-se fixo mesmo depois de a tentativa ocorrer ou ser cancelada. Para saber o resultado da entrega, procure uma entrada posterior com o mesmo `eventId`.
 
 | `reasonCode` | Significado |
 | --- | --- |

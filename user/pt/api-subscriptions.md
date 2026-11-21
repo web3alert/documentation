@@ -182,7 +182,9 @@ Em ambas as respostas de histórico, as entradas de webhooks em `channels` podem
 | --- | --- | --- |
 | `eventId` | `string` | ID da entrega, igual ao do cabeçalho `webhook-id`. |
 | `attempt` | `number` | Número da tentativa, a começar em `1`. |
-| `nextAttemptAt` | `string` | Marca temporal em formato ISO quando há uma nova tentativa pendente para o webhook. As rotas REST de histórico omitem este campo quando não há uma nova tentativa pendente. |
+| `nextAttemptAt` | `string` | Data e hora em formato ISO para as quais estava agendada a próxima tentativa quando esta entrada foi registada. As rotas REST de histórico omitem o campo se a entrada não registar uma nova tentativa agendada. |
+
+O valor mantém-se fixo mesmo depois de a tentativa ocorrer ou ser cancelada. Para saber o resultado da entrega, procure uma entrada posterior com o mesmo `eventId`.
 
 O estado da primeira entrada reflete todos os canais de entrega do evento. Se outro canal entregou o evento e o webhook falhou com um erro que permita nova tentativa, a entrada do evento tem o estado `delivered` e o canal webhook tem `ok: false`. O campo `reasonCode` do canal webhook da entrada do evento indica `channel.webhook.retry_scheduled` quando é agendada uma nova tentativa, ou `channel.webhook.retry_queue_full` quando a fila de novas tentativas não pode aceitar a entrega (por estar cheia ou por a entrega em fila, incluindo os dados do evento, exceder 256 KB).
 

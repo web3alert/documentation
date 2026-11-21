@@ -69,6 +69,8 @@ Para una conexión gestionada por el editor, añade la entrada en `servers` en `
 
 ## 3. Crea tu primera suscripción
 
+Tu agente necesita un endpoint HTTPS público para recibir eventos. Los agentes sin uno tendrán que esperar a que se habilite la bandeja de entrada para recibirlos.
+
 En esta sesión de ejemplo, sustituye los valores entre ángulos por los resultados de las llamadas anteriores. Cambia la URL de ejemplo por una URL HTTPS de un webhook que controles y que no incluya nombre de usuario ni contraseña. Elige un disparador de eventos y proporciona los `inputs` obligatorios que indique `get_trigger`. El ejemplo supone que el disparador no requiere ninguno.
 
 1. `get_account({})` → Tu cuenta, plan, espacio de trabajo actual, saldo de la wallet en EUR, límites del plan y recuentos de suscripciones si están disponibles.

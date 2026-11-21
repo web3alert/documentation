@@ -24,6 +24,12 @@ Token 撤销后，API 会立即拒绝该 token。MCP 仍有验证缓存时，到
 
 默认情况下，每个 server 进程允许每个 account 每分钟调用工具 120 次。两个 endpoints 和该 account 的所有 tokens 共享此限额。达到限额后，工具会返回 `rate_limited`，并在 `retryAfter` 中给出需要等待的秒数。
 
+## 升级现有客户端
+
+`/mcp` 端点现在仅通过每个请求的 `Authorization: Bearer <token>` 请求头接收令牌。仅在查询字符串或请求体中提供令牌的请求会收到 HTTP `401` 响应。服务器采用无状态模式，不创建会话。
+
+请配置客户端以发送该请求头，并从 URL 或请求体中移除令牌。参见[远程端点配置示例](#remote-mcp-endpoint)。
+
 ## Agent Endpoint
 
 Agent 工具在 account 当前选中的 workspace 中执行操作。如需让下一次调用使用其他 workspace，请在 Web3alert 应用中切换。
@@ -39,7 +45,9 @@ Agent 工具在 account 当前选中的 workspace 中执行操作。如需让下
 | `list_subscriptions` | 列出 subscriptions 的 ID、标题、状态、triggers、webhooks 和创建时间。 |
 | `set_subscription_state` | 暂停（`off`）或恢复（`on`）subscription。 |
 | `remove_subscription` | 删除订阅。Webhook 重试会在约 10 秒内停止。在此期间到期的尝试仍可能发出。 |
-| `get_delivery_log` | 查看工作区或单个订阅的投递结果。 告警历史按工作区访问列表中第一个具有所有者角色的账户的套餐检查。如果没有这样的账户，API 会检查请求方账户的套餐。如果该套餐不含历史记录，工具返回 `not_in_plan`。 Webhook 渠道条目包含 `eventId` 和 `attempt`。有待处理的 Webhook 重试时，`nextAttemptAt` 为 ISO 格式的时间戳，否则为 `null`。 |
+| `get_delivery_log` | 查看工作区或单个订阅的投递结果。 告警历史按工作区访问列表中第一个具有所有者角色的账户的套餐检查。如果没有这样的账户，API 会检查请求方账户的套餐。如果该套餐不含历史记录，工具返回 `not_in_plan`。 Webhook 渠道条目包含 `eventId` 和 `attempt`。`nextAttemptAt` 是写入该条目时为下一次尝试安排的时间，采用 ISO 格式。如果条目未记录已安排的重试，则为 `null`。 |
+
+即使重试已经执行或取消，`nextAttemptAt` 也保持不变。要查看投递结果，请查找具有相同 `eventId` 的后续条目。
 
 `limits.maxSubscriptions` 限制账户在所有工作区内创建的非 Free 项目启用订阅数。Free 套餐的上限为 5 个。Free 项目的订阅不计入上限。
 
@@ -50,8 +58,7 @@ Agent 工具在 account 当前选中的 workspace 中执行操作。如需让下
 ### Claude Code
 
 ```bash
-claude mcp add --transport http web3alert-agent https://web3alert.io/mcp/agent \
-  --header "Authorization: Bearer YOUR_PERSONAL_ACCESS_TOKEN"
+printf 'Web3alert token: ' && read -rs WEB3ALERT_TOKEN && echo && [ -n "$WEB3ALERT_TOKEN" ] && claude mcp add --scope user --transport http web3alert-agent https://web3alert.io/mcp/agent --header "Authorization: Bearer $WEB3ALERT_TOKEN"
 ```
 
 ### Claude Desktop 和 Cursor
@@ -97,6 +104,12 @@ claude mcp add --transport http web3alert-agent https://web3alert.io/mcp/agent \
 ```
 
 ## Remote MCP Endpoint
+
+如需将此端点添加到 Claude Code，请在 Bash 或 Zsh 中运行以下命令，并按提示输入令牌。输入的令牌会被隐藏。
+
+```bash
+printf 'Web3alert token: ' && read -rs WEB3ALERT_TOKEN && echo && [ -n "$WEB3ALERT_TOKEN" ] && claude mcp add --scope user --transport http web3alert https://web3alert.io/mcp --header "Authorization: Bearer $WEB3ALERT_TOKEN"
+```
 
 使用同一个 Claude Desktop 或 Cursor 配置文件。对于 [VS Code](#vs-code)，使用同一份 `servers` 示例，并将 URL 改为 `https://web3alert.io/mcp`。
 

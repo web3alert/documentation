@@ -140,7 +140,9 @@ Transferring a project to another workspace removes the signing secrets of the w
 
 A `2xx` response means the receiver accepted the delivery. Respond quickly because requests time out after 4 seconds by default. Web3alert retries HTTP `429`, any `5xx` response, timeouts, and network errors that occur before a response, such as a connection reset or a DNS or TLS failure. All other outcomes end the delivery. Test deliveries are never retried.
 
-Web3alert follows redirects, sends the signed request to the redirect target when signing is enabled, and uses the final response to decide the outcome.
+By default, Web3alert follows redirects from the receiver and uses the final response to decide the outcome. A `307` or `308` repeats the signed `POST` at the new URL when signing is enabled. A `303` changes the request to a `GET` without a body or signature. A `2xx` response to that `GET` counts as delivered.
+
+Configure the final HTTPS URL directly so every delivery to your signing-enabled webhook is a signed `POST`.
 
 When a retry is due and Web3alert's webhook sender is unavailable, Web3alert waits and tries again without advancing the attempt count. If the sender is unavailable on the first attempt, Web3alert schedules attempt 2 with the reason `webhook service unavailable` and the code `channel.webhook.retry_scheduled`. A sender timeout counts as a retryable failure with the reason `webhook service timed out` and follows the retry schedule.
 
@@ -172,11 +174,13 @@ Delivery history is kept on paid plans. The [subscription history routes](api-su
 | --- | --- |
 | `eventId` | The delivery's `webhook-id`. |
 | `attempt` | Attempt number, starting at `1`. |
-| `nextAttemptAt` | ISO timestamp when a webhook retry is pending. With no retry pending, REST history omits the field and MCP `get_delivery_log` sets it to `null`. |
+| `nextAttemptAt` | The ISO timestamp for which the next attempt was scheduled when this entry was written. If the entry records no scheduled retry, REST history omits the field and MCP `get_delivery_log` returns `null`. |
+
+The timestamp stays fixed even after the retry runs or is canceled. To find the delivery outcome, look for a later entry with the same `eventId`.
 
 | `reasonCode` | Meaning |
 | --- | --- |
-| `channel.webhook.retry_scheduled` | The first attempt failed and a retry is scheduled. |
+| `channel.webhook.retry_scheduled` | The first attempt failed and a retry was scheduled. |
 | `channel.webhook.rejected` | The webhook delivery was rejected. |
 | `channel.webhook.gone` | The endpoint returned HTTP `410`. |
 | `channel.webhook.retries_exhausted` | The sixth attempt failed with a retryable error. |

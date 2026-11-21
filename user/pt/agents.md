@@ -69,6 +69,8 @@ Para uma ligação gerida pelo editor, adicione a entrada em `servers` em `.vsco
 
 ## 3. Crie a sua primeira subscrição
 
+O seu agente precisa de um endpoint HTTPS público para receber eventos. Os agentes que não tenham um terão de aguardar pelo lançamento da caixa de entrada para receber eventos.
+
 Nesta sessão de exemplo, substitua os valores entre parênteses angulares pelos resultados das chamadas anteriores. Substitua o URL de exemplo pelo URL HTTPS de um webhook que controla, sem nome de utilizador ou palavra-passe. Escolha um gatilho de eventos e forneça os `inputs` obrigatórios que `get_trigger` indicar. O exemplo parte de um gatilho sem entradas obrigatórias.
 
 1. `get_account({})` → A conta, o plano, o espaço de trabalho atual, o saldo da carteira em EUR, os limites do plano e as contagens de subscrições, quando disponíveis.

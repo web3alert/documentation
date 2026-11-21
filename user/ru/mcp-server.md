@@ -24,6 +24,12 @@ Token дает MCP server доступ к Web3alert API от имени теку
 
 По умолчанию каждый процесс сервера разрешает 120 вызовов инструментов в минуту на account. Лимит общий для обоих endpoints и всех токенов этого account. Когда лимит исчерпан, инструмент возвращает `rate_limited` с временем ожидания в секундах в поле `retryAfter`.
 
+## Обновление существующих клиентов
+
+Эндпоинт `/mcp` теперь принимает токен только в заголовке `Authorization: Bearer <token>` в каждом запросе. Запросы, в которых токен передаётся только в параметрах URL или в теле, получают ответ HTTP `401`. Сервер работает без сессий MCP.
+
+Настройте клиент так, чтобы он отправлял этот заголовок, и удалите токен из URL или тела запроса. См. [примеры настройки удалённого эндпоинта](#remote-mcp-endpoint).
+
 ## Endpoint для агентов
 
 Инструменты для агентов работают с текущим workspace account. Чтобы следующий вызов работал с другим workspace, выберите его в приложении Web3alert.
@@ -39,7 +45,9 @@ Token дает MCP server доступ к Web3alert API от имени теку
 | `list_subscriptions` | Возвращает ID, названия, состояния, triggers, webhooks и время создания subscriptions. |
 | `set_subscription_state` | Приостанавливает (`off`) или возобновляет (`on`) subscription. |
 | `remove_subscription` | Удаляет подписку. Повторные попытки доставки вебхуков прекращаются примерно в течение 10 секунд. Попытка, время которой наступит в этот интервал, ещё может быть отправлена. |
-| `get_delivery_log` | Показывает результаты доставки в воркспейсе или для отдельной подписки. Для истории оповещений используется тариф первого аккаунта с ролью владельца в списке доступа воркспейса. Если такого аккаунта нет, API проверяет тариф аккаунта, который сделал запрос. Если в тариф не входит история, инструмент возвращает `not_in_plan`. Записи каналов вебхуков содержат `eventId` и `attempt`. `nextAttemptAt` содержит время в формате ISO, если ожидается повторная попытка доставки вебхука, или `null` в остальных случаях. |
+| `get_delivery_log` | Показывает результаты доставки в воркспейсе или для отдельной подписки. Для истории оповещений используется тариф первого аккаунта с ролью владельца в списке доступа воркспейса. Если такого аккаунта нет, API проверяет тариф аккаунта, который сделал запрос. Если в тариф не входит история, инструмент возвращает `not_in_plan`. Записи каналов вебхуков содержат `eventId` и `attempt`. `nextAttemptAt` содержит время в формате ISO, на которое была запланирована следующая попытка в момент создания записи, или `null`, если в записи нет запланированной повторной попытки. |
+
+Значение `nextAttemptAt` остаётся прежним даже после выполнения или отмены повторной попытки. Чтобы узнать результат доставки, найдите более позднюю запись с тем же `eventId`.
 
 `limits.maxSubscriptions` ограничивает количество созданных вами активных подписок на проекты без статуса Free суммарно во всех воркспейсах. На тарифе Free лимит равен 5. Подписки на проекты Free не входят в лимит.
 
@@ -50,8 +58,7 @@ Token дает MCP server доступ к Web3alert API от имени теку
 ### Claude Code
 
 ```bash
-claude mcp add --transport http web3alert-agent https://web3alert.io/mcp/agent \
-  --header "Authorization: Bearer YOUR_PERSONAL_ACCESS_TOKEN"
+printf 'Web3alert token: ' && read -rs WEB3ALERT_TOKEN && echo && [ -n "$WEB3ALERT_TOKEN" ] && claude mcp add --scope user --transport http web3alert-agent https://web3alert.io/mcp/agent --header "Authorization: Bearer $WEB3ALERT_TOKEN"
 ```
 
 ### Claude Desktop и Cursor
@@ -97,6 +104,12 @@ claude mcp add --transport http web3alert-agent https://web3alert.io/mcp/agent \
 ```
 
 ## Remote MCP endpoint
+
+Чтобы добавить этот эндпоинт в Claude Code, выполните команду в Bash или Zsh и введите токен по запросу. Символы токена при вводе скрыты.
+
+```bash
+printf 'Web3alert token: ' && read -rs WEB3ALERT_TOKEN && echo && [ -n "$WEB3ALERT_TOKEN" ] && claude mcp add --scope user --transport http web3alert https://web3alert.io/mcp --header "Authorization: Bearer $WEB3ALERT_TOKEN"
+```
 
 Используйте тот же файл конфигурации Claude Desktop или Cursor. Для [VS Code](#vs-code) используйте тот же пример `servers` с адресом `https://web3alert.io/mcp`.
 

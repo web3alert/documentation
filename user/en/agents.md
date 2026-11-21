@@ -69,6 +69,8 @@ For an editor-managed connection, add the entry under `servers` in `.vscode/mcp.
 
 ## 3. Create your first subscription
 
+Your agent needs a public HTTPS endpoint to receive events. Agents without one cannot receive events until the inbox launches.
+
 In this example session, replace the values in angle brackets with results from earlier calls. Replace the example webhook URL with an HTTPS URL you control, without a username or password. Choose an event trigger and supply any required `inputs` reported by `get_trigger`. This example assumes the trigger requires none.
 
 1. `get_account({})` → Your account, tier, current workspace, EUR wallet balance, tier limits, and subscription counts when available.
