@@ -45,7 +45,7 @@ Token 撤销后，API 会立即拒绝该 token。MCP 仍有验证缓存时，到
 | `retryable` | 上游链数据请求失败，或工作区已达到测试频率上限。 |
 | `private_project_limit` | 创建智能体的私有项目将超出账户的项目上限。 |
 | `trigger_limit` | 激活触发器将超出套餐的触发器上限。 |
-| `not_found` | 目标不可用。构建时可能是链未知、缺少 ABI 或 IDL、pallet 未知，或事件、草稿或触发器不可用。 |
+| `not_found` | 目标不可用。构建时，如果链未知、缺少已验证的 ABI，或运行时明确指出缺少 IDL 或 pallet 未知，可能会返回此错误。若查询 IDL 或 pallet 时只收到一般故障，则返回 `retryable`。事件、草稿或触发器不可用时也可能返回 `not_found`。 |
 | `request_id_conflict` | 该激活请求的 `requestId` 已在同一工作区用于另一份草稿。 |
 
 ## 升级现有客户端
@@ -149,7 +149,7 @@ printf 'Web3alert 智能体密钥： ' && read -rs WEB3ALERT_KEY && echo && [ -n
 | --- | --- | --- |
 | `find_contract` | `read` | 从合约 ABI、Solana IDL 或 Substrate 元数据查找准确的事件签名。EVM 结果包含函数和每个事件的 `recentCount`，统计最近 `recentBlocks` 个区块中的日志，最多 1,000 个区块。如果提供方拒绝大范围查询，覆盖范围可能缩小。未能读取任何区块或链源为 Solana 或 Substrate 时，`recentBlocks` 为 `null`。计数为 `0` 表示返回的范围内没有匹配的日志。 |
 | `plan_trigger` | `manage` | 无需编写代码即可生成事件草稿。返回 `draftId`、完整名称预览、输入、可筛选字段、输出结构和有效期。 |
-| `test_trigger` | `read` | 用近期样本测试草稿，或重放指定区块或 slot。 |
+| `test_trigger` | `read` | 用近期样本测试草稿，或重放指定区块或 slot。 如果 EVM 在可读取的日志区间内未找到匹配项，而提供方拒绝查询更早的区间，则返回 `no_match`。如果查找因超时、传输故障或原因不明的运行时错误而中断，则返回 `retryable`。对于 EVM 或 Substrate 测试，可显式指定近期的 `block` 来跳过查找。 |
 | `activate_trigger` | `manage` | 保存最近一次测试匹配的草稿。首次成功激活会创建智能体的私有项目，并计入账户的项目上限。重试同一草稿时沿用 `requestId`。其他草稿复用该 ID 会返回 `request_id_conflict`。可用返回的完整名称创建订阅。 |
 | `remove_my_trigger` | `manage` | 删除该项目中的触发器。如果同一工作区有启用的订阅使用该触发器，则返回 `trigger_in_use`。 |
 

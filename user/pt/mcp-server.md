@@ -45,7 +45,7 @@ Os erros das ferramentas são independentes dos erros de autenticação HTTP.
 | `retryable` | Um pedido ao fornecedor de dados da cadeia falhou ou o espaço atingiu o limite de testes. |
 | `private_project_limit` | Criar o projeto privado do agente excederia o limite de projetos da conta. |
 | `trigger_limit` | Ativar o trigger excederia o limite do plano. |
-| `not_found` | O alvo está indisponível. Na criação de triggers, pode indicar uma cadeia desconhecida, ABI ou IDL em falta, pallet desconhecido ou evento, rascunho ou trigger indisponível. |
+| `not_found` | O alvo está indisponível. Na criação de triggers, este erro pode indicar uma cadeia desconhecida, um ABI verificado em falta ou que o runtime identificou um IDL em falta ou um pallet desconhecido. Uma falha genérica ao pesquisar o IDL ou pallet devolve `retryable`. Um evento, rascunho ou trigger indisponível também pode devolver `not_found`. |
 | `request_id_conflict` | O mesmo `requestId` de ativação já foi usado para outro rascunho no espaço. |
 
 ## Atualizar clientes existentes
@@ -149,7 +149,7 @@ Use `https://web3alert.io/mcp/agent/build` com as mesmas definições e o mesmo 
 | --- | --- | --- |
 | `find_contract` | `read` | Procura assinaturas exatas de eventos no ABI de um contrato, no IDL Solana ou nos metadados Substrate. Para EVM, devolve funções e um `recentCount` por evento nos últimos `recentBlocks` blocos, até 1 000. O intervalo pode ser menor se o fornecedor recusar uma consulta ampla. `recentBlocks` é `null` se não for possível ler nenhum bloco ou se a fonte for Solana ou Substrate. Uma contagem de `0` indica que não foram encontrados logs correspondentes no intervalo indicado. |
 | `plan_trigger` | `manage` | Gera um rascunho para um evento sem escrever código. Devolve `draftId`, fullname previsto, entradas, campos filtráveis, esquema de saída e validade. |
-| `test_trigger` | `read` | Testa um rascunho com uma amostra recente ou reproduz um bloco ou slot indicado. |
+| `test_trigger` | `read` | Testa um rascunho com uma amostra recente ou reproduz um bloco ou slot indicado. Se a pesquisa em EVM não encontrar correspondências nas janelas de logs que conseguiu ler e o fornecedor recusar as janelas mais antigas, o resultado é `no_match`. Se a pesquisa for interrompida por um tempo limite, uma falha de transporte ou um erro do runtime sem causa específica, o resultado é `retryable`. Para dispensar a pesquisa num teste EVM ou Substrate, indique explicitamente um `block` recente. |
 | `activate_trigger` | `manage` | Guarda um rascunho cujo último teste encontrou uma correspondência. A primeira ativação bem-sucedida cria o projeto privado do agente, que conta para o limite da conta. Reutilize `requestId` ao repetir o pedido para o mesmo rascunho. Usá-lo com outro rascunho devolve `request_id_conflict`. Use o fullname devolvido para criar subscrições. |
 | `remove_my_trigger` | `manage` | Remove um trigger desse projeto. Devolve `trigger_in_use` se uma subscrição ativa no mesmo espaço o usar. |
 

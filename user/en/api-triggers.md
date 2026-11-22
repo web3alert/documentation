@@ -336,7 +336,9 @@ If building is switched off, the routes return HTTP `400` with `error.message` s
 
 ## POST /api/agent/build/contracts
 
-Agent keys require `read`. Send `chain` and one of `address` (EVM), `program` (Solana) or `pallet` (Substrate). Use a Web3alert built-in chain source, with a short name such as `ethereum`, `base`, `arbitrum-one`, `polkadot` or `solana`, or use `common.<chain>` or `common.source.<chain>`. An unknown chain returns `404 not_found` with the supported short names for the target type in `error.details.chains`. A temporary chain data failure returns `503 retryable`. A contract without a verified ABI, a Solana program without an IDL, or an unknown Substrate pallet also returns `404 not_found`.
+Agent keys require `read`. Send `chain` and one of `address` (EVM), `program` (Solana) or `pallet` (Substrate). Use a Web3alert built-in chain source, with a short name such as `ethereum`, `base`, `arbitrum-one`, `polkadot` or `solana`, or use `common.<chain>` or `common.source.<chain>`. An unknown chain returns `404 not_found` with the supported short names for the target type in `error.details.chains`. A temporary chain data failure returns `503 retryable`.
+
+A missing verified ABI for an EVM contract returns `404 not_found`. A Solana program without an IDL or an unknown Substrate pallet returns `404 not_found` when the runtime identifies the cause. If the runtime only reports a generic failure, the API returns `503 retryable`.
 
 Returns `{ chain, source, events, recentBlocks, functions? }` with exact event signatures. For EVM, each event’s `recentCount` counts logs over the last `recentBlocks` blocks, up to 1,000. If the provider refuses a wide query, the API retries with smaller windows and can report a shorter range. `recentBlocks` is `null` when no blocks could be read and for Solana or Substrate. A `null` `recentCount` means the count is unavailable or inapplicable.
 
@@ -344,13 +346,15 @@ Returns `{ chain, source, events, recentBlocks, functions? }` with exact event s
 
 Agent keys require `manage`. Send `chain` in any of the formats accepted by [contract discovery](#post-api-agent-build-contracts), along with the target and an `event` name or exact signature. You can include `title` and `description`. Returns `{ draftId, fullnamePreview, inputs, filterable, outputSchema, expiresAt }`. The generated draft lasts seven days. An unknown chain returns `404 not_found` with `error.details.chains`. An unknown event also returns `404 not_found`. A temporary chain data failure returns `503 retryable`.
 
-A contract without a verified ABI, a Solana program without an IDL, or an unknown Substrate pallet also returns `404 not_found`. An overloaded event name returns HTTP `400`. Use its exact signature.
+The [schema lookup errors for contract discovery](#post-api-agent-build-contracts) also apply to draft planning. An overloaded event name returns HTTP `400`. Use its exact signature.
 
 ## POST /api/agent/build/drafts/:draftId/test
 
 Agent keys require `read`. Optionally send `block` (EVM or Substrate) or `slot` (Solana). Omit both for a bounded recent search. Returns `{ result, block?, slot?, output? }`, where `result` is `matched`, `no_match`, `invalid` or `retryable`. An unavailable draft returns `404 not_found` or `410 draft_expired` if it is still stored past expiry.
 
 Using `slot` for EVM or Substrate, or `block` for Solana, returns `result: "invalid"`.
+
+If EVM discovery finds no match in the log windows it could read and the provider refuses older windows, the result is `no_match`. If discovery stops on a timeout, a transport failure or a runtime error with no specific cause, the result is `retryable`. To bypass discovery for an EVM or Substrate test, pass a recent `block` explicitly.
 
 ## POST /api/agent/build/drafts/:draftId/activate
 

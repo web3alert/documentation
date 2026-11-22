@@ -45,7 +45,7 @@ Tool errors are returned separately from HTTP authentication errors.
 | `retryable` | A chain data request failed upstream or the workspace has reached its test rate limit. |
 | `private_project_limit` | Creating the private agent project would exceed the account's project cap. |
 | `trigger_limit` | Activating the trigger would exceed the plan's trigger cap. |
-| `not_found` | The target is unavailable. On build calls, this can mean an unknown chain, missing ABI or IDL, unknown pallet, or unavailable event, draft or trigger. |
+| `not_found` | The target is unavailable. Build calls can return this for an unknown chain, a missing verified ABI, or a missing IDL or unknown pallet identified by the runtime. A generic IDL or pallet lookup failure returns `retryable`. An unavailable event, draft or trigger can also return `not_found`. |
 | `request_id_conflict` | The same activation `requestId` was already used for another draft in the workspace. |
 
 ## Upgrading existing clients
@@ -149,7 +149,7 @@ Use `https://web3alert.io/mcp/agent/build` with the same client settings and bea
 | --- | --- | --- |
 | `find_contract` | `read` | Finds exact event signatures from a contract ABI, Solana IDL or Substrate metadata. EVM results include functions and a per-event `recentCount` over the last `recentBlocks` blocks, up to 1,000. The range can be shorter if the provider refuses a wide query. `recentBlocks` is `null` if no blocks could be read or the source is Solana or Substrate. A count of `0` means no matching logs in the reported range. |
 | `plan_trigger` | `manage` | Generates a draft for an event without custom code. Returns its `draftId`, preview fullname, inputs, filterable fields, output schema and expiry. |
-| `test_trigger` | `read` | Tests a draft on a recent sample or replays a supplied block or slot. |
+| `test_trigger` | `read` | Tests a draft on a recent sample or replays a supplied block or slot. If EVM discovery finds no match in the log windows it could read and the provider refuses older windows, the result is `no_match`. If discovery stops on a timeout, a transport failure or a runtime error with no specific cause, the result is `retryable`. To bypass discovery for an EVM or Substrate test, pass a recent `block` explicitly. |
 | `activate_trigger` | `manage` | Saves a draft whose latest test matched. The first successful activation creates the workspace's private agent project, which counts toward the account's private-project cap. Reuse `requestId` on retries for the same draft. Reusing it for a different draft returns `request_id_conflict`. The returned trigger fullname is ready for subscriptions. |
 | `remove_my_trigger` | `manage` | Removes a trigger from that project. Returns `trigger_in_use` if a live subscription in the trigger's workspace uses it. |
 

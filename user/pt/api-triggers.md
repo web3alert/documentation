@@ -336,7 +336,9 @@ Se a criação de triggers estiver desativada, as rotas devolvem HTTP `400` com 
 
 ## POST /api/agent/build/contracts
 
-As chaves requerem `read`. Envie `chain` e um de `address` (EVM), `program` (Solana) ou `pallet` (Substrate). Use uma fonte de cadeia integrada do Web3alert com um nome curto como `ethereum`, `base`, `arbitrum-one`, `polkadot` ou `solana`, ou use `common.<chain>` ou `common.source.<chain>`. Uma cadeia desconhecida devolve `404 not_found` e os nomes curtos aceites para o tipo de alvo em `error.details.chains`. Uma falha temporária dos dados da cadeia devolve `503 retryable`. Um contrato sem ABI verificado, um programa Solana sem IDL ou um pallet Substrate desconhecido também devolve `404 not_found`.
+As chaves requerem `read`. Envie `chain` e um de `address` (EVM), `program` (Solana) ou `pallet` (Substrate). Use uma fonte de cadeia integrada do Web3alert com um nome curto como `ethereum`, `base`, `arbitrum-one`, `polkadot` ou `solana`, ou use `common.<chain>` ou `common.source.<chain>`. Uma cadeia desconhecida devolve `404 not_found` e os nomes curtos aceites para o tipo de alvo em `error.details.chains`. Uma falha temporária dos dados da cadeia devolve `503 retryable`.
+
+Um contrato EVM sem ABI verificado devolve `404 not_found`. Um programa Solana sem IDL ou um pallet Substrate desconhecido devolve `404 not_found` quando o runtime identifica a causa. Se apenas indicar uma falha genérica, a API devolve `503 retryable`.
 
 Devolve `{ chain, source, events, recentBlocks, functions? }` com assinaturas exatas de eventos. Para EVM, o `recentCount` de cada evento conta os logs dos últimos `recentBlocks` blocos, até 1 000. Se o fornecedor recusar uma consulta ampla, a API tenta novamente com janelas mais pequenas e pode devolver um intervalo menor. `recentBlocks` é `null` quando não é possível ler nenhum bloco e para Solana ou Substrate. Um `recentCount` de `null` indica que a contagem está indisponível ou não se aplica.
 
@@ -344,13 +346,15 @@ Devolve `{ chain, source, events, recentBlocks, functions? }` com assinaturas ex
 
 As chaves requerem `manage`. Envie `chain` num dos formatos aceites pela [pesquisa de contratos](#post-api-agent-build-contracts), juntamente com o alvo e um nome ou assinatura exata em `event`. Pode incluir `title` e `description`. Devolve `{ draftId, fullnamePreview, inputs, filterable, outputSchema, expiresAt }`. O rascunho dura sete dias. Uma cadeia desconhecida devolve `404 not_found` com `error.details.chains`. Um evento desconhecido também devolve `404 not_found`. Uma falha temporária dos dados da cadeia devolve `503 retryable`.
 
-Um contrato sem ABI verificado, um programa Solana sem IDL ou um pallet Substrate desconhecido também devolve `404 not_found`. Um nome de evento sobrecarregado devolve HTTP `400`. Use a assinatura exata.
+Os [erros de pesquisa de esquemas de contratos](#post-api-agent-build-contracts) também se aplicam ao planeamento de rascunhos. Um nome de evento sobrecarregado devolve HTTP `400`. Use a assinatura exata.
 
 ## POST /api/agent/build/drafts/:draftId/test
 
 As chaves requerem `read`. Envie opcionalmente `block` (EVM ou Substrate) ou `slot` (Solana). Omita ambos para pesquisar num intervalo recente limitado. Devolve `{ result, block?, slot?, output? }` com `matched`, `no_match`, `invalid` ou `retryable`. Um rascunho indisponível devolve `404 not_found`, ou `410 draft_expired` se ainda estiver guardado após expirar.
 
 Usar `slot` para EVM ou Substrate, ou `block` para Solana, devolve `result: "invalid"`.
+
+Se a pesquisa em EVM não encontrar correspondências nas janelas de logs que conseguiu ler e o fornecedor recusar as janelas mais antigas, o resultado é `no_match`. Se a pesquisa for interrompida por um tempo limite, uma falha de transporte ou um erro do runtime sem causa específica, o resultado é `retryable`. Para dispensar a pesquisa num teste EVM ou Substrate, indique explicitamente um `block` recente.
 
 ## POST /api/agent/build/drafts/:draftId/activate
 

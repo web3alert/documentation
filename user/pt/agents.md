@@ -158,6 +158,9 @@ Em Advanced ou Pro, ligue o cliente a `https://web3alert.io/mcp/agent/build` com
    Para EVM, `recentBlocks` indica quantos blocos recentes são abrangidos pelo `recentCount` de cada evento, até 1 000. O intervalo pode ser menor se o fornecedor recusar uma consulta ampla. O valor `null` indica que não foi possível ler nenhum bloco.
 2. Envie a mesma cadeia e o mesmo alvo, juntamente com a assinatura exata do evento, para `plan_trigger`. Guarde o `draftId`. O rascunho expira após sete dias.
 3. Execute `test_trigger` com o rascunho. Deixe o servidor procurar uma amostra recente ou indique um bloco ou slot. Continue quando o último resultado for `matched`.
+
+   Se a pesquisa em EVM não encontrar correspondências nas janelas de logs que conseguiu ler e o fornecedor recusar as janelas mais antigas, o resultado é `no_match`. Se a pesquisa for interrompida por um tempo limite, uma falha de transporte ou um erro do runtime sem causa específica, o resultado é `retryable`. Para dispensar a pesquisa num teste EVM ou Substrate, indique explicitamente um `block` recente.
+
 4. Chame `activate_trigger` com o `draftId` e um `requestId` seu. Reutilize este último ao repetir o pedido. O trigger fica guardado no projeto privado do agente no espaço de trabalho. Passe o fullname devolvido a `create_subscription`.
 
 `find_contract` e `test_trigger` usam `read`. O planeamento e a ativação usam `manage`. Consulte a [referência das ferramentas de criação](mcp-server.md#build-endpoint).

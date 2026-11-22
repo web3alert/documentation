@@ -158,6 +158,9 @@ On Advanced or Pro, connect the same client to `https://web3alert.io/mcp/agent/b
    For EVM, `recentBlocks` shows how many recent blocks each event’s `recentCount` covers, up to 1,000. The range can be shorter if the provider rejects a wide query. A `null` value means no blocks could be read.
 2. Pass the same chain and target plus the exact event signature to `plan_trigger`. Save the returned `draftId`. The draft expires after seven days.
 3. Run `test_trigger` on the draft. Let the server find a recent sample or supply a block or slot. Continue when the latest result is `matched`.
+
+   If EVM discovery finds no match in the log windows it could read and the provider refuses older windows, the result is `no_match`. If discovery stops on a timeout, a transport failure or a runtime error with no specific cause, the result is `retryable`. To bypass discovery for an EVM or Substrate test, pass a recent `block` explicitly.
+
 4. Call `activate_trigger` with the same `draftId` and your own `requestId`. Reuse the ID on retries. The saved trigger is in the workspace's private agent project. Pass its returned fullname to `create_subscription`.
 
 `find_contract` and `test_trigger` use `read`. Planning and activation use `manage`. See the [build tool reference](mcp-server.md#build-endpoint).

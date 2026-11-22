@@ -158,6 +158,9 @@ claude mcp add --transport http web3alert-agent https://web3alert.io/mcp/agent \
    对于 EVM，`recentBlocks` 表示每个事件的 `recentCount` 涵盖的近期区块数，最多 1,000 个。如果提供方拒绝大范围查询，覆盖范围可能缩小。值为 `null` 表示未能读取任何区块。
 2. 将同一条链、同一目标和准确的事件签名传给 `plan_trigger`，保存返回的 `draftId`。草稿七天后过期。
 3. 对草稿运行 `test_trigger`。可让服务端查找近期样本，也可提供区块或 slot。最近一次结果为 `matched` 后即可继续。
+
+   如果 EVM 在可读取的日志区间内未找到匹配项，而提供方拒绝查询更早的区间，则返回 `no_match`。如果查找因超时、传输故障或原因不明的运行时错误而中断，则返回 `retryable`。对于 EVM 或 Substrate 测试，可显式指定近期的 `block` 来跳过查找。
+
 4. 用原 `draftId` 和自己的 `requestId` 调用 `activate_trigger`。重试时沿用该 ID。触发器将保存到工作区的智能体私有项目。把返回的完整名称传给 `create_subscription`。
 
 `find_contract` 和 `test_trigger` 需要 `read`。规划和激活需要 `manage`。参见[构建工具参考](mcp-server.md#build-endpoint)。

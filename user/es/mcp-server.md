@@ -45,7 +45,7 @@ Los errores de las herramientas son independientes de los errores de autenticaci
 | `retryable` | Falló una solicitud al proveedor de datos de la cadena o se alcanzó el límite de pruebas del espacio. |
 | `private_project_limit` | Crear el proyecto privado del agente superaría el límite de proyectos de la cuenta. |
 | `trigger_limit` | Activar el trigger superaría el límite del plan. |
-| `not_found` | El destino no está disponible. Al crear un trigger, puede indicar una cadena desconocida, falta de ABI o IDL, un pallet desconocido o un evento, borrador o trigger no disponible. |
+| `not_found` | El destino no está disponible. La creación de triggers puede devolver este error si la cadena es desconocida, falta un ABI verificado o el runtime identifica que falta el IDL o que el pallet es desconocido. Un fallo genérico al buscar el IDL o el pallet devuelve `retryable`. Un evento, borrador o trigger no disponible también puede devolver `not_found`. |
 | `request_id_conflict` | Ya se usó el mismo `requestId` de activación para otro borrador del espacio. |
 
 ## Actualizar clientes existentes
@@ -149,7 +149,7 @@ Usa `https://web3alert.io/mcp/agent/build` con la misma configuración y cabecer
 | --- | --- | --- |
 | `find_contract` | `read` | Busca firmas exactas de eventos en el ABI de un contrato, el IDL de Solana o los metadatos de Substrate. Para EVM, devuelve funciones y un `recentCount` por evento en los últimos `recentBlocks` bloques, hasta 1.000. El intervalo puede ser menor si el proveedor rechaza una consulta amplia. `recentBlocks` es `null` si no se pudo leer ningún bloque o si la fuente es Solana o Substrate. Un recuento de `0` indica que no hubo logs coincidentes en el intervalo indicado. |
 | `plan_trigger` | `manage` | Genera un borrador para un evento sin escribir código. Devuelve `draftId`, fullname previsto, inputs, campos filtrables, esquema de salida y vencimiento. |
-| `test_trigger` | `read` | Prueba un borrador con una muestra reciente o reproduce el bloque o slot indicado. |
+| `test_trigger` | `read` | Prueba un borrador con una muestra reciente o reproduce el bloque o slot indicado. Si la búsqueda en EVM no encuentra coincidencias en los intervalos de logs que pudo leer y el proveedor rechaza los intervalos más antiguos, el resultado es `no_match`. Si la búsqueda se interrumpe por un tiempo de espera agotado, un fallo de transporte o un error del runtime sin causa específica, el resultado es `retryable`. Para omitir la búsqueda en una prueba de EVM o Substrate, indica explícitamente un `block` reciente. |
 | `activate_trigger` | `manage` | Guarda un borrador cuya última prueba coincidió. La primera activación correcta crea el proyecto privado del agente, que cuenta para el límite de la cuenta. Reutiliza `requestId` al reintentar el mismo borrador. Si lo usas con otro borrador, devuelve `request_id_conflict`. El fullname devuelto sirve para crear suscripciones. |
 | `remove_my_trigger` | `manage` | Elimina un trigger de ese proyecto. Devuelve `trigger_in_use` si lo usa una suscripción activa del mismo espacio. |
 

@@ -335,7 +335,9 @@ Payload: trigger/source-specific search object.
 
 ## POST /api/agent/build/contracts
 
-密钥需要 `read` 权限。发送 `chain`，并指定 `address`（EVM）、`program`（Solana）或 `pallet`（Substrate）中的一项。仅支持 Web3alert 内置链源。可以使用简称，如 `ethereum`、`base`、`arbitrum-one`、`polkadot` 或 `solana`，也可以使用 `common.<chain>` 或 `common.source.<chain>`。若无法识别链，API 返回 `404 not_found`，并在 `error.details.chains` 中列出该目标类型支持的简称。链数据暂时不可用时返回 `503 retryable`。 合约没有已验证的 ABI、Solana 程序没有 IDL，或 Substrate pallet 未知时，也会返回 `404 not_found`。
+密钥需要 `read` 权限。发送 `chain`，并指定 `address`（EVM）、`program`（Solana）或 `pallet`（Substrate）中的一项。仅支持 Web3alert 内置链源。可以使用简称，如 `ethereum`、`base`、`arbitrum-one`、`polkadot` 或 `solana`，也可以使用 `common.<chain>` 或 `common.source.<chain>`。若无法识别链，API 返回 `404 not_found`，并在 `error.details.chains` 中列出该目标类型支持的简称。链数据暂时不可用时返回 `503 retryable`。
+
+EVM 合约没有已验证的 ABI 时返回 `404 not_found`。Solana 程序缺少 IDL 或 Substrate pallet 未知时，如果运行时明确指出该原因，则返回 `404 not_found`。如果运行时只报告一般故障，API 会返回 `503 retryable`。
 
 返回 `{ chain, source, events, recentBlocks, functions? }`，其中包含准确的事件签名。对于 EVM，每个事件的 `recentCount` 统计最近 `recentBlocks` 个区块中的日志，最多 1,000 个区块。如果提供方拒绝大范围查询，API 会缩小查询窗口重试，返回的覆盖范围可能更短。未能读取任何区块或链源为 Solana 或 Substrate 时，`recentBlocks` 为 `null`。`recentCount` 为 `null` 表示计数不可用或不适用。
 
@@ -343,13 +345,15 @@ Payload: trigger/source-specific search object.
 
 密钥需要 `manage` 权限。`chain` 使用[合约查找端点](#post-api-agent-build-contracts)支持的格式，同时传入目标，并在 `event` 中提供名称或准确签名。可选 `title` 和 `description`。返回 `{ draftId, fullnamePreview, inputs, filterable, outputSchema, expiresAt }`。草稿有效期为七天。若无法识别链，返回 `404 not_found` 和 `error.details.chains`。事件未知时也返回 `404 not_found`。链数据暂时不可用时返回 `503 retryable`。
 
-合约没有已验证的 ABI、Solana 程序没有 IDL，或 Substrate pallet 未知时，也会返回 `404 not_found`。 传入重载事件的名称会返回 HTTP `400`。请使用准确的事件签名。
+[合约查找中的模式查询错误](#post-api-agent-build-contracts)同样适用于草稿规划。 传入重载事件的名称会返回 HTTP `400`。请使用准确的事件签名。
 
 ## POST /api/agent/build/drafts/:draftId/test
 
 密钥需要 `read` 权限。可选 `block`（EVM 或 Substrate）或 `slot`（Solana）。均省略时会在近期的有限范围内搜索。返回 `{ result, block?, slot?, output? }`，其中结果为 `matched`、`no_match`、`invalid` 或 `retryable`。草稿不可用时返回 `404 not_found`，若过期但仍存储，则返回 `410 draft_expired`。
 
 对 EVM 或 Substrate 传入 `slot`、或对 Solana 传入 `block` 时，返回 `result: "invalid"`。
+
+如果 EVM 在可读取的日志区间内未找到匹配项，而提供方拒绝查询更早的区间，则返回 `no_match`。如果查找因超时、传输故障或原因不明的运行时错误而中断，则返回 `retryable`。对于 EVM 或 Substrate 测试，可显式指定近期的 `block` 来跳过查找。
 
 ## POST /api/agent/build/drafts/:draftId/activate
 
