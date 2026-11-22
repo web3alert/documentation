@@ -77,7 +77,7 @@ Token 撤销后，API 会立即拒绝该 token。MCP 仍有验证缓存时，到
 | `list_webhooks` | 列出 workspace 中已注册的 webhooks 的 `fullname`、名称和 URL。 `signed` 字段表示该 Webhook 是否有签名密钥。 |
 | `add_webhook` | 注册使用 HTTPS 且不含凭据的 Webhook。如果检查时发现工作区已有同名资源，工具会拒绝请求并返回 `webhook_exists`。 签名密钥仅在 `add_webhook` 的回复中以 `signingSecret` 字段显示。之后轮换密钥会替换该端点所有接收方使用的密钥。 |
 | `remove_webhook` | 按完整名称删除当前工作区的 Webhook。如果同一工作区有启用的订阅使用该 Webhook，则返回 `webhook_in_use`。需要 `manage`。 |
-| `create_subscription` | 创建一个订阅并选择一个投递目标，`webhook` 或 `inbox: true`。传入必填输入及可选的 `conditions`。 每次准备通过 `create_subscription` 创建新订阅时，指定唯一的 `title`。如果没有收到响应，重试前先调用 `list_subscriptions` 并按标题查找。若仅凭标题无法判断，请检查 [GET /api/subscriptions](api-subscriptions.md#get-api-subscriptions) 返回的规则和操作。如果仍不能确认订阅是否已创建，请停止。 |
+| `create_subscription` | 创建一个订阅并选择一个投递目标，`webhook` 或 `inbox: true`。传入必填输入及可选的 `conditions`。 使用 `inbox: true` 时，`resource_name_in_use` 表示其他资源已占用收件箱的名称。请让工作区的 `owner` 或 `admin` 解决冲突。 每次准备通过 `create_subscription` 创建新订阅时，指定唯一的 `title`。如果没有收到响应，请调用 `list_subscriptions` 并按标题查找。如果没有匹配项，请等待后再次检查，因为原调用仍可能创建订阅。若仅凭标题无法判断，请检查 [GET /api/subscriptions](api-subscriptions.md#get-api-subscriptions) 返回的规则和操作。如果结果仍不明确，请停止，确认原请求的结果后再尝试创建。 |
 | `list_subscriptions` | 列出 subscriptions 的 ID、标题、状态、triggers、webhooks 和创建时间。 |
 | `set_subscription_state` | 暂停（`off`）或恢复（`on`）subscription。 |
 | `remove_subscription` | 删除订阅。Webhook 重试会在约 10 秒内停止。在此期间到期的尝试仍可能发出。 |
@@ -150,7 +150,7 @@ printf 'Web3alert 智能体密钥： ' && read -rs WEB3ALERT_KEY && echo && [ -n
 | --- | --- | --- |
 | `find_contract` | `read` | 从合约 ABI、Solana IDL 或 Substrate 元数据查找准确的事件签名。EVM 结果包含函数和每个事件的 `recentCount`，统计最近 `recentBlocks` 个区块中的日志，最多 1,000 个区块。如果提供方拒绝大范围查询，覆盖范围可能缩小。未能读取任何区块或链源为 Solana 或 Substrate 时，`recentBlocks` 为 `null`。计数为 `0` 表示返回的范围内没有匹配的日志。 |
 | `plan_trigger` | `manage` | 无需编写代码即可生成事件草稿。返回 `draftId`、完整名称预览、输入、可筛选字段、输出结构和有效期。 |
-| `test_trigger` | `read` | 用近期样本测试草稿，或重放指定区块或 slot。 Solana 查找最多尝试近期 12 个 slot，Substrate 最多尝试近期 12 个区块。如果 EVM 已读取至少一个日志区间但没有匹配项，且提供方对更早的区间返回错误（包括提供方报告的超时），或运行时返回原因不明的拒绝，查找可能以 `no_match` 结束。该结果仅覆盖已读取的区间。传输故障、达到查找时限或未能读取任何区间时返回 `retryable`。 如果你知道事件发生的位置或想跳过查找，请向 `test_trigger` 传入对应的位置，Solana 用 `slot`，EVM 或 Substrate 用 `block`。 |
+| `test_trigger` | `read` | 用近期样本测试草稿，或重放指定区块或 slot。 EVM 查找最多覆盖最近 1,000 个区块。 Solana 查找最多尝试近期 12 个 slot，Substrate 最多尝试近期 12 个区块。如果 EVM 已读取至少一个日志区间但没有匹配项，且提供方对更早的区间返回错误（包括提供方报告的超时），或运行时返回原因不明的拒绝，查找可能以 `no_match` 结束。该结果仅覆盖已读取的区间。传输故障、达到查找时限或未能读取任何区间时返回 `retryable`。 如果你知道事件发生的位置或想跳过查找，请向 `test_trigger` 传入对应的位置，Solana 用 `slot`，EVM 或 Substrate 用 `block`。 对于更早的 EVM 事件，请直接传入其 `block`。 如果 API 因工作区测试限流而返回带有 `error.code: "retryable"` 的 HTTP `429`，MCP 会返回工具错误。请延长重试间隔。成功的工具响应也可能包含 `result: "retryable"`。 |
 | `activate_trigger` | `manage` | 保存最近一次测试匹配的草稿。首次成功激活会创建智能体的私有项目，并计入账户的项目上限。重试同一草稿时沿用 `requestId`。其他草稿复用该 ID 会返回 `request_id_conflict`。可用返回的完整名称创建订阅。 如果工作区的智能体项目是另一位成员创建的，激活时按项目创建者的套餐检查触发器单位。如果该套餐已不允许管理触发器，则返回 `plan_required`。 激活需要 `requestId`，最多 128 个字符，且至少包含一个非空白字符。 具有工作区 `developer` 角色的成员可以构建和激活触发器。只有 `owner` 或 `admin` 能用返回的完整名称调用 `create_subscription`。 |
 | `remove_my_trigger` | `manage` | 删除该项目中的触发器。如果同一工作区有启用的订阅使用该触发器，则返回 `trigger_in_use`。 |
 

@@ -354,9 +354,11 @@ Agent keys require `read`. Optionally send `block` (EVM or Substrate) or `slot` 
 
 Using `slot` for EVM or Substrate, or `block` for Solana, returns `result: "invalid"`.
 
-Solana discovery tries up to 12 recent slots, and Substrate tries up to 12 recent blocks. After EVM discovery reads at least one log window without a match, an error response from the provider, including a provider-side timeout, or an opaque runtime refusal on older windows can end the scan with `no_match`. That result covers only the windows read. Transport failures, reaching the discovery deadline, and a scan that cannot read any windows return `retryable`.
+EVM discovery covers at most the latest 1,000 blocks. Solana discovery tries up to 12 recent slots, and Substrate tries up to 12 recent blocks. After EVM discovery reads at least one log window without a match, an error response from the provider, including a provider-side timeout, or an opaque runtime refusal on older windows can end the scan with `no_match`. That result covers only the windows read. Transport failures, reaching the discovery deadline, and a scan that cannot read any windows return `retryable`.
 
-If you know where the event occurred or want to bypass discovery, pass its `slot` for Solana or `block` for EVM or Substrate to `test_trigger`.
+If you know where the event occurred or want to bypass discovery, pass its `slot` for Solana or `block` for EVM or Substrate to `test_trigger`. For an older EVM event, pass its `block` directly.
+
+The workspace test limiter returns HTTP `429` with `error.code: "retryable"`. Back off before retrying. A successful response can carry `result: "retryable"`.
 
 ## POST /api/agent/build/drafts/:draftId/activate
 

@@ -353,9 +353,11 @@ EVM 合约没有已验证的 ABI 时返回 `404 not_found`。Solana 程序缺少
 
 对 EVM 或 Substrate 传入 `slot`、或对 Solana 传入 `block` 时，返回 `result: "invalid"`。
 
-Solana 查找最多尝试近期 12 个 slot，Substrate 最多尝试近期 12 个区块。如果 EVM 已读取至少一个日志区间但没有匹配项，且提供方对更早的区间返回错误（包括提供方报告的超时），或运行时返回原因不明的拒绝，查找可能以 `no_match` 结束。该结果仅覆盖已读取的区间。传输故障、达到查找时限或未能读取任何区间时返回 `retryable`。
+EVM 查找最多覆盖最近 1,000 个区块。 Solana 查找最多尝试近期 12 个 slot，Substrate 最多尝试近期 12 个区块。如果 EVM 已读取至少一个日志区间但没有匹配项，且提供方对更早的区间返回错误（包括提供方报告的超时），或运行时返回原因不明的拒绝，查找可能以 `no_match` 结束。该结果仅覆盖已读取的区间。传输故障、达到查找时限或未能读取任何区间时返回 `retryable`。
 
-如果你知道事件发生的位置或想跳过查找，请向 `test_trigger` 传入对应的位置，Solana 用 `slot`，EVM 或 Substrate 用 `block`。
+如果你知道事件发生的位置或想跳过查找，请向 `test_trigger` 传入对应的位置，Solana 用 `slot`，EVM 或 Substrate 用 `block`。 对于更早的 EVM 事件，请直接传入其 `block`。
+
+触发工作区测试限流时，API 返回 HTTP `429`，且 `error.code: "retryable"`。请延长重试间隔。成功响应也可能包含 `result: "retryable"`。
 
 ## POST /api/agent/build/drafts/:draftId/activate
 

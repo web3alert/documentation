@@ -354,9 +354,11 @@ As chaves requerem `read`. Envie opcionalmente `block` (EVM ou Substrate) ou `sl
 
 Usar `slot` para EVM ou Substrate, ou `block` para Solana, devolve `result: "invalid"`.
 
-A pesquisa em Solana tenta até 12 slots recentes e em Substrate até 12 blocos recentes. Se uma pesquisa EVM ler pelo menos um intervalo de logs sem correspondências, uma resposta de erro do fornecedor, incluindo um tempo limite do lado do fornecedor, ou uma recusa genérica do runtime em intervalos anteriores pode terminar a pesquisa com `no_match`. O resultado só abrange os intervalos lidos. Falhas de transporte, o fim do prazo da pesquisa e a impossibilidade de ler qualquer intervalo devolvem `retryable`.
+A pesquisa em EVM abrange no máximo os últimos 1 000 blocos. A pesquisa em Solana tenta até 12 slots recentes e em Substrate até 12 blocos recentes. Se uma pesquisa EVM ler pelo menos um intervalo de logs sem correspondências, uma resposta de erro do fornecedor, incluindo um tempo limite do lado do fornecedor, ou uma recusa genérica do runtime em intervalos anteriores pode terminar a pesquisa com `no_match`. O resultado só abrange os intervalos lidos. Falhas de transporte, o fim do prazo da pesquisa e a impossibilidade de ler qualquer intervalo devolvem `retryable`.
 
-Se souber onde ocorreu o evento ou quiser dispensar a pesquisa, passe a `test_trigger` o seu `slot` para Solana ou o seu `block` para EVM ou Substrate.
+Se souber onde ocorreu o evento ou quiser dispensar a pesquisa, passe a `test_trigger` o seu `slot` para Solana ou o seu `block` para EVM ou Substrate. Para um evento EVM anterior a esse intervalo, indique diretamente o respetivo `block`.
+
+O limite de testes do espaço devolve HTTP `429` com `error.code: "retryable"`. Aumente a espera antes de repetir o pedido. Uma resposta bem-sucedida pode conter `result: "retryable"`.
 
 ## POST /api/agent/build/drafts/:draftId/activate
 
