@@ -38,7 +38,7 @@ El acceso a endpoint depende de:
 - access level de project/data source/resource;
 - estado de la entidad.
 
-El plan de la cuenta determina el límite de la API externa. Todas las claves de agente de una cuenta comparten una sola cuota. Las solicitudes con tokens de sesión usan una cuota separada por cuenta, independiente de la cuota de agente. El límite de solicitudes del account nunca se aplica a `DELETE /api/token` ni a `DELETE /api/tokens`, por lo que puedes revocar tokens aunque el account haya agotado su cuota. Los valores detallados se describen en [Limits](limits.md#api-and-mcp).
+Cada cuenta tiene tres cuotas independientes para la API. Todas sus claves de agente comparten una cuota al ritmo del plan de la cuenta. Las solicitudes de sesión externas comparten otra cuota al mismo ritmo. Las sesiones de la interfaz web propia usan una tercera cuota de 1.200 solicitudes por minuto. El tráfico de sesión de confianza de MCP está exento de estos límites. El límite de solicitudes del account nunca se aplica a `DELETE /api/token` ni a `DELETE /api/tokens`, por lo que puedes revocar tokens aunque el account haya agotado su cuota. Los valores detallados se describen en [Limits](limits.md#api-and-mcp).
 
 ## Response format
 

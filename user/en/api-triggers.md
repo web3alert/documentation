@@ -358,7 +358,7 @@ EVM discovery covers at most the latest 1,000 blocks. Solana discovery tries up 
 
 If you know where the event occurred or want to bypass discovery, pass its `slot` for Solana or `block` for EVM or Substrate to `test_trigger`. For an older EVM event, pass its `block` directly.
 
-The workspace test limiter returns HTTP `429` with `error.code: "retryable"`. Back off before retrying. A successful response can carry `result: "retryable"`.
+Contract discovery, draft creation and draft testing share a per-IP edge limit of 2 requests per second with a burst of 10. The edge returns HTTP `429` with `Retry-After` and no `error.code`. Honor `Retry-After` before retrying. The workspace test limiter returns HTTP `429` with `error.code: "retryable"`. Back off before retrying. A successful response can carry `result: "retryable"`.
 
 ## POST /api/agent/build/drafts/:draftId/activate
 

@@ -357,7 +357,7 @@ EVM 查找最多覆盖最近 1,000 个区块。 Solana 查找最多尝试近期 
 
 如果你知道事件发生的位置或想跳过查找，请向 `test_trigger` 传入对应的位置，Solana 用 `slot`，EVM 或 Substrate 用 `block`。 对于更早的 EVM 事件，请直接传入其 `block`。
 
-触发工作区测试限流时，API 返回 HTTP `429`，且 `error.code: "retryable"`。请延长重试间隔。成功响应也可能包含 `result: "retryable"`。
+查询合约、创建草稿和测试草稿共用边缘层的每 IP 限额，每秒 2 次请求，突发容量为 10。边缘层返回 HTTP `429`，包含 `Retry-After`，没有 `error.code`。请按 `Retry-After` 指示等待后重试。触发工作区测试限流时，API 返回 HTTP `429`，且 `error.code: "retryable"`。请延长重试间隔。成功响应也可能包含 `result: "retryable"`。
 
 ## POST /api/agent/build/drafts/:draftId/activate
 

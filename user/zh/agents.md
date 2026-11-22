@@ -2,7 +2,7 @@
 
 Web3alert 目录提供来自 EVM 和 Substrate 链的已解码链上事件，涵盖以太坊（Ethereum）、Polkadot 和 Kusama 等链。智能体可以通过 [14 个 MCP 工具](mcp-server.md#agent-endpoint) 查找并订阅触发器，然后通过 Webhook 或收件箱接收符合条件的 JSON 事件。
 
-在 Free 套餐中，智能体订阅只能向公开的 HTTPS Webhook 投递事件。如果没有公开的 HTTPS 端点，需要使用 Advanced 或 Pro 套餐才能使用收件箱。
+收件箱使用工作区访问列表中首位所有者的套餐。工作区没有所有者时，使用调用者自己的套餐。如果你拥有工作区的 `owner` 或 `admin` 角色，只要首位所有者使用 Advanced 或 Pro 套餐，即使你自己的账户是 Free，也可以使用收件箱。适用套餐为 Free 时，请使用公开的 HTTPS Webhook。
 
 ## 1. 获取智能体密钥
 
@@ -123,9 +123,11 @@ claude mcp add --transport http web3alert-agent https://web3alert.io/mcp/agent \
 付款前请确认密钥具有 `spend` 权限，并通过 [GET /api/billing/overview](api-billing.md#get-api-billing-overview) 查看调用者账户当前的套餐。在应用中核对或请账户持有人确认，没有生效的更高档套餐、待处理的结账或启用自动续订的有效套餐会阻止这次购买。设置或读取收件箱需要工作区的 `owner` 或 `admin` 角色。能否使用收件箱取决于工作区访问列表中第一个拥有 `owner` 角色的账户的套餐。用其他账户购买套餐不会为该所有者开通收件箱。
 
 1. 签名前调用 `get_account({})`，查看欧元余额，并在设有月度上限时确认本次购买在密钥的剩余额度内。新账户的余额为 0 欧元，Advanced 一个月为 15 欧元。在此零余额示例中，使用 `manage` 权限调用 `get_topup_requirements({"amountEur":15})`。充值范围为 5–500 欧元。Web3alert 使用欧洲央行的美元参考汇率，按 1 USDC 等于 1 USD 换算，不加价。
-2. 通过 HTTPS 向 `https://web3alert.io/api/billing/wallet/x402-topup` 发送相同的请求体，省略付款签名，以获取新报价。 两次 POST 均须发送 `Authorization: Bearer <agent-key>` 和 `Content-Type: application/json`。仅在第二次 POST 中发送 `PAYMENT-SIGNATURE`。 签名前请核对付款 URL 必须正是该地址，网络为 Base（`eip155:8453`），资产为 USDC（`0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913`），且付款的 `payTo` 与新报价中的地址一致。核对预期的 USDC 金额。金额以字符串表示，以六位小数的最小单位计。例如 `"1000000"` 等于 1 USDC。任一项不符就停止。
+2. 使用没有自动付款功能的 HTTP 客户端，通过 HTTPS 向 `https://web3alert.io/api/billing/wallet/x402-topup` 发送相同的请求体，省略付款签名，以获取新报价。两次 POST 均须发送 `Authorization: Bearer <agent-key>` 和 `Content-Type: application/json`。仅在第二次 POST 中发送 `PAYMENT-SIGNATURE`。 签名前请核对付款 URL 必须正是该地址，网络为 Base（`eip155:8453`），资产为 USDC（`0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913`），且付款的 `payTo` 与新报价中的地址一致。核对预期的 USDC 金额。金额以字符串表示，以六位小数的最小单位计。例如 `"1000000"` 等于 1 USDC。任一项不符就停止。
 
-   可以按 `get_topup_requirements` 的建议使用 `@x402/fetch`，也可以直接使用 `@x402/core` 搭配 `@x402/evm`。无论使用哪种方式，都请确保客户端的单笔支付上限至少等于报价中的 USDC 金额。`@x402/core` 2.30.0 对 USDC 的默认单笔支付上限为 1 美元。若报价不超过 20 USDC，可在注册 EVM 支付方案之前调用 `x402Client.fromConfig({ schemes: [], spendControls: { maxAmountPerPayment: 20 } })`。付款方无需持有 ETH 来支付 gas，因为智能体签署 EIP-3009 授权后，由支付服务方提交转账并支付 gas 费。使用自己的 x402 v2 客户端和钱包签署该报价。仅向该 URL 发送报价的请求体、Bearer 凭据及 `PAYMENT-SIGNATURE` 中的签名。已签名的 `POST` 不得跟随重定向。
+   使用 `@x402/core`、`@x402/evm` 支付方案和自己的钱包显式签署已核对的报价。确保客户端的单笔支付上限至少等于报价中的 USDC 金额。`@x402/core` 2.30.0 对 USDC 的默认单笔支付上限为 1 美元。若报价不超过 20 USDC，可在注册 EVM 支付方案之前调用 `x402Client.fromConfig({ schemes: [], spendControls: { maxAmountPerPayment: 20 } })`。付款方无需持有 ETH 来支付 gas，因为智能体签署 EIP-3009 授权后，由支付服务方提交转账并支付 gas 费。保存编码后的 `PAYMENT-SIGNATURE` 值供重试使用。使用没有自动付款功能的 HTTP 客户端，仅向核对过的 HTTPS URL 发送 `POST`，附上报价请求体、Bearer 凭据和该请求头。已签名的 `POST` 不得跟随重定向。
+
+   对这个端点使用 `@x402/fetch` 等自动付款封装器时，每次调用都会签署新的付款授权。超时后重新调用封装器会授权第二笔付款，结算成功后会计为另一笔充值。重试时请发送保存的签名。
 3. 如果已签名的 `POST` 返回 `202`、`5xx` 或超时，付款结果仍未确认。 逐次延长重试间隔。 即使报价已过期，也可在同一工作区用相同的请求体和签名重试有限次数。 如果重试返回带有 `PAYMENT-REQUIRED` 且没有 `PAYMENT-RESPONSE` 的新 `402` 报价，第一笔付款的结果仍未确认。请停止重试，不要签署新报价。 付款被拒时，解码后的 `PAYMENT-RESPONSE` 包含 `success: false`。 如果结果仍未确认，请停止并保留已有的标识符，例如 `topupId`，以便运营人员对账。在结果确认之前，切勿为同一目的签署另一笔付款。等[充值](api-billing.md#post-api-billing-wallet-x402-topup)结算并计入余额后再购买套餐。
 4. 为本次购买生成新的 `requestId`，例如 UUID，然后替换 `buy_plan({"planId":"advanced","durationMonths":1,"requestId":"<new-uuid>"})` 中的 `<new-uuid>`。请使用 `spend` 权限并确认欧元余额充足。可购买 1、3、6 或 12 个月的 Advanced 或 Pro，不会自动续订。仅在重试本次购买时沿用该 ID 和原参数。已有启用自动续订的有效套餐时返回 `key_not_allowed`。待处理的结账或有效的更高套餐也可能阻止购买，工具会返回 `api_error` 和 API 的消息。请让账户持有人先处理现有套餐或结账。`buy_plan` 的响应会立即返回所购套餐的 `tier`。MCP 会缓存该账户的 `/me` 响应，因此 `get_account` 最多可能继续显示原套餐 30 秒。
 
@@ -158,7 +160,7 @@ claude mcp add --transport http web3alert-agent https://web3alert.io/mcp/agent \
 
 找到触发器，用 `get_trigger` 查看输入，然后调用 `create_subscription({"trigger":"<trigger-fullname>","inbox":true,"title":"<unique-title>","state":"on"})`。传入必填的 `inputs`。每次调用只能指定一个投递目标。该工具会创建或复用工作区收件箱。 使用 `inbox: true` 时，`resource_name_in_use` 表示其他资源已占用收件箱的名称。请让工作区的 `owner` 或 `admin` 解决冲突。
 
-调用 `read_events({})` 从保留的最旧事件开始读取。当 `hasMore` 为真时继续读取，并在同一工作区将非空的 `nextCursor` 用作 `after`。`gap: true` 表示游标之后、首条结果之前或同一页的结果之间缺少此前保存过的事件。如果较新的已保存事件不再保留，空页也可能报告缺口。投递历史可用时，通过 `get_delivery_log` 查看未投递事件。使用事件的 `id` 去重。
+调用 `read_events({})` 从保留的最旧事件开始读取。当 `hasMore` 为真时继续读取，并在同一工作区将非空的 `nextCursor` 用作 `after`。`gap: true` 表示游标之后、首条结果之前或同一页的结果之间缺少此前保存过的事件。如果较新的已保存事件不再保留，空页也可能报告缺口。投递历史可用时，通过 `get_delivery_log` 查看未投递事件。使用事件的 `id` 去重。收件箱事件体超过 64 KiB 时，收到的事件包含 `body.truncated: true`，且没有 `body.object`。处理前请检查该标记。
 
 是否保存事件以及保留时长取决于工作区所有者的套餐。若无所有者，则使用订阅创建者的套餐。Advanced 最多保留 **7 天或 25,000 条事件**，Pro 最多保留 **30 天或 100,000 条事件**。不含告警历史的套餐不会保存事件。创建和读取收件箱时检查工作区所有者的套餐，若无所有者则检查调用者的套餐。若该套餐不包含告警历史，则返回 `not_in_plan`。
 

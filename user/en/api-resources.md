@@ -188,7 +188,7 @@ While the applicable plan lacks alert history, the API refuses inbox writes. Tho
 
 Requires an account session or an agent key with `read`, plus workspace control and the same paid-plan check as inbox creation. Pass the optional query parameters `after` (opaque cursor) and `limit` (1–500, default 100). The initial read starts at the oldest retained event. A cursor works only in its original workspace. An empty cursor, forbidden characters, or more than 256 characters returns HTTP `400` with `error.message` set to `invalid request`. Other invalid cursors, including a cursor from another workspace, return HTTP `400` with `error.message` set to `invalid inbox cursor`.
 
-Returns `{ events, nextCursor, hasMore, gap }`. Each event contains `cursor`, `id`, `receivedAt`, `subscription`, `trigger` and `body`. A body over 64 KB is stored with `truncated: true` and without `object`.
+Returns `{ events, nextCursor, hasMore, gap }`. Each event contains `cursor`, `id`, `receivedAt`, `subscription`, `trigger` and `body`. A body over 64 KiB is stored with `truncated: true` and without `object`.
 
 Pass `nextCursor` as `after` for the next page or poll. An empty page returns the supplied cursor, or `null` if it was omitted. `gap: true` reports holes in previously stored events, between the cursor and the first result or between events on the same page. With a cursor, an empty page can also report a gap if newer events were stored and then expired or were removed. Check the [delivery log](api-subscriptions.md) for undelivered events when history is available.
 

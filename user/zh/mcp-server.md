@@ -70,7 +70,7 @@ Token 撤销后，API 会立即拒绝该 token。MCP 仍有验证缓存时，到
 | 工具 | 用途 |
 | --- | --- |
 | `get_account` | 返回账户 ID、名称、套餐、欧元余额、套餐限制和可用的订阅计数，以及密钥权限、有效期、月度上限和本月支出。 |
-| `get_topup_requirements` | 获取 5–500 欧元的 USDC 充值报价。使用自己的 x402 客户端和钱包付款。需要 `manage`。 签名前请核对[付款 URL、网络和资产](api-billing.md#post-api-billing-wallet-x402-topup)。 |
+| `get_topup_requirements` | 获取 5–500 欧元的 USDC 充值报价。使用自己的钱包显式签署付款。需要 `manage`。 签名前请核对[付款 URL、网络和资产](api-billing.md#post-api-billing-wallet-x402-topup)。 |
 | `buy_plan` | 使用欧元余额购买 Advanced 或 Pro，无自动续订。需要 `spend` 权限和新的 8–64 字符 `requestId`，例如生成的 UUID。仅在重试同一笔购买时沿用该 ID。 |
 | `find_triggers` | 在公开目录中搜索 EVM 和 Substrate 链的触发器，也会搜索当前工作区中的触发器。 |
 | `get_trigger` | 查看 trigger 的运行时 inputs、投递的事件字段以及可在 `conditions` 中使用的字段。 |
@@ -81,7 +81,7 @@ Token 撤销后，API 会立即拒绝该 token。MCP 仍有验证缓存时，到
 | `list_subscriptions` | 列出 subscriptions 的 ID、标题、状态、triggers、webhooks 和创建时间。 |
 | `set_subscription_state` | 暂停（`off`）或恢复（`on`）subscription。 |
 | `remove_subscription` | 删除订阅。Webhook 重试会在约 10 秒内停止。在此期间到期的尝试仍可能发出。 |
-| `read_events` | 在付费工作区从最旧的事件开始读取收件箱。在同一工作区轮询时将 `nextCursor` 用作 `after`。`gap: true` 表示一页中或该页首条结果之前缺少已保存的事件。如果较新的已保存事件不再保留，空页也可能报告缺口。投递历史可用时，用 `get_delivery_log` 查看未投递事件。需要 `read`。 |
+| `read_events` | 在付费工作区从最旧的事件开始读取收件箱。在同一工作区轮询时将 `nextCursor` 用作 `after`。`gap: true` 表示一页中或该页首条结果之前缺少已保存的事件。如果较新的已保存事件不再保留，空页也可能报告缺口。投递历史可用时，用 `get_delivery_log` 查看未投递事件。需要 `read`。收件箱事件体超过 64 KiB 时，收到的事件包含 `body.truncated: true`，且没有 `body.object`。处理前请检查该标记。 |
 | `get_delivery_log` | 查看工作区或单个订阅的投递结果。 告警历史按工作区访问列表中第一个具有所有者角色的账户的套餐检查。如果没有这样的账户，API 会检查请求方账户的套餐。如果该套餐不含历史记录，工具返回 `not_in_plan`。 Webhook 渠道条目包含 `eventId` 和 `attempt`。`nextAttemptAt` 是写入该条目时为下一次尝试安排的时间，采用 ISO 格式。如果条目未记录已安排的重试，则为 `null`。 |
 
 即使重试已经执行或取消，`nextAttemptAt` 也保持不变。要查看投递结果，请查找具有相同 `eventId` 的后续条目。如果订阅被暂停或删除导致重试停止，或重试已过期，Web3alert 不会写入最终条目，因此缺少最终条目时，无法确定投递结果或重试是否仍待执行。

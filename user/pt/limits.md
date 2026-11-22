@@ -146,7 +146,7 @@ MCP server está disponível para `Free`, `Advanced` e `Pro`.
 
 ### External API Rate
 
-Todas as chaves de agente de uma conta partilham uma única quota da API externa, de acordo com o plano dessa conta. Os pedidos com tokens de sessão usam uma quota separada por conta, independente da quota de agente. Cada quota é reposta à taxa por minuto abaixo e pode acumular até um minuto de pedidos. O limite de pedidos do account nunca se aplica a `DELETE /api/token` nem a `DELETE /api/tokens`, pelo que pode revogar tokens mesmo quando o account já esgotou a sua quota.
+Cada conta tem três quotas independentes da API. Todas as suas chaves de agente partilham uma quota à taxa do plano da conta. Os pedidos de sessão externos partilham outra quota à mesma taxa. As sessões da interface web própria usam uma terceira quota de 1 200 pedidos por minuto. O tráfego de sessão de confiança do MCP está isento destes limites. Cada quota é reposta à sua taxa por minuto e pode acumular até um minuto de pedidos. O limite de pedidos do account nunca se aplica a `DELETE /api/token` nem a `DELETE /api/tokens`, pelo que pode revogar tokens mesmo quando o account já esgotou a sua quota.
 
 | Tier | External API requests |
 | --- | ---: |
@@ -154,7 +154,7 @@ Todas as chaves de agente de uma conta partilham uma única quota da API externa
 | Advanced | 300/min |
 | Pro | 900/min |
 
-Os pedidos de sessão da interface web usam uma quota separada por conta. Os pedidos de confiança do servidor MCP autenticados com um token de sessão estão isentos do limite da API externa. Os pedidos que o MCP faz com uma chave de agente contam para a quota partilhada pelas chaves de agente da conta. As chamadas a ferramentas MCP têm um limite próprio de 120 por minuto e por account por predefinição, partilhado pelos três endpoints MCP em cada processo do servidor.
+Os pedidos que o MCP faz com uma chave de agente contam para a quota partilhada pelas chaves de agente da conta. As chamadas a ferramentas MCP têm um limite próprio de 120 por minuto e por account por predefinição, partilhado pelos três endpoints MCP em cada processo do servidor.
 
 ## Pagamentos de agentes {#agent-payments}
 

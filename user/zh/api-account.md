@@ -153,7 +153,7 @@ nonce 和验证端点共用边缘层的每 IP 限流，每秒 1 次请求，突�
 
 持有链接即可访问。返回 `{ wallet, account: { name }, createdAt, expiresAt }`。未知、已过期、已替换或已使用的链接均返回 `404 claim_not_found`。可通过 `POST /api/token` 的可选字段 `claim` 完成认领。
 
-为支持 Telegram 跨浏览器登录，认领页面无需账户凭据即可调用 `POST /api/agent/claim-handoffs`。页面在 JSON 请求体中以 `{ token }` 发送有效的认领令牌，并收到 `{ handoff, expiresAt }`。新的交接令牌会替换同一链接的上一个令牌。交接令牌最多有效 15 分钟，认领链接若提前到期，令牌也随之失效。Telegram 回调在 Telegram 打开的浏览器中将它作为 `claimHandoff` 发送至 `POST /api/token`。登录成功后，交接令牌和认领链接都会被消耗。交接令牌无效时返回 `404 claim_not_found`。
+为支持 Telegram 跨浏览器登录，认领页面无需账户凭据即可调用 `POST /api/agent/claim-handoffs`。页面在 JSON 请求体中以 `{ token }` 发送有效的认领令牌，并收到 `{ handoff, expiresAt }`。新的交接令牌会替换同一链接的上一个令牌。交接令牌最多有效 15 分钟，认领链接若提前到期，令牌也随之失效。Telegram 回调在 Telegram 打开的浏览器中将它作为 `claimHandoff` 发送至 `POST /api/token`。登录成功后，交接令牌和认领链接都会被消耗。交接令牌无效时返回 `404 claim_not_found`。使用过期、已替换或已使用的认领链接签发交接令牌时，API 返回 `404 claim_not_found`。登录时收到 `409 login_already_linked`，交接令牌在到期前仍可使用。请对交接令牌保密。
 
 ## DELETE /api/me
 

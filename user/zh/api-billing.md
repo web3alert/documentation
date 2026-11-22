@@ -27,7 +27,9 @@
 
 通过 HTTPS 直接从 `https://web3alert.io/api/billing/wallet/x402-topup` 获取报价。 使用智能体密钥时，两次 POST 均须发送 `Authorization: Bearer <agent-key>` 和 `Content-Type: application/json`。仅在第二次 POST 中发送 `PAYMENT-SIGNATURE`。 签名前请核对付款 URL 必须正是该地址，网络为 Base（`eip155:8453`），资产为 USDC（`0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913`），且付款的 `payTo` 与新报价中的地址一致。核对预期的 USDC 金额。金额以字符串表示，以六位小数的最小单位计。例如 `"1000000"` 等于 1 USDC。任一项不符就停止。仅向该 URL 发送智能体密钥和付款签名。已签名的 `POST` 不得跟随重定向。
 
-没有 `PAYMENT-SIGNATURE` 的请求返回 `402`。响应体和 base64 编码的 `PAYMENT-REQUIRED` 包含同一份 x402 v2 `PaymentRequired` 报价。报价有效期为 300 秒。USDC 金额向上取整到美分，`resource.url` 始终使用配置的公开源地址。用钱包签名并保留 `accepts[0].extra.quoteId`，然后发送相同的请求体和 base64 编码的 `PAYMENT-SIGNATURE`。开始新付款时，如果报价已过期、不匹配或来自其他工作区，则返回带有新报价的 `402` 响应。
+没有 `PAYMENT-SIGNATURE` 的请求返回 `402`。响应体和 base64 编码的 `PAYMENT-REQUIRED` 包含同一份 x402 v2 `PaymentRequired` 报价。报价有效期为 300 秒。USDC 金额向上取整到美分，`resource.url` 始终使用配置的公开源地址。使用没有自动付款功能的 HTTP 客户端获取报价并发送带签名的 POST。使用 `@x402/core`、`@x402/evm` 和自己的钱包显式签名，保留 `accepts[0].extra.quoteId`。保存 base64 编码的 `PAYMENT-SIGNATURE` 值，并与相同的请求体一并发送。开始新付款时，如果报价已过期、不匹配或来自其他工作区，则返回带有新报价的 `402` 响应。
+
+对这个端点使用 `@x402/fetch` 等自动付款封装器时，每次调用都会签署新的付款授权。超时后重新调用封装器会授权第二笔付款，结算成功后会计为另一笔充值。重试时请发送保存的签名。
 
 支付结算后返回 `200`、`PAYMENT-RESPONSE` 和 `{ topupId, amountEur, usdcAmount, transaction, network, balanceEur }`。
 

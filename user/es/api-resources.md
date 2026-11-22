@@ -187,7 +187,7 @@ Sin historial de alertas en el plan aplicable, la API rechaza las escrituras de 
 
 Requiere una sesión o una clave de agente con `read`, control del espacio y la misma comprobación de plan que la creación de la bandeja. Los parámetros `after` (cursor opaco) y `limit` (1–500, 100 por defecto) son opcionales. La primera lectura empieza en el evento conservado más antiguo. El cursor solo funciona en su espacio original. Un cursor vacío, con caracteres no admitidos o de más de 256 caracteres devuelve HTTP `400` con `invalid request` en `error.message`. Otros cursores inválidos, incluidos los de otro espacio, devuelven HTTP `400` con `invalid inbox cursor` en `error.message`.
 
-Devuelve `{ events, nextCursor, hasMore, gap }`. Cada evento contiene `cursor`, `id`, `receivedAt`, `subscription`, `trigger` y `body`. Los cuerpos de más de 64 KB se guardan con `truncated: true` y sin `object`.
+Devuelve `{ events, nextCursor, hasMore, gap }`. Cada evento contiene `cursor`, `id`, `receivedAt`, `subscription`, `trigger` y `body`. Los cuerpos de más de 64 KiB se guardan con `truncated: true` y sin `object`.
 
 Pasa `nextCursor` como `after` para seguir leyendo. Una página vacía devuelve el cursor enviado o `null` si lo omitiste. `gap: true` indica huecos en eventos previamente guardados, entre el cursor y el primer resultado o entre eventos de la misma página. Con un cursor, una página vacía también puede indicar un hueco si se habían guardado eventos posteriores que caducaron o se eliminaron. Consulta el [historial de entregas](api-subscriptions.md) para ver los eventos no entregados cuando haya historial.
 

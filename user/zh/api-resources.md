@@ -178,7 +178,7 @@ Payload: 无。
 
 需要账户会话令牌或有 `read` 权限的智能体密钥、工作区管理权限，并采用与创建收件箱相同的套餐检查。查询参数 `after`（不透明游标）和 `limit`（1–500，默认 100）可选。首次读取从保留的最旧事件开始。游标只能在原工作区使用。游标为空、包含不允许的字符或超过 256 个字符时，返回 HTTP `400`，`error.message` 为 `invalid request`。其他无效游标（含来自其他工作区的游标）也返回 HTTP `400`，`error.message` 为 `invalid inbox cursor`。
 
-返回 `{ events, nextCursor, hasMore, gap }`。每条事件包含 `cursor`、`id`、`receivedAt`、`subscription`、`trigger` 和 `body`。大于 64 KB 的事件体在保存时会移除 `object` 并添加 `truncated: true`。
+返回 `{ events, nextCursor, hasMore, gap }`。每条事件包含 `cursor`、`id`、`receivedAt`、`subscription`、`trigger` 和 `body`。大于 64 KiB 的事件体在保存时会移除 `object` 并添加 `truncated: true`。
 
 将 `nextCursor` 用作 `after` 以翻页或轮询。空页返回原游标，未提供时返回 `null`。`gap: true` 表示游标与首条结果之间或同一页的事件之间出现缺口，且缺少的是此前已保存的事件。提供游标时，如果较新的事件曾保存但已过期或被移除，空页也可能报告缺口。投递历史可用时，可在[投递日志](api-subscriptions.md)查看未投递事件。
 

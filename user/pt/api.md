@@ -38,7 +38,7 @@ O acesso ao endpoint depende de:
 - access level de project/data source/resource;
 - estado da entidade.
 
-O plano da conta determina o limite da API externa. Todas as chaves de agente de uma conta partilham uma única quota. Os pedidos com tokens de sessão usam uma quota separada por conta, independente da quota de agente. O limite de pedidos do account nunca se aplica a `DELETE /api/token` nem a `DELETE /api/tokens`, pelo que pode revogar tokens mesmo quando o account já esgotou a sua quota. Os valores detalhados estão descritos em [Limits](limits.md#api-and-mcp).
+Cada conta tem três quotas independentes da API. Todas as suas chaves de agente partilham uma quota à taxa do plano da conta. Os pedidos de sessão externos partilham outra quota à mesma taxa. As sessões da interface web própria usam uma terceira quota de 1 200 pedidos por minuto. O tráfego de sessão de confiança do MCP está isento destes limites. O limite de pedidos do account nunca se aplica a `DELETE /api/token` nem a `DELETE /api/tokens`, pelo que pode revogar tokens mesmo quando o account já esgotou a sua quota. Os valores detalhados estão descritos em [Limits](limits.md#api-and-mcp).
 
 ## Response format
 

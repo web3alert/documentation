@@ -153,7 +153,7 @@ Requires an agent key with `manage`. Takes no body. Returns `{ claimUrl, expires
 
 Public to the link holder. Returns `{ wallet, account: { name }, createdAt, expiresAt }`. An unknown, expired, replaced or used link returns `404 claim_not_found`. Complete the claim with the optional `claim` field in `POST /api/token`.
 
-For Telegram sign-in across browsers, the claim page calls `POST /api/agent/claim-handoffs` without an account credential. It sends the live claim token in the JSON body as `{ token }` and receives `{ handoff, expiresAt }`. A new handoff replaces the previous one for the same link. It expires after 15 minutes or when the link expires, whichever comes first. The Telegram callback sends it as `claimHandoff` to `POST /api/token` in the browser Telegram opens. A successful sign-in consumes both the handoff and the claim link. An invalid handoff returns `404 claim_not_found`.
+For Telegram sign-in across browsers, the claim page calls `POST /api/agent/claim-handoffs` without an account credential. It sends the live claim token in the JSON body as `{ token }` and receives `{ handoff, expiresAt }`. A new handoff replaces the previous one for the same link. It expires after 15 minutes or when the link expires, whichever comes first. The Telegram callback sends it as `claimHandoff` to `POST /api/token` in the browser Telegram opens. A successful sign-in consumes both the handoff and the claim link. An invalid handoff returns `404 claim_not_found`. Issuing a handoff from an expired, replaced or used claim link returns `404 claim_not_found`. At sign-in, `409 login_already_linked` leaves the handoff usable until it expires. Keep the handoff private.
 
 ## DELETE /api/me
 

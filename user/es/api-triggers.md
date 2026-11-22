@@ -358,7 +358,7 @@ La búsqueda en EVM abarca como máximo los últimos 1.000 bloques. La búsqueda
 
 Si sabes dónde ocurrió el evento o quieres omitir la búsqueda, pasa a `test_trigger` su `slot` para Solana o su `block` para EVM o Substrate. Para un evento de EVM anterior a ese intervalo, indica su `block` directamente.
 
-El límite de pruebas del espacio devuelve HTTP `429` con `error.code: "retryable"`. Aumenta la espera antes de reintentar. Una respuesta exitosa puede contener `result: "retryable"`.
+La búsqueda de contratos, la creación de borradores y las pruebas de borradores comparten un límite por IP en el perímetro de 2 solicitudes por segundo, con una ráfaga de 10. El perímetro devuelve HTTP `429` con `Retry-After` y sin `error.code`. Respeta `Retry-After` antes de reintentar. El límite de pruebas del espacio devuelve HTTP `429` con `error.code: "retryable"`. Aumenta la espera antes de reintentar. Una respuesta exitosa puede contener `result: "retryable"`.
 
 ## POST /api/agent/build/drafts/:draftId/activate
 
