@@ -153,8 +153,10 @@ Retention follows the workspace owner's plan, falling back to the caller's plan 
 
 On Advanced or Pro, connect the same client to `https://web3alert.io/mcp/agent/build` using the same bearer header. The server generates the trigger from an EVM contract ABI, Solana IDL or Substrate metadata, so you can build without writing code.
 
-1. Use `find_contract` with a built-in chain source and a contract address, Solana program or Substrate pallet to find an exact event signature.
-2. Pass the target and event to `plan_trigger`. Save the returned `draftId`. The draft expires after seven days.
+1. Use `find_contract` with a platform chain and a contract address, Solana program or Substrate pallet. Set `chain` to a short name such as `ethereum`, `base`, `arbitrum-one`, `polkadot` or `solana`, or use `common.<chain>` or `common.source.<chain>`. For an unknown chain, look for available names after `Supported:` in the tool error.
+
+   For EVM, `recentBlocks` shows how many recent blocks each event’s `recentCount` covers, up to 1,000. The range can be shorter if the provider rejects a wide query. A `null` value means no blocks could be read.
+2. Pass the same chain and target plus the exact event signature to `plan_trigger`. Save the returned `draftId`. The draft expires after seven days.
 3. Run `test_trigger` on the draft. Let the server find a recent sample or supply a block or slot. Continue when the latest result is `matched`.
 4. Call `activate_trigger` with the same `draftId` and your own `requestId`. Reuse the ID on retries. The saved trigger is in the workspace's private agent project. Pass its returned fullname to `create_subscription`.
 

@@ -334,11 +334,13 @@ transforms над переданным input, затем валидирует п
 
 ## POST /api/agent/build/contracts
 
-Для ключей нужно право `read`. Передайте `chain` и одно из полей `address` (EVM), `program` (Solana) или `pallet` (Substrate). Возвращает `{ chain, source, events, functions? }` с точными сигнатурами. Для EVM доступно число недавних логов по событиям. Неизвестная цель даёт `404 not_found`. Временный сбой данных сети даёт `503 retryable`.
+Для ключей нужно право `read`. Передайте `chain` и одно из полей `address` (EVM), `program` (Solana) или `pallet` (Substrate). Укажите встроенный источник Web3alert коротким именем, например `ethereum`, `base`, `arbitrum-one`, `polkadot` или `solana`, либо именем в формате `common.<chain>` или `common.source.<chain>`. Для неизвестной сети ответ `404 not_found` содержит в `error.details.chains` короткие имена, поддерживаемые для указанного типа цели. Временный сбой данных сети даёт `503 retryable`.
+
+Возвращает `{ chain, source, events, recentBlocks, functions? }` с точными сигнатурами событий. Для EVM поле `recentCount` каждого события содержит число логов за последние `recentBlocks` блоков, максимум 1 000. Если провайдер отклоняет запрос по широкому диапазону, API повторяет его по меньшим диапазонам и может вернуть число для меньшего количества блоков. `recentBlocks` равно `null`, если прочитать блоки не удалось, а также для Solana или Substrate. `recentCount` равно `null`, когда подсчёт недоступен или неприменим.
 
 ## POST /api/agent/build/drafts
 
-Для ключей нужно право `manage`. Передайте сеть и цель, имя или точную сигнатуру `event` и необязательные `title` и `description`. Возвращает `{ draftId, fullnamePreview, inputs, filterable, outputSchema, expiresAt }`. Черновик действует семь дней. Неизвестная цель или событие даёт `404 not_found`. Временный сбой данных сети даёт `503 retryable`.
+Для ключей нужно право `manage`. Передайте `chain` в одном из форматов [поиска контрактов](#post-api-agent-build-contracts), цель и имя или точную сигнатуру в поле `event`. Можно добавить `title` и `description`. Возвращает `{ draftId, fullnamePreview, inputs, filterable, outputSchema, expiresAt }`. Черновик действует семь дней. Для неизвестной сети API возвращает `404 not_found` с `error.details.chains`. Неизвестное событие также даёт `404 not_found`. Временный сбой данных сети даёт `503 retryable`.
 
 ## POST /api/agent/build/drafts/:draftId/test
 

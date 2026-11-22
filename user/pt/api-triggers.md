@@ -334,11 +334,13 @@ Os cinco caminhos aceitam uma sessão de conta ou chave de agente no espaço atu
 
 ## POST /api/agent/build/contracts
 
-As chaves requerem `read`. Envie `chain` e um de `address` (EVM), `program` (Solana) ou `pallet` (Substrate). Devolve `{ chain, source, events, functions? }` com assinaturas exatas. EVM inclui a contagem recente de logs por evento, quando disponível. Um alvo desconhecido devolve `404 not_found`. Uma falha temporária dos dados da cadeia devolve `503 retryable`.
+As chaves requerem `read`. Envie `chain` e um de `address` (EVM), `program` (Solana) ou `pallet` (Substrate). Use uma fonte de cadeia integrada do Web3alert com um nome curto como `ethereum`, `base`, `arbitrum-one`, `polkadot` ou `solana`, ou use `common.<chain>` ou `common.source.<chain>`. Uma cadeia desconhecida devolve `404 not_found` e os nomes curtos aceites para o tipo de alvo em `error.details.chains`. Uma falha temporária dos dados da cadeia devolve `503 retryable`.
+
+Devolve `{ chain, source, events, recentBlocks, functions? }` com assinaturas exatas de eventos. Para EVM, o `recentCount` de cada evento conta os logs dos últimos `recentBlocks` blocos, até 1 000. Se o fornecedor recusar uma consulta ampla, a API tenta novamente com janelas mais pequenas e pode devolver um intervalo menor. `recentBlocks` é `null` quando não é possível ler nenhum bloco e para Solana ou Substrate. Um `recentCount` de `null` indica que a contagem está indisponível ou não se aplica.
 
 ## POST /api/agent/build/drafts
 
-As chaves requerem `manage`. Envie a mesma cadeia e alvo, um nome ou assinatura exata em `event`, e opcionalmente `title` e `description`. Devolve `{ draftId, fullnamePreview, inputs, filterable, outputSchema, expiresAt }`. O rascunho dura sete dias. Um alvo ou evento desconhecido devolve `404 not_found`. Uma falha temporária dos dados da cadeia devolve `503 retryable`.
+As chaves requerem `manage`. Envie `chain` num dos formatos aceites pela [pesquisa de contratos](#post-api-agent-build-contracts), juntamente com o alvo e um nome ou assinatura exata em `event`. Pode incluir `title` e `description`. Devolve `{ draftId, fullnamePreview, inputs, filterable, outputSchema, expiresAt }`. O rascunho dura sete dias. Uma cadeia desconhecida devolve `404 not_found` com `error.details.chains`. Um evento desconhecido também devolve `404 not_found`. Uma falha temporária dos dados da cadeia devolve `503 retryable`.
 
 ## POST /api/agent/build/drafts/:draftId/test
 

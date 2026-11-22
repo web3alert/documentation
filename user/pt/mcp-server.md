@@ -132,9 +132,11 @@ Para uma ligação gerida pelo editor, adicione a entrada em `servers` em `.vsco
 
 Use `https://web3alert.io/mcp/agent/build` com as mesmas definições e o mesmo cabeçalho Bearer. A lista inclui as 14 ferramentas anteriores e estas 5. As contas Free podem descobri-las e recebem `plan_required` ao chamá-las.
 
+`find_contract` e `plan_trigger` usam as fontes de cadeia integradas do Web3alert. Passe um nome curto como `ethereum`, `base`, `arbitrum-one`, `polkadot` ou `solana`, ou use `common.<chain>` ou `common.source.<chain>`. Se a cadeia for desconhecida e houver nomes curtos disponíveis para o tipo de alvo, o erro `not_found` apresenta-os após `Supported:`.
+
 | Ferramenta | Permissão | Função |
 | --- | --- | --- |
-| `find_contract` | `read` | Procura assinaturas exatas de eventos no ABI de um contrato, IDL Solana ou metadados Substrate. Os resultados EVM incluem funções e uma contagem recente de logs, se disponível. |
+| `find_contract` | `read` | Procura assinaturas exatas de eventos no ABI de um contrato, no IDL Solana ou nos metadados Substrate. Para EVM, devolve funções e um `recentCount` por evento nos últimos `recentBlocks` blocos, até 1 000. O intervalo pode ser menor se o fornecedor recusar uma consulta ampla. `recentBlocks` é `null` se não for possível ler nenhum bloco ou se a fonte for Solana ou Substrate. Uma contagem de `0` indica que não foram encontrados logs correspondentes no intervalo indicado. |
 | `plan_trigger` | `manage` | Gera um rascunho para um evento sem escrever código. Devolve `draftId`, fullname previsto, entradas, campos filtráveis, esquema de saída e validade. |
 | `test_trigger` | `read` | Testa um rascunho com uma amostra recente ou reproduz um bloco ou slot indicado. |
 | `activate_trigger` | `manage` | Guarda um rascunho cujo último teste encontrou uma correspondência no projeto privado do agente. Reutilize `requestId` nas novas tentativas. Use o fullname devolvido para criar subscrições. |

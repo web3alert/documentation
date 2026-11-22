@@ -334,11 +334,13 @@ For all five build routes, use an account session or an agent key in the current
 
 ## POST /api/agent/build/contracts
 
-Agent keys require `read`. Send `chain` and one of `address` (EVM), `program` (Solana) or `pallet` (Substrate). Returns `{ chain, source, events, functions? }` with exact event signatures. EVM includes a recent log count per event when available. An unknown target returns `404 not_found`. A temporary chain data failure returns `503 retryable`.
+Agent keys require `read`. Send `chain` and one of `address` (EVM), `program` (Solana) or `pallet` (Substrate). Use a Web3alert built-in chain source, with a short name such as `ethereum`, `base`, `arbitrum-one`, `polkadot` or `solana`, or use `common.<chain>` or `common.source.<chain>`. An unknown chain returns `404 not_found` with the supported short names for the target type in `error.details.chains`. A temporary chain data failure returns `503 retryable`.
+
+Returns `{ chain, source, events, recentBlocks, functions? }` with exact event signatures. For EVM, each event’s `recentCount` counts logs over the last `recentBlocks` blocks, up to 1,000. If the provider refuses a wide query, the API retries with smaller windows and can report a shorter range. `recentBlocks` is `null` when no blocks could be read and for Solana or Substrate. A `null` `recentCount` means the count is unavailable or inapplicable.
 
 ## POST /api/agent/build/drafts
 
-Agent keys require `manage`. Send the same chain and target plus an `event` name or exact signature, with optional `title` and `description`. Returns `{ draftId, fullnamePreview, inputs, filterable, outputSchema, expiresAt }`. The generated draft lasts seven days. An unknown target or event returns `404 not_found`. A temporary chain data failure returns `503 retryable`.
+Agent keys require `manage`. Send `chain` in any of the formats accepted by [contract discovery](#post-api-agent-build-contracts), along with the target and an `event` name or exact signature. You can include `title` and `description`. Returns `{ draftId, fullnamePreview, inputs, filterable, outputSchema, expiresAt }`. The generated draft lasts seven days. An unknown chain returns `404 not_found` with `error.details.chains`. An unknown event also returns `404 not_found`. A temporary chain data failure returns `503 retryable`.
 
 ## POST /api/agent/build/drafts/:draftId/test
 

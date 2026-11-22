@@ -153,8 +153,10 @@ La retención depende del plan del propietario del espacio de trabajo o del soli
 
 En Advanced o Pro, conecta el cliente a `https://web3alert.io/mcp/agent/build` con la misma cabecera Bearer. El servidor genera el trigger a partir de un ABI de EVM, un IDL de Solana o metadatos de Substrate, sin que tengas que escribir código.
 
-1. Usa `find_contract` con una fuente de cadena integrada y la dirección del contrato, el programa de Solana o el pallet de Substrate para obtener la firma exacta del evento.
-2. Envía el origen y el evento a `plan_trigger`. Guarda el `draftId`. El borrador caduca a los siete días.
+1. Usa `find_contract` con una cadena de la plataforma y la dirección del contrato, el programa de Solana o el pallet de Substrate. En `chain`, usa un nombre corto como `ethereum`, `base`, `arbitrum-one`, `polkadot` o `solana`, o usa `common.<chain>` o `common.source.<chain>`. Si la cadena es desconocida, busca los nombres disponibles después de `Supported:` en el error.
+
+   Para EVM, `recentBlocks` indica cuántos bloques recientes abarca el `recentCount` de cada evento, hasta 1.000. El intervalo puede ser menor si el proveedor rechaza una consulta amplia. El valor `null` indica que no se pudo leer ningún bloque.
+2. Envía la misma cadena y el mismo destino, junto con la firma exacta del evento, a `plan_trigger`. Guarda el `draftId`. El borrador caduca a los siete días.
 3. Ejecuta `test_trigger` con el borrador. Deja que el servidor busque una muestra reciente o indica un bloque o slot. Continúa cuando el último resultado sea `matched`.
 4. Ejecuta `activate_trigger` con el `draftId` y un `requestId` propio. Reutiliza este último en los reintentos. El trigger se guarda en el proyecto privado del agente del espacio de trabajo. Pasa el fullname devuelto a `create_subscription`.
 

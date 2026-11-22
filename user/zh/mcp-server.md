@@ -132,9 +132,11 @@ printf 'Web3alert 智能体密钥： ' && read -rs WEB3ALERT_KEY && echo && [ -n
 
 使用相同的客户端设置和 Bearer 请求头连接 `https://web3alert.io/mcp/agent/build`。工具列表包括上述 14 个工具和以下 5 个工具。Free 账户可以发现这些工具，调用时会收到 `plan_required`。
 
+`find_contract` 和 `plan_trigger` 仅使用 Web3alert 的内置链源。可以传入简称，例如 `ethereum`、`base`、`arbitrum-one`、`polkadot` 或 `solana`，也可以使用 `common.<chain>` 或 `common.source.<chain>`。若无法识别链，且该目标类型有可用的简称，`not_found` 工具错误会在 `Supported:` 后列出这些简称。
+
 | 工具 | 权限 | 功能 |
 | --- | --- | --- |
-| `find_contract` | `read` | 从合约 ABI、Solana IDL 或 Substrate 元数据查找准确的事件签名。EVM 结果还包含函数和可用的近期日志数量。 |
+| `find_contract` | `read` | 从合约 ABI、Solana IDL 或 Substrate 元数据查找准确的事件签名。EVM 结果包含函数和每个事件的 `recentCount`，统计最近 `recentBlocks` 个区块中的日志，最多 1,000 个区块。如果提供方拒绝大范围查询，覆盖范围可能缩小。未能读取任何区块或链源为 Solana 或 Substrate 时，`recentBlocks` 为 `null`。计数为 `0` 表示返回的范围内没有匹配的日志。 |
 | `plan_trigger` | `manage` | 无需编写代码即可生成事件草稿。返回 `draftId`、完整名称预览、输入、可筛选字段、输出结构和有效期。 |
 | `test_trigger` | `read` | 用近期样本测试草稿，或重放指定区块或 slot。 |
 | `activate_trigger` | `manage` | 将最近一次测试匹配的草稿保存到智能体的私有项目。重试时沿用 `requestId`。可用返回的完整名称创建订阅。 |

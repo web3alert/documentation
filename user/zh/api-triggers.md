@@ -333,11 +333,13 @@ Payload: trigger/source-specific search object.
 
 ## POST /api/agent/build/contracts
 
-密钥需要 `read` 权限。发送 `chain` 和 `address`（EVM）、`program`（Solana）或 `pallet`（Substrate）中的一个。返回 `{ chain, source, events, functions? }` 和准确的事件签名。EVM 会在可用时返回各事件的近期日志计数。目标未知时返回 `404 not_found`，链数据暂时不可用时返回 `503 retryable`。
+密钥需要 `read` 权限。发送 `chain`，并指定 `address`（EVM）、`program`（Solana）或 `pallet`（Substrate）中的一项。仅支持 Web3alert 内置链源。可以使用简称，如 `ethereum`、`base`、`arbitrum-one`、`polkadot` 或 `solana`，也可以使用 `common.<chain>` 或 `common.source.<chain>`。若无法识别链，API 返回 `404 not_found`，并在 `error.details.chains` 中列出该目标类型支持的简称。链数据暂时不可用时返回 `503 retryable`。
+
+返回 `{ chain, source, events, recentBlocks, functions? }`，其中包含准确的事件签名。对于 EVM，每个事件的 `recentCount` 统计最近 `recentBlocks` 个区块中的日志，最多 1,000 个区块。如果提供方拒绝大范围查询，API 会缩小查询窗口重试，返回的覆盖范围可能更短。未能读取任何区块或链源为 Solana 或 Substrate 时，`recentBlocks` 为 `null`。`recentCount` 为 `null` 表示计数不可用或不适用。
 
 ## POST /api/agent/build/drafts
 
-密钥需要 `manage` 权限。发送相同的链和目标，并在 `event` 中提供名称或准确签名，可选 `title` 和 `description`。返回 `{ draftId, fullnamePreview, inputs, filterable, outputSchema, expiresAt }`。草稿有效期为七天。目标或事件未知时返回 `404 not_found`，链数据暂时不可用时返回 `503 retryable`。
+密钥需要 `manage` 权限。`chain` 使用[合约查找端点](#post-api-agent-build-contracts)支持的格式，同时传入目标，并在 `event` 中提供名称或准确签名。可选 `title` 和 `description`。返回 `{ draftId, fullnamePreview, inputs, filterable, outputSchema, expiresAt }`。草稿有效期为七天。若无法识别链，返回 `404 not_found` 和 `error.details.chains`。事件未知时也返回 `404 not_found`。链数据暂时不可用时返回 `503 retryable`。
 
 ## POST /api/agent/build/drafts/:draftId/test
 

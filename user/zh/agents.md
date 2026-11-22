@@ -153,8 +153,10 @@ claude mcp add --transport http web3alert-agent https://web3alert.io/mcp/agent \
 
 在 Advanced 或 Pro 套餐下，使用同一个 Bearer 请求头连接 `https://web3alert.io/mcp/agent/build`。服务端根据 EVM 合约 ABI、Solana IDL 或 Substrate 元数据生成触发器，无需编写代码。
 
-1. 使用 `find_contract`，指定内置链源以及合约地址、Solana 程序或 Substrate pallet，找到准确的事件签名。
-2. 将目标和事件传给 `plan_trigger`，保存返回的 `draftId`。草稿七天后过期。
+1. 调用 `find_contract`，指定平台支持的链以及合约地址、Solana 程序或 Substrate pallet。`chain` 可用简称，如 `ethereum`、`base`、`arbitrum-one`、`polkadot` 或 `solana`，也可用 `common.<chain>` 或 `common.source.<chain>`。若无法识别链，请查看工具错误中 `Supported:` 后的可用名称。
+
+   对于 EVM，`recentBlocks` 表示每个事件的 `recentCount` 涵盖的近期区块数，最多 1,000 个。如果提供方拒绝大范围查询，覆盖范围可能缩小。值为 `null` 表示未能读取任何区块。
+2. 将同一条链、同一目标和准确的事件签名传给 `plan_trigger`，保存返回的 `draftId`。草稿七天后过期。
 3. 对草稿运行 `test_trigger`。可让服务端查找近期样本，也可提供区块或 slot。最近一次结果为 `matched` 后即可继续。
 4. 用原 `draftId` 和自己的 `requestId` 调用 `activate_trigger`。重试时沿用该 ID。触发器将保存到工作区的智能体私有项目。把返回的完整名称传给 `create_subscription`。
 

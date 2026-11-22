@@ -132,9 +132,11 @@ For an editor-managed connection, add the entry under `servers` in `.vscode/mcp.
 
 Use `https://web3alert.io/mcp/agent/build` with the same client settings and bearer header. The tool list contains all 14 tools above plus these 5. Free accounts can discover the build tools and receive `plan_required` on calls to them.
 
+`find_contract` and `plan_trigger` use Web3alert’s built-in chain sources. Pass a short name such as `ethereum`, `base`, `arbitrum-one`, `polkadot` or `solana`, or use `common.<chain>` or `common.source.<chain>`. When short names are available for the target type, the `not_found` tool error for an unknown chain appends `Supported:` followed by those names.
+
 | Tool | Scope | What it does |
 | --- | --- | --- |
-| `find_contract` | `read` | Finds exact event signatures from a contract ABI, Solana IDL or Substrate metadata. EVM results include functions and a recent log count when available. |
+| `find_contract` | `read` | Finds exact event signatures from a contract ABI, Solana IDL or Substrate metadata. EVM results include functions and a per-event `recentCount` over the last `recentBlocks` blocks, up to 1,000. The range can be shorter if the provider refuses a wide query. `recentBlocks` is `null` if no blocks could be read or the source is Solana or Substrate. A count of `0` means no matching logs in the reported range. |
 | `plan_trigger` | `manage` | Generates a draft for an event without custom code. Returns its `draftId`, preview fullname, inputs, filterable fields, output schema and expiry. |
 | `test_trigger` | `read` | Tests a draft on a recent sample or replays a supplied block or slot. |
 | `activate_trigger` | `manage` | Saves a draft whose latest test matched to the workspace's private agent project. Reuse `requestId` on retries. The returned trigger fullname is ready for subscriptions. |

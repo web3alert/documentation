@@ -132,9 +132,11 @@ Para una conexión gestionada por el editor, añade la entrada en `servers` en `
 
 Usa `https://web3alert.io/mcp/agent/build` con la misma configuración y cabecera Bearer. La lista incluye las 14 herramientas anteriores y estas 5. Las cuentas Free pueden descubrirlas y reciben `plan_required` al llamarlas.
 
+`find_contract` y `plan_trigger` usan las fuentes de cadena integradas de Web3alert. Pasa un nombre corto como `ethereum`, `base`, `arbitrum-one`, `polkadot` o `solana`, o usa `common.<chain>` o `common.source.<chain>`. Si la cadena es desconocida y hay nombres cortos disponibles para el tipo de destino, el error `not_found` los añade después de `Supported:`.
+
 | Herramienta | Permiso | Función |
 | --- | --- | --- |
-| `find_contract` | `read` | Busca firmas exactas de eventos en el ABI de un contrato, IDL de Solana o metadatos de Substrate. Los resultados de EVM incluyen funciones y un recuento de eventos recientes cuando está disponible. |
+| `find_contract` | `read` | Busca firmas exactas de eventos en el ABI de un contrato, el IDL de Solana o los metadatos de Substrate. Para EVM, devuelve funciones y un `recentCount` por evento en los últimos `recentBlocks` bloques, hasta 1.000. El intervalo puede ser menor si el proveedor rechaza una consulta amplia. `recentBlocks` es `null` si no se pudo leer ningún bloque o si la fuente es Solana o Substrate. Un recuento de `0` indica que no hubo logs coincidentes en el intervalo indicado. |
 | `plan_trigger` | `manage` | Genera un borrador para un evento sin escribir código. Devuelve `draftId`, fullname previsto, inputs, campos filtrables, esquema de salida y vencimiento. |
 | `test_trigger` | `read` | Prueba un borrador con una muestra reciente o reproduce el bloque o slot indicado. |
 | `activate_trigger` | `manage` | Guarda un borrador cuya última prueba coincidió en el proyecto privado del agente. Reutiliza `requestId` al reintentar. El fullname devuelto sirve para crear suscripciones. |

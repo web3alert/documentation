@@ -334,11 +334,13 @@ Las cinco rutas admiten una sesión de cuenta o una clave de agente en el espaci
 
 ## POST /api/agent/build/contracts
 
-Las claves requieren `read`. Envía `chain` y uno de `address` (EVM), `program` (Solana) o `pallet` (Substrate). Devuelve `{ chain, source, events, functions? }` con firmas exactas. EVM incluye el recuento reciente de logs por evento cuando está disponible. Un destino desconocido devuelve `404 not_found`. Si los datos de cadena no están disponibles temporalmente, devuelve `503 retryable`.
+Las claves requieren `read`. Envía `chain` y uno de `address` (EVM), `program` (Solana) o `pallet` (Substrate). Usa una fuente de cadena integrada de Web3alert con un nombre corto como `ethereum`, `base`, `arbitrum-one`, `polkadot` o `solana`, o usa `common.<chain>` o `common.source.<chain>`. Una cadena desconocida devuelve `404 not_found` y los nombres cortos admitidos para el tipo de destino en `error.details.chains`. Un fallo temporal de datos de cadena devuelve `503 retryable`.
+
+Devuelve `{ chain, source, events, recentBlocks, functions? }` con firmas exactas de eventos. Para EVM, el `recentCount` de cada evento cuenta los logs de los últimos `recentBlocks` bloques, hasta 1.000. Si el proveedor rechaza una consulta amplia, la API reintenta con intervalos más pequeños y puede devolver un intervalo menor. `recentBlocks` es `null` si no se pudo leer ningún bloque y para Solana o Substrate. Un `recentCount` de `null` indica que el recuento no está disponible o no se aplica.
 
 ## POST /api/agent/build/drafts
 
-Las claves requieren `manage`. Envía los mismos datos de cadena y destino con un nombre o firma exacta en `event`, y opcionalmente `title` y `description`. Devuelve `{ draftId, fullnamePreview, inputs, filterable, outputSchema, expiresAt }`. El borrador dura siete días. Un destino o evento desconocido devuelve `404 not_found`. Un fallo temporal de datos de cadena devuelve `503 retryable`.
+Las claves requieren `manage`. Envía `chain` en uno de los formatos admitidos por la [búsqueda de contratos](#post-api-agent-build-contracts), junto con el destino y un nombre o una firma exacta en `event`. Puedes incluir `title` y `description`. Devuelve `{ draftId, fullnamePreview, inputs, filterable, outputSchema, expiresAt }`. El borrador dura siete días. Una cadena desconocida devuelve `404 not_found` con `error.details.chains`. Un evento desconocido también devuelve `404 not_found`. Un fallo temporal de datos de cadena devuelve `503 retryable`.
 
 ## POST /api/agent/build/drafts/:draftId/test
 
