@@ -16,6 +16,8 @@
 
 ## POST /api/billing/wallet/crypto-topup
 
+Требуется токен сессии аккаунта. Ключи агента получают `403 key_not_allowed`.
+
 <!-- api-contract: redirect-query=authoritative-externalReference; existing-value=replaced -->
 Создает пополнение баланса криптовалютой. Если передан `returnUrl` или
 `cancelUrl`, API устанавливает в нём query-параметр `externalReference` с
@@ -26,11 +28,19 @@
 
 Требуется сессия аккаунта или ключ агента с `manage`. Передайте `{ amountEur }` от 5 до 500 € с точностью до двух знаков. Оплата в USDC в сети Base по справочному курсу ЕЦБ для USD, где 1 USDC = 1 USD без наценки.
 
+Перед подписью убедитесь, что URL платежа в точности равен `https://web3alert.io/api/billing/wallet/x402-topup`, сеть — Base (`eip155:8453`), а актив — USDC (`0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913`). Если проверка не пройдена, остановитесь. Отправляйте ключ и подпись платежа только на этот URL.
+
 Запрос без `PAYMENT-SIGNATURE` возвращает `402` с котировкой x402 v2 `PaymentRequired` в теле и той же котировкой в заголовке `PAYMENT-REQUIRED` в base64. Котировка действует 300 секунд. Сумма в USDC округляется вверх до цента, а `resource.url` использует настроенный публичный origin. Подпишите платёж кошельком, сохранив `accepts[0].extra.quoteId`, и отправьте то же тело с заголовком `PAYMENT-SIGNATURE` в base64. Для нового платежа просроченная, несовпадающая котировка или котировка из другого пространства приводит к новой котировке с ответом `402`.
 
-Завершённый платёж возвращает `200` с `PAYMENT-RESPONSE` и `{ topupId, amountEur, usdcAmount, transaction, network, balanceEur }`. При `202` с `{ status: "pending", topupId }` повторите запрос с той же подписью. Повтор завершённого платежа возвращает исходный результат. При отказе сервер возвращает `402` со строкой `error` в теле и подробностями в `PAYMENT-RESPONSE`. Сбои сервиса дают `502 facilitator_unavailable`, `503 x402_unavailable` или `503 rate_unavailable`.
+Завершённый платёж возвращает `200` с `PAYMENT-RESPONSE` и `{ topupId, amountEur, usdcAmount, transaction, network, balanceEur }`.
+
+При `202` с `{ status: "pending", topupId }` повторяйте запрос ограниченное число раз с тем же телом и подписью в том же пространстве. Если платёж остаётся в ожидании, остановитесь, сохраните `topupId` для сверки оператором и не авторизуйте другой платёж для той же цели. Эндпоинт обновления пополнений через платёжную страницу не применяется к записям x402.
+
+Повтор завершённого платежа возвращает исходный результат. При отказе сервер возвращает `402` со строкой `error` в теле и подробностями в `PAYMENT-RESPONSE`. Сбои сервиса дают `502 facilitator_unavailable`, `503 x402_unavailable` или `503 rate_unavailable`.
 
 ## POST /api/billing/wallet/topup/refresh
+
+Требуется токен сессии аккаунта. Ключи агента получают `403 key_not_allowed`.
 
 <!-- api-contract: target=exact-topupId-or-externalReference; recent-topup-fallback=forbidden; result-correlation=fail-closed-on-missing-or-ambiguous -->
 Обновляет статус пополнения, точно указанного через `topupId` или
@@ -39,9 +49,11 @@
 должна вызывать refresh, если идентификатор отсутствует, повторяется или
 конфликтует с другим идентификатором.
 
+Этот эндпоинт предназначен для пополнений через платёжную страницу. Для записей x402 используйте [процедуру пополнения x402](#post-api-billing-wallet-x402-topup).
+
 ## POST /api/billing/account-plan/balance-purchase
 
-Для ключей нужно право `spend` и значение `autoRenew: false`. Если покупка превысит месячный лимит ключа, сервер вернёт `403 spend_cap_exceeded`. Покупка тарифа ключом при активном тарифе с автопродлением возвращает `403 key_not_allowed` до списания средств.
+Для ключей нужно право `spend` и значение `autoRenew: false`. Если покупка превысит месячный лимит ключа, сервер вернёт `403 spend_cap_exceeded`. Покупка тарифа ключом при активном тарифе с автопродлением возвращает `403 key_not_allowed` до списания средств. Незавершённое оформление или действующий более высокий тариф также могут заблокировать покупку до списания средств. Сначала решите вопрос с текущим тарифом или оформлением.
 
 <!-- api-contract: requestId=optional-backward-compatible-8-128-rfc3986-unreserved; requestId-omitted=not-retry-safe-across-http-attempts; autoRenew-default=false; same-intent=same-requestId-and-payload; exact-replay=original-subscriptionId-and-invoiceId-without-second-debit; conflicting-payload=rejected; new-intent=new-requestId -->
 Покупает или улучшает тариф account за баланс кошелька.
@@ -82,9 +94,13 @@
 
 ## POST /api/billing/account-plan/checkout
 
+Требуется токен сессии аккаунта. Ключи агента получают `403 key_not_allowed`.
+
 Создает checkout для тарифа account.
 
 ## POST /api/billing/account-plan/crypto-checkout
+
+Требуется токен сессии аккаунта. Ключи агента получают `403 key_not_allowed`.
 
 Создает прямой crypto checkout для тарифа account.
 
@@ -133,6 +149,8 @@
 
 ## POST /api/billing/project-addon/checkout
 
+Требуется токен сессии аккаунта. Ключи агента получают `403 key_not_allowed`.
+
 <!-- api-contract: pending-hosted-retry=existing-subscriptionId-invoiceId-externalReference-and-fresh-signed-form -->
 Создает checkout для project add-on.
 
@@ -146,6 +164,8 @@
 | `pending-hosted-retry` | Вернуть существующие `subscriptionId`, `invoiceId` и `externalReference` с новой подписанной формой `checkout`. |
 
 ## POST /api/billing/project-addon/crypto-checkout
+
+Требуется токен сессии аккаунта. Ключи агента получают `403 key_not_allowed`.
 
 <!-- api-contract: pending-linked-provider-order-retry=same-providerOrderId-and-paymentUrl; ambiguous-provider-creation-or-linkage=fail-closed-pending; next-attempt=cancel-or-reconcile-first -->
 Создает прямой crypto checkout для project add-on.
@@ -193,6 +213,8 @@ reconciliation.
 
 ## POST /api/billing/coupon/gift-purchase
 
+Требуется токен сессии аккаунта. Ключи агента получают `403 key_not_allowed`.
+
 <!-- api-contract: requestId=optional-backward-compatible-8-128-rfc3986-unreserved; requestId-omitted=not-retry-safe-across-http-attempts; same-intent=same-requestId-planId-durationMonths; exact-replay=same-couponId-and-code-without-second-debit-or-referral-reward; conflicting-payload=rejected; new-intent=new-requestId; response=couponId-code -->
 Покупает подарочный купон за баланс кошелька.
 
@@ -237,9 +259,13 @@ reconciliation.
 
 ## POST /api/billing/subscription/update-renewal
 
+Требуется токен сессии аккаунта. Ключи агента получают `403 key_not_allowed`.
+
 Обновляет настройку автоматического продления.
 
 ## POST /api/billing/crypto-checkout/refresh
+
+Требуется токен сессии аккаунта. Ключи агента получают `403 key_not_allowed`.
 
 <!-- api-contract: late-payment-after-cancel-or-project-transfer=no-reactivation; disposition=reconciliation-or-refund -->
 Обновляет статус crypto checkout.
@@ -253,6 +279,8 @@ reconciliation или refund.
 | `late-payment-after-cancel-or-project-transfer` | Сохранить `no-reactivation`; применить `reconciliation-or-refund`. |
 
 ## POST /api/billing/crypto-checkout/cancel
+
+Требуется токен сессии аккаунта. Ключи агента получают `403 key_not_allowed`.
 
 <!-- api-contract: late-payment-after-cancel-or-project-transfer=no-reactivation; disposition=reconciliation-or-refund -->
 Отменяет crypto checkout.

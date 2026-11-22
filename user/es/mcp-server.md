@@ -22,7 +22,7 @@ Tras la revocación, la API rechaza el token de inmediato. Mientras MCP conserve
 | --- | --- |
 | `401` | Falta un Bearer token obligatorio o el token enviado es inválido, desconocido o revocado. Envía el header con un token válido. Obtén uno nuevo si no tienes token o el servidor ya no lo reconoce. |
 | `403` | El servidor rechazó el origen del cliente (`forbidden_origin`) o el account no superó la comprobación de acceso a MCP (`mcp_access_denied`). Revisa el header `Origin` del cliente o los datos del account, según el error. |
-| `429` | La API limitó la verificación del token. Espera el tiempo indicado en `Retry-After` antes de volver a intentarlo. |
+| `429` | El perímetro limitó las solicitudes de tu IP o la API limitó la verificación de credenciales. Respeta `Retry-After` antes de reintentar. |
 | `503` | La verificación del token no está disponible temporalmente. Espera el tiempo indicado en `Retry-After` y vuelve a intentarlo con el mismo token. |
 
 Por defecto, cada proceso permite 120 llamadas a herramientas por minuto y por cuenta, compartidas entre los tres endpoints y todas las credenciales de la cuenta. Al agotar el límite, la herramienta devuelve `rate_limited` con `retryAfter` en segundos.
@@ -37,6 +37,7 @@ Los errores de las herramientas son independientes de los errores de autenticaci
 | `not_in_plan` | El plan del espacio de trabajo no incluye la bandeja de entrada o el historial de entregas. |
 | `plan_required` | La operación de creación requiere una cuenta Advanced o Pro. |
 | `insufficient_balance` | El saldo en EUR no alcanza para comprar el plan. |
+| `api_error` | En `buy_plan`, un checkout pendiente o un plan superior activo pueden bloquear la compra antes de efectuar un cargo. La herramienta devuelve el mensaje de la API. Resuelve primero el plan o el checkout existente. |
 | `x402_unavailable` | Las recargas en USDC no están disponibles. |
 | `rate_unavailable` | El tipo de referencia del BCE no está disponible. |
 | `no_current_workspace` | La herramienta requiere un espacio de trabajo actual y la API no devolvió ninguno. |
@@ -45,7 +46,7 @@ Los errores de las herramientas son independientes de los errores de autenticaci
 | `retryable` | Falló una solicitud al proveedor de datos de la cadena o se alcanzó el límite de pruebas del espacio. |
 | `private_project_limit` | Crear el proyecto privado del agente superaría el límite de proyectos de la cuenta. |
 | `trigger_limit` | Activar el trigger superaría el límite del plan. |
-| `not_found` | El destino no está disponible. La creación de triggers puede devolver este error si la cadena es desconocida, falta un ABI verificado o el runtime identifica que falta el IDL o que el pallet es desconocido. Un fallo genérico al buscar el IDL o el pallet devuelve `retryable`. Un evento, borrador o trigger no disponible también puede devolver `not_found`. |
+| `not_found` | El destino no está disponible. La creación de triggers puede devolver este error si la cadena es desconocida, falta un ABI verificado o el runtime identifica que falta el IDL o que el pallet es desconocido. Un fallo genérico al buscar el IDL o el pallet devuelve `retryable`. Un evento, borrador o trigger no disponible también puede devolver `not_found`. Un explorador saturado también puede devolver `not_found` por falta de ABI. Si el contrato está verificado en el explorador, reintenta en un minuto. |
 | `request_id_conflict` | Ya se usó el mismo `requestId` de activación para otro borrador del espacio. |
 
 ## Actualizar clientes existentes
@@ -69,18 +70,18 @@ Las herramientas actúan en el espacio de trabajo al que está vinculada la clav
 | Herramienta | Qué hace |
 | --- | --- |
 | `get_account` | Devuelve ID, nombre, plan, saldo en EUR, límites del plan y recuentos de suscripciones si están disponibles, además de los permisos, el vencimiento, el límite y el gasto mensual de la clave. |
-| `get_topup_requirements` | Cotiza una recarga de 5 a 500 € en USDC. Paga con un cliente x402 y tu cartera. Requiere `manage`. |
+| `get_topup_requirements` | Cotiza una recarga de 5 a 500 € en USDC. Paga con un cliente x402 y tu cartera. Requiere `manage`. Comprueba la [URL de pago, la red y el activo](api-billing.md#post-api-billing-wallet-x402-topup) antes de firmar. |
 | `buy_plan` | Compra Advanced o Pro con el saldo en EUR, sin renovación automática. Requiere `spend` y un `requestId` de 8–64 caracteres. Reutiliza el mismo ID al reintentar la compra. |
 | `find_triggers` | Busca disparadores de redes EVM y Substrate en el catálogo público. También busca en los disparadores del espacio de trabajo actual. |
 | `get_trigger` | Muestra los inputs de ejecución del trigger, los campos de los eventos entregados y los campos que puedes usar en `conditions`. |
 | `list_webhooks` | Muestra el `fullname`, el nombre y la URL de cada webhook registrado en el workspace. El campo `signed` indica si el webhook tiene un secreto de firma. |
 | `add_webhook` | Registra un webhook con una URL HTTPS sin credenciales. Si al comprobar el nombre ya existe un recurso con ese nombre en el espacio de trabajo, la herramienta rechaza la solicitud con `webhook_exists`. El secreto de firma solo aparece en la respuesta de `add_webhook` como `signingSecret`. Si lo rotas más adelante, se sustituye para todos los receptores de ese endpoint. |
 | `remove_webhook` | Elimina un webhook por su fullname en el espacio actual. Requiere `manage`. Devuelve `webhook_in_use` si lo usa una suscripción activa del mismo espacio. |
-| `create_subscription` | Crea una suscripción con un destino, `webhook` o `inbox: true`. Incluye los inputs obligatorios y las `conditions` opcionales. |
+| `create_subscription` | Crea una suscripción con un destino, `webhook` o `inbox: true`. Incluye los inputs obligatorios y las `conditions` opcionales. Si `create_subscription` termina sin respuesta, llama a `list_subscriptions` antes de reintentar. El reintento puede crear una segunda suscripción. |
 | `list_subscriptions` | Lista los IDs, títulos, estados, triggers, webhooks y fechas de creación de las subscriptions. |
 | `set_subscription_state` | Pausa (`off`) o reanuda (`on`) una subscription. |
 | `remove_subscription` | Elimina una suscripción. Los reintentos de webhook se detienen en unos 10 segundos. Todavía puede enviarse un intento previsto para ese intervalo. |
-| `read_events` | Lee la bandeja de un espacio con plan de pago, desde el evento más antiguo. Pasa `nextCursor` como `after` en el mismo espacio. `gap: true` indica eventos perdidos entre el cursor y el primer resultado, o una página vacía cuando se habían guardado eventos posteriores al cursor. Requiere `read`. |
+| `read_events` | Lee la bandeja de un espacio con plan de pago desde el evento más antiguo. Pasa `nextCursor` como `after` en el mismo espacio. `gap: true` indica huecos previos o internos a una página de eventos previamente guardados. Una página vacía también puede indicar un hueco si ya no se conservan eventos más recientes. Usa `get_delivery_log` para eventos no entregados cuando haya historial. Requiere `read`. |
 | `get_delivery_log` | Muestra los resultados de entrega del espacio de trabajo o de una suscripción. El historial de alertas usa el plan de la primera cuenta con rol de propietario en la lista de acceso del espacio de trabajo. Si no existe esa cuenta, la API comprueba el plan de la cuenta que hace la solicitud. Si ese plan no incluye el historial, la herramienta devuelve `not_in_plan`. Los registros de canales webhook incluyen `eventId` y `attempt`. `nextAttemptAt` es la marca de tiempo ISO para la que se había programado el siguiente intento al guardar el registro, o `null` si el registro no indica un reintento programado. |
 
 La marca de tiempo `nextAttemptAt` permanece fija aunque el reintento se ejecute o se cancele. Para conocer el resultado de la entrega, busca un registro posterior con el mismo `eventId`. Si los reintentos se detienen porque se pausa o elimina la suscripción, o si un reintento caduca, Web3alert no guarda un registro final y, sin ese registro, se desconocen tanto el resultado de la entrega como el estado actual de los reintentos.
@@ -149,8 +150,8 @@ Usa `https://web3alert.io/mcp/agent/build` con la misma configuración y cabecer
 | --- | --- | --- |
 | `find_contract` | `read` | Busca firmas exactas de eventos en el ABI de un contrato, el IDL de Solana o los metadatos de Substrate. Para EVM, devuelve funciones y un `recentCount` por evento en los últimos `recentBlocks` bloques, hasta 1.000. El intervalo puede ser menor si el proveedor rechaza una consulta amplia. `recentBlocks` es `null` si no se pudo leer ningún bloque o si la fuente es Solana o Substrate. Un recuento de `0` indica que no hubo logs coincidentes en el intervalo indicado. |
 | `plan_trigger` | `manage` | Genera un borrador para un evento sin escribir código. Devuelve `draftId`, fullname previsto, inputs, campos filtrables, esquema de salida y vencimiento. |
-| `test_trigger` | `read` | Prueba un borrador con una muestra reciente o reproduce el bloque o slot indicado. Si la búsqueda en EVM no encuentra coincidencias en los intervalos de logs que pudo leer y el proveedor rechaza los intervalos más antiguos, el resultado es `no_match`. Si la búsqueda se interrumpe por un tiempo de espera agotado, un fallo de transporte o un error del runtime sin causa específica, el resultado es `retryable`. Para omitir la búsqueda en una prueba de EVM o Substrate, indica explícitamente un `block` reciente. |
-| `activate_trigger` | `manage` | Guarda un borrador cuya última prueba coincidió. La primera activación correcta crea el proyecto privado del agente, que cuenta para el límite de la cuenta. Reutiliza `requestId` al reintentar el mismo borrador. Si lo usas con otro borrador, devuelve `request_id_conflict`. El fullname devuelto sirve para crear suscripciones. |
+| `test_trigger` | `read` | Prueba un borrador con una muestra reciente o reproduce el bloque o slot indicado. Si una búsqueda EVM ya leyó algunos intervalos de logs, un rechazo o un error del runtime sin causa específica en intervalos más antiguos puede acabar en `no_match`. Ese resultado solo abarca los intervalos leídos. Si sabes que ocurrió el evento, pasa su `block` a `test_trigger`. Los tiempos de espera agotados, fallos de transporte y búsquedas que no pudieron leer ningún intervalo devuelven `retryable`. Puedes omitir la búsqueda con un `block` reciente para EVM o Substrate. |
+| `activate_trigger` | `manage` | Guarda un borrador cuya última prueba coincidió. La primera activación correcta crea el proyecto privado del agente, que cuenta para el límite de la cuenta. Reutiliza `requestId` al reintentar el mismo borrador. Si lo usas con otro borrador, devuelve `request_id_conflict`. El fullname devuelto sirve para crear suscripciones. Si otro miembro creó el proyecto del agente en el espacio, la activación usa el plan de su creador para comprobar las unidades de triggers. Devuelve `plan_required` si ese plan ya no permite gestionar triggers. |
 | `remove_my_trigger` | `manage` | Elimina un trigger de ese proyecto. Devuelve `trigger_in_use` si lo usa una suscripción activa del mismo espacio. |
 
 La eliminación directa de un trigger o webhook comprueba las suscripciones activas (`on`) en el espacio de trabajo del trigger o webhook. Páusalas o elimínalas antes de reintentar. Al eliminar un proyecto, un espacio de trabajo o una cuenta, se bloquean las suscripciones afectadas. Una suscripción activa a un trigger público en otro espacio permite eliminar directamente el trigger.

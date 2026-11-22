@@ -389,6 +389,8 @@ Workspace-level limit protege el flujo general de alerts dentro del workspace.
 
 La bandeja conserva los eventos más recientes dentro de ambos límites. El almacenamiento y la retención siguen el plan del propietario del espacio o el de quien creó la suscripción si no hay propietario. Si ese plan no incluye historial de alertas, no se guardan eventos. La creación y la lectura usan el plan del solicitante cuando no hay propietario.
 
+Cada evento conserva la fecha de caducidad asignada al guardarlo. El límite de cantidad se aplica después de una escritura. Al bajar de plan puede haber más eventos que el nuevo límite hasta la siguiente escritura.
+
 ## Project Transfer
 
 Project transfer requests tienen anti-spam limits.

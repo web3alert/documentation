@@ -338,7 +338,7 @@ If building is switched off, the routes return HTTP `400` with `error.message` s
 
 Agent keys require `read`. Send `chain` and one of `address` (EVM), `program` (Solana) or `pallet` (Substrate). Use a Web3alert built-in chain source, with a short name such as `ethereum`, `base`, `arbitrum-one`, `polkadot` or `solana`, or use `common.<chain>` or `common.source.<chain>`. An unknown chain returns `404 not_found` with the supported short names for the target type in `error.details.chains`. A temporary chain data failure returns `503 retryable`.
 
-A missing verified ABI for an EVM contract returns `404 not_found`. A Solana program without an IDL or an unknown Substrate pallet returns `404 not_found` when the runtime identifies the cause. If the runtime only reports a generic failure, the API returns `503 retryable`.
+A missing verified ABI for an EVM contract returns `404 not_found`. A Solana program without an IDL or an unknown Substrate pallet returns `404 not_found` when the runtime identifies the cause. If the runtime only reports a generic failure, the API returns `503 retryable`. A busy explorer can also produce the missing-ABI `not_found` response. If the contract is verified on the explorer, retry in a minute.
 
 Returns `{ chain, source, events, recentBlocks, functions? }` with exact event signatures. For EVM, each event’s `recentCount` counts logs over the last `recentBlocks` blocks, up to 1,000. If the provider refuses a wide query, the API retries with smaller windows and can report a shorter range. `recentBlocks` is `null` when no blocks could be read and for Solana or Substrate. A `null` `recentCount` means the count is unavailable or inapplicable.
 
@@ -354,13 +354,15 @@ Agent keys require `read`. Optionally send `block` (EVM or Substrate) or `slot` 
 
 Using `slot` for EVM or Substrate, or `block` for Solana, returns `result: "invalid"`.
 
-If EVM discovery finds no match in the log windows it could read and the provider refuses older windows, the result is `no_match`. If discovery stops on a timeout, a transport failure or a runtime error with no specific cause, the result is `retryable`. To bypass discovery for an EVM or Substrate test, pass a recent `block` explicitly.
+After an EVM scan reads some log windows, a refusal or opaque runtime error on older windows can end the scan with `no_match`. That result covers only the windows read. If you know the event occurred, pass its `block` to `test_trigger`. Timeouts, transport failures and a scan that cannot read any windows return `retryable`. You can bypass discovery with a recent `block` for EVM or Substrate.
 
 ## POST /api/agent/build/drafts/:draftId/activate
 
 Agent keys require `manage`. Send `{ requestId }` and reuse it on retries. Returns `{ trigger, project }` for the workspace's private agent project. The latest test must return `matched` or activation returns `409 not_tested`. Tier caps return `403 private_project_limit` or `403 trigger_limit`. Draft availability errors are the same as for testing.
 
 The first successful activation creates the private project `agent-triggers` or a suffixed name if that name is taken. It counts toward the account's private-project cap. Advanced has one slot, so creating the agent project when that slot is already used returns `403 private_project_limit`. Reusing a `requestId` for the same draft in the workspace returns the original result. Using that ID for a different draft returns `409 request_id_conflict`.
+
+If another member created the workspace's agent project, activation uses that creator's plan to check trigger units. It returns `plan_required` if that plan no longer allows trigger management.
 
 ## DELETE /api/agent/build/triggers/:fullname
 

@@ -181,13 +181,15 @@ Use o fullname como `values.inbox` na ação de subscrição `common.builtin.inb
 
 O armazenamento e a retenção seguem o plano do proprietário ou de quem criou a subscrição quando não há proprietário. Se esse plano não incluir histórico de alertas, não são guardados eventos. Consulte [Limites](limits.md).
 
+Enquanto o plano aplicável não incluir histórico de alertas, a API recusa gravações na caixa de entrada. Cinco eventos consecutivos por entregar à caixa bloqueiam a subscrição. Depois de restaurar um plano pago, verifique o estado com `list_subscriptions` e reative as subscrições bloqueadas com `set_subscription_state` e `state: "on"`. Confirme que é devolvido `on`.
+
 ## GET /api/events
 
-Requer uma sessão ou chave de agente com `read`, mais controlo do espaço e a mesma verificação do plano que a criação da caixa. Os parâmetros `after` (cursor opaco) e `limit` (1–500, 100 por predefinição) são opcionais. A leitura inicial começa no evento retido mais antigo. O cursor só funciona no seu espaço original. Um cursor de outro espaço ou malformado devolve HTTP `400` com `invalid inbox cursor` em `error.message`.
+Requer uma sessão ou chave de agente com `read`, mais controlo do espaço e a mesma verificação do plano que a criação da caixa. Os parâmetros `after` (cursor opaco) e `limit` (1–500, 100 por predefinição) são opcionais. A leitura inicial começa no evento retido mais antigo. O cursor só funciona no seu espaço original. Um cursor vazio, com caracteres não permitidos ou com mais de 256 caracteres devolve HTTP `400` com `invalid request` em `error.message`. Outros cursores inválidos, incluindo os de outro espaço, devolvem HTTP `400` com `invalid inbox cursor` em `error.message`.
 
 Devolve `{ events, nextCursor, hasMore, gap }`. Cada evento contém `cursor`, `id`, `receivedAt`, `subscription`, `trigger` e `body`. Um corpo superior a 64 KB é guardado com `truncated: true` e sem `object`.
 
-Passe `nextCursor` como `after` na próxima página ou consulta. Uma página vazia devolve o cursor enviado, ou `null` se este tiver sido omitido. Com um cursor, `gap: true` indica que um ou mais eventos entre o cursor e o primeiro resultado já não estão retidos. Também pode ocorrer numa página vazia se tinham sido guardados eventos posteriores ao cursor.
+Passe `nextCursor` como `after` na próxima página ou consulta. Uma página vazia devolve o cursor enviado ou `null` se foi omitido. `gap: true` indica lacunas em eventos guardados anteriormente, entre o cursor e o primeiro resultado ou entre eventos na mesma página. Com um cursor, uma página vazia também pode indicar uma lacuna se foram guardados eventos posteriores que expiraram ou foram removidos. Consulte o [histórico de entregas](api-subscriptions.md) para eventos não entregues quando houver histórico.
 
 ## GET /api/resources/external/:token
 

@@ -16,6 +16,8 @@ Con una clave de agente, la respuesta omite los códigos de los cupones regalo s
 
 ## POST /api/billing/wallet/crypto-topup
 
+Requiere un token de sesión de cuenta. Las claves de agente reciben `403 key_not_allowed`.
+
 <!-- api-contract: redirect-query=authoritative-externalReference; existing-value=replaced -->
 Crea una recarga de saldo con criptomonedas. Si se proporciona `returnUrl` o
 `cancelUrl`, la API establece su parámetro de consulta `externalReference` con
@@ -26,11 +28,19 @@ Conserva esa referencia durante la redirección del proveedor.
 
 Requiere una sesión o clave de agente con `manage`. Envía `{ amountEur }` de 5 a 500 €, con hasta dos decimales. Paga en USDC en Base al tipo de referencia del BCE para el USD, usando 1 USDC = 1 USD sin recargo.
 
+Antes de firmar, comprueba que la URL de pago sea exactamente `https://web3alert.io/api/billing/wallet/x402-topup`, la red sea Base (`eip155:8453`) y el activo sea USDC (`0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913`). Si falla alguna comprobación, detente. Envía la clave y la firma del pago únicamente a esa URL.
+
 Una solicitud sin `PAYMENT-SIGNATURE` devuelve `402` con una cotización x402 v2 `PaymentRequired` en el cuerpo y la misma cotización codificada en base64 en `PAYMENT-REQUIRED`. La cotización dura 300 segundos. El importe en USDC se redondea hacia arriba al céntimo y `resource.url` usa el origen público configurado. Firma con tu cartera conservando `accepts[0].extra.quoteId` y envía el mismo cuerpo con `PAYMENT-SIGNATURE` en base64. Para un pago nuevo, una cotización caducada, que no coincide o de otro espacio devuelve una nueva cotización `402`.
 
-Un pago liquidado devuelve `200` con `PAYMENT-RESPONSE` y `{ topupId, amountEur, usdcAmount, transaction, network, balanceEur }`. Si recibes `202` con `{ status: "pending", topupId }`, reintenta con la misma firma. Repetir un pago liquidado devuelve el resultado original. Un pago rechazado devuelve `402` con `error` como cadena en el cuerpo y los detalles del fallo en `PAYMENT-RESPONSE`. Los fallos de servicio devuelven `502 facilitator_unavailable`, `503 x402_unavailable` o `503 rate_unavailable`.
+Un pago liquidado devuelve `200` con `PAYMENT-RESPONSE` y `{ topupId, amountEur, usdcAmount, transaction, network, balanceEur }`.
+
+Si recibes `202` con `{ status: "pending", topupId }`, reintenta un número limitado de veces con el mismo cuerpo y la misma firma en el mismo espacio. Si sigue pendiente, detente, guarda el `topupId` para que el operador lo concilie y no autorices otro pago para el mismo fin. El endpoint de actualización de recargas alojadas no se aplica a los registros x402.
+
+Repetir un pago liquidado devuelve el resultado original. Un pago rechazado devuelve `402` con `error` como cadena en el cuerpo y los detalles del fallo en `PAYMENT-RESPONSE`. Los fallos de servicio devuelven `502 facilitator_unavailable`, `503 x402_unavailable` o `503 rate_unavailable`.
 
 ## POST /api/billing/wallet/topup/refresh
+
+Requiere un token de sesión de cuenta. Las claves de agente reciben `403 key_not_allowed`.
 
 <!-- api-contract: target=exact-topupId-or-externalReference; recent-topup-fallback=forbidden; result-correlation=fail-closed-on-missing-or-ambiguous -->
 Actualiza el estado de la recarga identificada por `topupId` o
@@ -39,9 +49,11 @@ o por la URL de retorno; no deduzcas el destino a partir de la recarga más
 reciente. Una página de retorno no debe solicitar la actualización si falta el
 identificador, está repetido o entra en conflicto con otro identificador.
 
+Este endpoint es para recargas alojadas. Para registros x402, sigue el [procedimiento de recarga x402](#post-api-billing-wallet-x402-topup).
+
 ## POST /api/billing/account-plan/balance-purchase
 
-Las claves de agente requieren `spend` y deben usar `autoRenew: false`. Si la compra supera el límite mensual, devuelve `403 spend_cap_exceeded`. Comprar un plan con una clave mientras hay un plan activo con renovación automática devuelve `403 key_not_allowed` antes de efectuar el cargo.
+Las claves de agente requieren `spend` y deben usar `autoRenew: false`. Si la compra supera el límite mensual, devuelve `403 spend_cap_exceeded`. Comprar un plan con una clave mientras hay un plan activo con renovación automática devuelve `403 key_not_allowed` antes de efectuar el cargo. Un checkout pendiente o un plan superior activo también pueden bloquear la compra antes de efectuar un cargo. Resuelve primero el plan o el checkout existente.
 
 <!-- api-contract: requestId=optional-backward-compatible-8-128-rfc3986-unreserved; requestId-omitted=not-retry-safe-across-http-attempts; autoRenew-default=false; same-intent=same-requestId-and-payload; exact-replay=original-subscriptionId-and-invoiceId-without-second-debit; conflicting-payload=rejected; new-intent=new-requestId -->
 Compra o mejora un plan de cuenta usando el saldo del monedero.
@@ -81,9 +93,13 @@ Respuesta: HTTP 200 OK.
 
 ## POST /api/billing/account-plan/checkout
 
+Requiere un token de sesión de cuenta. Las claves de agente reciben `403 key_not_allowed`.
+
 Crea un checkout para un plan de cuenta.
 
 ## POST /api/billing/account-plan/crypto-checkout
+
+Requiere un token de sesión de cuenta. Las claves de agente reciben `403 key_not_allowed`.
 
 Crea un checkout directo con criptomonedas para un plan de cuenta.
 
@@ -131,6 +147,8 @@ Respuesta: HTTP 200 OK.
 
 ## POST /api/billing/project-addon/checkout
 
+Requiere un token de sesión de cuenta. Las claves de agente reciben `403 key_not_allowed`.
+
 <!-- api-contract: pending-hosted-retry=existing-subscriptionId-invoiceId-externalReference-and-fresh-signed-form -->
 Crea un checkout para un add-on de proyecto.
 
@@ -143,6 +161,8 @@ nuevo formulario `checkout` firmado. Envía el último formulario devuelto.
 | `pending-hosted-retry` | Devuelve los `subscriptionId`, `invoiceId` y `externalReference` existentes con un nuevo formulario `checkout` firmado. |
 
 ## POST /api/billing/project-addon/crypto-checkout
+
+Requiere un token de sesión de cuenta. Las claves de agente reciben `403 key_not_allowed`.
 
 <!-- api-contract: pending-linked-provider-order-retry=same-providerOrderId-and-paymentUrl; ambiguous-provider-creation-or-linkage=fail-closed-pending; next-attempt=cancel-or-reconcile-first -->
 Crea un checkout directo con criptomonedas para un add-on de proyecto.
@@ -190,6 +210,8 @@ Respuesta: HTTP 200 OK.
 
 ## POST /api/billing/coupon/gift-purchase
 
+Requiere un token de sesión de cuenta. Las claves de agente reciben `403 key_not_allowed`.
+
 <!-- api-contract: requestId=optional-backward-compatible-8-128-rfc3986-unreserved; requestId-omitted=not-retry-safe-across-http-attempts; same-intent=same-requestId-planId-durationMonths; exact-replay=same-couponId-and-code-without-second-debit-or-referral-reward; conflicting-payload=rejected; new-intent=new-requestId; response=couponId-code -->
 Compra un cupón regalo usando el saldo del monedero.
 
@@ -234,9 +256,13 @@ Reclama un código de referido.
 
 ## POST /api/billing/subscription/update-renewal
 
+Requiere un token de sesión de cuenta. Las claves de agente reciben `403 key_not_allowed`.
+
 Actualiza la renovación automática de la facturación.
 
 ## POST /api/billing/crypto-checkout/refresh
+
+Requiere un token de sesión de cuenta. Las claves de agente reciben `403 key_not_allowed`.
 
 <!-- api-contract: late-payment-after-cancel-or-project-transfer=no-reactivation; disposition=reconciliation-or-refund -->
 Actualiza el estado de un checkout con criptomonedas.
@@ -250,6 +276,8 @@ reconciliación o reembolso.
 | `late-payment-after-cancel-or-project-transfer` | Conserva `no-reactivation` y usa `reconciliation-or-refund`. |
 
 ## POST /api/billing/crypto-checkout/cancel
+
+Requiere un token de sesión de cuenta. Las claves de agente reciben `403 key_not_allowed`.
 
 <!-- api-contract: late-payment-after-cancel-or-project-transfer=no-reactivation; disposition=reconciliation-or-refund -->
 Cancela un checkout con criptomonedas.

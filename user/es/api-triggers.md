@@ -338,7 +338,7 @@ Si la creación de triggers está desactivada, las rutas devuelven HTTP `400` co
 
 Las claves requieren `read`. Envía `chain` y uno de `address` (EVM), `program` (Solana) o `pallet` (Substrate). Usa una fuente de cadena integrada de Web3alert con un nombre corto como `ethereum`, `base`, `arbitrum-one`, `polkadot` o `solana`, o usa `common.<chain>` o `common.source.<chain>`. Una cadena desconocida devuelve `404 not_found` y los nombres cortos admitidos para el tipo de destino en `error.details.chains`. Un fallo temporal de datos de cadena devuelve `503 retryable`.
 
-Un contrato EVM sin ABI verificado devuelve `404 not_found`. Un programa de Solana sin IDL o un pallet de Substrate desconocido devuelve `404 not_found` cuando el runtime identifica la causa. Si solo informa de un fallo genérico, la API devuelve `503 retryable`.
+Un contrato EVM sin ABI verificado devuelve `404 not_found`. Un programa de Solana sin IDL o un pallet de Substrate desconocido devuelve `404 not_found` cuando el runtime identifica la causa. Si solo informa de un fallo genérico, la API devuelve `503 retryable`. Un explorador saturado también puede devolver `not_found` por falta de ABI. Si el contrato está verificado en el explorador, reintenta en un minuto.
 
 Devuelve `{ chain, source, events, recentBlocks, functions? }` con firmas exactas de eventos. Para EVM, el `recentCount` de cada evento cuenta los logs de los últimos `recentBlocks` bloques, hasta 1.000. Si el proveedor rechaza una consulta amplia, la API reintenta con intervalos más pequeños y puede devolver un intervalo menor. `recentBlocks` es `null` si no se pudo leer ningún bloque y para Solana o Substrate. Un `recentCount` de `null` indica que el recuento no está disponible o no se aplica.
 
@@ -354,13 +354,15 @@ Las claves requieren `read`. Envía opcionalmente `block` (EVM o Substrate) o `s
 
 Usar `slot` para EVM o Substrate, o `block` para Solana, devuelve `result: "invalid"`.
 
-Si la búsqueda en EVM no encuentra coincidencias en los intervalos de logs que pudo leer y el proveedor rechaza los intervalos más antiguos, el resultado es `no_match`. Si la búsqueda se interrumpe por un tiempo de espera agotado, un fallo de transporte o un error del runtime sin causa específica, el resultado es `retryable`. Para omitir la búsqueda en una prueba de EVM o Substrate, indica explícitamente un `block` reciente.
+Si una búsqueda EVM ya leyó algunos intervalos de logs, un rechazo o un error del runtime sin causa específica en intervalos más antiguos puede acabar en `no_match`. Ese resultado solo abarca los intervalos leídos. Si sabes que ocurrió el evento, pasa su `block` a `test_trigger`. Los tiempos de espera agotados, fallos de transporte y búsquedas que no pudieron leer ningún intervalo devuelven `retryable`. Puedes omitir la búsqueda con un `block` reciente para EVM o Substrate.
 
 ## POST /api/agent/build/drafts/:draftId/activate
 
 Las claves requieren `manage`. Envía `{ requestId }` y reutilízalo al reintentar. Devuelve `{ trigger, project }` para el proyecto privado del agente en el espacio. Si la última prueba no devolvió `matched`, responde `409 not_tested`. Los límites del plan devuelven `403 private_project_limit` o `403 trigger_limit`. Los errores de disponibilidad del borrador son los mismos que en la prueba.
 
 La primera activación correcta crea el proyecto privado `agent-triggers` o usa un sufijo si el nombre ya está ocupado. El proyecto cuenta para el límite de proyectos privados de la cuenta. Advanced permite uno, así que la creación del proyecto del agente devuelve `403 private_project_limit` si ese cupo ya está ocupado. Reutilizar el `requestId` con el mismo borrador del espacio devuelve el resultado original. Usarlo con otro borrador devuelve `409 request_id_conflict`.
+
+Si otro miembro creó el proyecto del agente en el espacio, la activación usa el plan de su creador para comprobar las unidades de triggers. Devuelve `plan_required` si ese plan ya no permite gestionar triggers.
 
 ## DELETE /api/agent/build/triggers/:fullname
 

@@ -182,13 +182,15 @@ Use the returned fullname as `values.inbox` in the `common.builtin.inbox` subscr
 
 Event storage and retention follow the workspace owner's plan, or the subscription creator's when there is no owner. The inbox stores no events while that plan lacks alert history. See [Limits](limits.md).
 
+While the applicable plan lacks alert history, the API refuses inbox writes. Five consecutive undelivered events to the inbox block the subscription. After restoring a paid plan, check the state with `list_subscriptions` and resume any blocked subscription with `set_subscription_state` and `state: "on"`. Check that it returns `on`.
+
 ## GET /api/events
 
-Requires an account session or an agent key with `read`, plus workspace control and the same paid-plan check as inbox creation. Pass the optional query parameters `after` (opaque cursor) and `limit` (1–500, default 100). The initial read starts at the oldest retained event. A cursor works only in its original workspace. A foreign or malformed cursor returns HTTP `400` with `error.message` set to `invalid inbox cursor`.
+Requires an account session or an agent key with `read`, plus workspace control and the same paid-plan check as inbox creation. Pass the optional query parameters `after` (opaque cursor) and `limit` (1–500, default 100). The initial read starts at the oldest retained event. A cursor works only in its original workspace. An empty cursor, forbidden characters, or more than 256 characters returns HTTP `400` with `error.message` set to `invalid request`. Other invalid cursors, including a cursor from another workspace, return HTTP `400` with `error.message` set to `invalid inbox cursor`.
 
 Returns `{ events, nextCursor, hasMore, gap }`. Each event contains `cursor`, `id`, `receivedAt`, `subscription`, `trigger` and `body`. A body over 64 KB is stored with `truncated: true` and without `object`.
 
-Pass `nextCursor` as `after` for the next page or poll. An empty page returns the supplied cursor, or `null` if it was omitted. With a cursor, `gap: true` means one or more events between the cursor and the first returned event are no longer retained. It can also occur on an empty page if newer events had been stored after that cursor.
+Pass `nextCursor` as `after` for the next page or poll. An empty page returns the supplied cursor, or `null` if it was omitted. `gap: true` reports holes in previously stored events, between the cursor and the first result or between events on the same page. With a cursor, an empty page can also report a gap if newer events were stored and then expired or were removed. Check the [delivery log](api-subscriptions.md) for undelivered events when history is available.
 
 ## GET /api/resources/external/:token
 

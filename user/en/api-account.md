@@ -50,6 +50,8 @@ Provider credentials and the returned token are secrets. Send them only over HTT
 
 With `claim`, a successful sign-in attaches the login to the wallet account, consumes the claim link, and issues a session token for that account. `409 login_already_linked` means the login belongs to another account and the link remains usable. An invalid claim returns `404 claim_not_found` and creates no account.
 
+Claiming the account leaves previously issued wallet keys active. After signing in, review the keys on the [Agents page](https://web3alert.io/agents) and revoke any you do not want to keep.
+
 ## DELETE /api/token
 
 Revokes the token used to authenticate this request.
@@ -127,6 +129,8 @@ Requires an account session token. Revokes a key belonging to the account. Retur
 ## POST /api/agent/siwe/nonce
 
 Public. Takes no body. Returns `{ nonce, issuedAt, expiresAt }`. The nonce can be used once and expires after 10 minutes.
+
+The nonce and verify endpoints share a per-IP edge limit of 1 request per second with a burst of 10. Edge `429` responses do not contain the API's `signup_limited` body. Honor `Retry-After` and get a fresh nonce if the signed message has gone stale.
 
 ## POST /api/agent/siwe/verify
 

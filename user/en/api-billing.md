@@ -16,6 +16,8 @@ When authenticated with an agent key, the response omits unused gift coupon code
 
 ## POST /api/billing/wallet/crypto-topup
 
+Requires an account session token. Agent keys receive `403 key_not_allowed`.
+
 <!-- api-contract: redirect-query=authoritative-externalReference; existing-value=replaced -->
 Creates a crypto balance top-up. When `returnUrl` or `cancelUrl` is supplied,
 the API sets its `externalReference` query parameter to the exact reference of
@@ -26,11 +28,19 @@ across the provider redirect.
 
 Requires an account session or an agent key with `manage`. Send `{ amountEur }` from €5 to €500 with up to two decimals. Pay in USDC on Base at the ECB USD reference rate, using 1 USDC = 1 USD with no markup.
 
+Before signing, verify that the payment URL is exactly `https://web3alert.io/api/billing/wallet/x402-topup`, the network is Base (`eip155:8453`), and the asset is USDC (`0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913`). Stop if any check fails. Send your agent key and payment signature only to that URL.
+
 A request without `PAYMENT-SIGNATURE` returns `402` with an x402 v2 `PaymentRequired` quote in the body and the same quote base64-encoded in `PAYMENT-REQUIRED`. The quote lasts 300 seconds. The USDC amount is rounded up to the next cent, and `resource.url` uses the configured public origin. Sign with your wallet, preserving `accepts[0].extra.quoteId`, then send the same body with the base64-encoded `PAYMENT-SIGNATURE`. For a new payment, an expired or mismatched quote, including a quote from another workspace, returns a fresh `402` quote.
 
-A settled payment returns `200` with `PAYMENT-RESPONSE` and `{ topupId, amountEur, usdcAmount, transaction, network, balanceEur }`. For `202` with `{ status: "pending", topupId }`, retry the same signature. Replaying a settled payment returns the original result. A refused payment returns `402` with a string `error` in the body and failure details in `PAYMENT-RESPONSE`. Service failures return `502 facilitator_unavailable`, `503 x402_unavailable` or `503 rate_unavailable`.
+A settled payment returns `200` with `PAYMENT-RESPONSE` and `{ topupId, amountEur, usdcAmount, transaction, network, balanceEur }`.
+
+For `202` with `{ status: "pending", topupId }`, retry a limited number of times with the same request body and signature in the same workspace. If it stays pending, stop, keep the `topupId` for the operator to reconcile, and do not authorize another payment for the same purpose. The hosted top-up refresh route does not apply to x402 records.
+
+Replaying a settled payment returns the original result. A refused payment returns `402` with a string `error` in the body and failure details in `PAYMENT-RESPONSE`. Service failures return `502 facilitator_unavailable`, `503 x402_unavailable` or `503 rate_unavailable`.
 
 ## POST /api/billing/wallet/topup/refresh
+
+Requires an account session token. Agent keys receive `403 key_not_allowed`.
 
 <!-- api-contract: target=exact-topupId-or-externalReference; recent-topup-fallback=forbidden; result-correlation=fail-closed-on-missing-or-ambiguous -->
 Refreshes the state of the top-up identified by `topupId` or
@@ -39,9 +49,11 @@ redirect URL; do not infer the target from the most recent top-up. A return page
 must not request a refresh when the identifier is missing, repeated, or
 conflicts with another identifier.
 
+This route is for hosted top-ups. For x402 records, use the [x402 top-up procedure](#post-api-billing-wallet-x402-topup).
+
 ## POST /api/billing/account-plan/balance-purchase
 
-Agent keys require `spend` and must use `autoRenew: false`. A purchase over the key's monthly cap returns `403 spend_cap_exceeded`. Buying an account plan with a key while an auto-renewing plan is active returns `403 key_not_allowed` before any debit.
+Agent keys require `spend` and must use `autoRenew: false`. A purchase over the key's monthly cap returns `403 spend_cap_exceeded`. Buying an account plan with a key while an auto-renewing plan is active returns `403 key_not_allowed` before any debit. A pending checkout or a higher active plan can also block an account-plan purchase before any debit. Resolve the existing plan or checkout first.
 
 <!-- api-contract: requestId=optional-backward-compatible-8-128-rfc3986-unreserved; requestId-omitted=not-retry-safe-across-http-attempts; autoRenew-default=false; same-intent=same-requestId-and-payload; exact-replay=original-subscriptionId-and-invoiceId-without-second-debit; conflicting-payload=rejected; new-intent=new-requestId -->
 Purchases or upgrades an account plan using the wallet balance.
@@ -81,9 +93,13 @@ Response: HTTP 200 OK.
 
 ## POST /api/billing/account-plan/checkout
 
+Requires an account session token. Agent keys receive `403 key_not_allowed`.
+
 Creates a checkout for an account plan.
 
 ## POST /api/billing/account-plan/crypto-checkout
+
+Requires an account session token. Agent keys receive `403 key_not_allowed`.
 
 Creates a direct crypto checkout for an account plan.
 
@@ -131,6 +147,8 @@ Response: HTTP 200 OK.
 
 ## POST /api/billing/project-addon/checkout
 
+Requires an account session token. Agent keys receive `403 key_not_allowed`.
+
 <!-- api-contract: pending-hosted-retry=existing-subscriptionId-invoiceId-externalReference-and-fresh-signed-form -->
 Creates a checkout for a project add-on.
 
@@ -143,6 +161,8 @@ signed `checkout` form. Submit the latest returned form.
 | `pending-hosted-retry` | Return the existing `subscriptionId`, `invoiceId`, and `externalReference` with a fresh signed `checkout` form. |
 
 ## POST /api/billing/project-addon/crypto-checkout
+
+Requires an account session token. Agent keys receive `403 key_not_allowed`.
 
 <!-- api-contract: pending-linked-provider-order-retry=same-providerOrderId-and-paymentUrl; ambiguous-provider-creation-or-linkage=fail-closed-pending; next-attempt=cancel-or-reconcile-first -->
 Creates a direct crypto checkout for a project add-on.
@@ -189,6 +209,8 @@ Response: HTTP 200 OK.
 
 ## POST /api/billing/coupon/gift-purchase
 
+Requires an account session token. Agent keys receive `403 key_not_allowed`.
+
 <!-- api-contract: requestId=optional-backward-compatible-8-128-rfc3986-unreserved; requestId-omitted=not-retry-safe-across-http-attempts; same-intent=same-requestId-planId-durationMonths; exact-replay=same-couponId-and-code-without-second-debit-or-referral-reward; conflicting-payload=rejected; new-intent=new-requestId; response=couponId-code -->
 Purchases a gift coupon using the wallet balance.
 
@@ -233,9 +255,13 @@ Claims a referral code.
 
 ## POST /api/billing/subscription/update-renewal
 
+Requires an account session token. Agent keys receive `403 key_not_allowed`.
+
 Updates automatic billing renewal.
 
 ## POST /api/billing/crypto-checkout/refresh
+
+Requires an account session token. Agent keys receive `403 key_not_allowed`.
 
 <!-- api-contract: late-payment-after-cancel-or-project-transfer=no-reactivation; disposition=reconciliation-or-refund -->
 Refreshes the state of a crypto checkout.
@@ -249,6 +275,8 @@ handled through reconciliation or refund instead.
 | `late-payment-after-cancel-or-project-transfer` | Preserve `no-reactivation`; use `reconciliation-or-refund`. |
 
 ## POST /api/billing/crypto-checkout/cancel
+
+Requires an account session token. Agent keys receive `403 key_not_allowed`.
 
 <!-- api-contract: late-payment-after-cancel-or-project-transfer=no-reactivation; disposition=reconciliation-or-refund -->
 Cancels a crypto checkout.

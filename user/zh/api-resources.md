@@ -172,13 +172,15 @@ Payload: 无。
 
 保存和保留事件时使用工作区所有者的套餐，若无所有者则使用订阅创建者的套餐。若该套餐不含告警历史，则不保存事件。参见[限制](limits.md)。
 
+适用套餐不含告警历史时，API 会拒绝写入收件箱。连续 5 条事件未能投递到收件箱后，订阅会被阻止。恢复付费套餐后，用 `list_subscriptions` 检查状态，再调用 `set_subscription_state` 并传入 `state: "on"` 重新启用被阻止的订阅。确认返回状态为 `on`。
+
 ## GET /api/events
 
-需要账户会话令牌或有 `read` 权限的智能体密钥、工作区管理权限，并采用与创建收件箱相同的套餐检查。查询参数 `after`（不透明游标）和 `limit`（1–500，默认 100）可选。首次读取从保留的最旧事件开始。游标仅可在原工作区使用。格式错误或来自其他工作区的游标会返回 HTTP `400`，`error.message` 为 `invalid inbox cursor`。
+需要账户会话令牌或有 `read` 权限的智能体密钥、工作区管理权限，并采用与创建收件箱相同的套餐检查。查询参数 `after`（不透明游标）和 `limit`（1–500，默认 100）可选。首次读取从保留的最旧事件开始。游标只能在原工作区使用。游标为空、包含不允许的字符或超过 256 个字符时，返回 HTTP `400`，`error.message` 为 `invalid request`。其他无效游标（含来自其他工作区的游标）也返回 HTTP `400`，`error.message` 为 `invalid inbox cursor`。
 
 返回 `{ events, nextCursor, hasMore, gap }`。每条事件包含 `cursor`、`id`、`receivedAt`、`subscription`、`trigger` 和 `body`。大于 64 KB 的事件体在保存时会移除 `object` 并添加 `truncated: true`。
 
-将 `nextCursor` 用作 `after` 以翻页或轮询。空页返回原游标，未提供时返回 `null`。使用游标时，`gap: true` 表示游标与首条返回事件之间有一条或多条事件超出保留范围。如果此前保存过游标之后的事件，空页也可能返回这个值。
+将 `nextCursor` 用作 `after` 以翻页或轮询。空页返回原游标，未提供时返回 `null`。`gap: true` 表示游标与首条结果之间或同一页的事件之间出现缺口，且缺少的是此前已保存的事件。提供游标时，如果较新的事件曾保存但已过期或被移除，空页也可能报告缺口。投递历史可用时，可在[投递日志](api-subscriptions.md)查看未投递事件。
 
 ## GET /api/resources/external/:token
 

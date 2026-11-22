@@ -389,6 +389,8 @@ Workspace-level limit protects the overall alert flow inside a workspace.
 
 The inbox keeps the newest events within both limits. Storage and retention use the workspace owner's plan, or the subscription creator's if the workspace lacks an owner. A plan without alert history stores no events. Creating or reading the inbox uses the caller's plan when the workspace has no owner.
 
+Each event keeps the expiry assigned when it was written. The count cap is enforced after a write, so a downgrade can leave more events than the new cap allows until the next write.
+
 ## Project Transfer
 
 Project transfer requests have anti-spam limits.

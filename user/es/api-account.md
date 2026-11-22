@@ -50,6 +50,8 @@ Las credenciales del provider y el token devuelto son secretos. Envíalos solo m
 
 Con `claim`, un inicio de sesión correcto vincula el acceso a la cuenta de la cartera, consume el enlace y emite un token de sesión para esa cuenta. `409 login_already_linked` significa que el acceso pertenece a otra cuenta y el enlace sigue válido. Una reclamación inválida devuelve `404 claim_not_found` sin crear una cuenta.
 
+Reclamar la cuenta deja activas las claves emitidas previamente mediante la cartera. Después de iniciar sesión, revisa las claves en la [página Agents](https://web3alert.io/agents) y revoca las que no quieras conservar.
+
 ## DELETE /api/token
 
 Revoca el token usado para autenticar esta solicitud.
@@ -127,6 +129,8 @@ Requiere un token de sesión. Revoca una clave de la cuenta. Si se revoca o ya e
 ## POST /api/agent/siwe/nonce
 
 Público. No requiere cuerpo. Devuelve `{ nonce, issuedAt, expiresAt }`. El nonce caduca en 10 minutos y se usa una sola vez.
+
+Los endpoints de nonce y verificación comparten un límite por IP en el perímetro de 1 solicitud por segundo, con una ráfaga de 10. Los `429` del perímetro no incluyen el cuerpo `signup_limited` de la API. Respeta `Retry-After` y pide un nonce nuevo si el mensaje firmado ha quedado desactualizado.
 
 ## POST /api/agent/siwe/verify
 

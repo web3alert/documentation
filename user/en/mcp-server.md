@@ -22,7 +22,7 @@ After revocation, the API rejects the token immediately. While MCP still has a c
 | --- | --- |
 | `401` | The bearer credential is missing, invalid, unknown, expired or revoked. Send the header with a valid agent key. |
 | `403` | The client origin was rejected (`forbidden_origin`) or the account failed MCP access checks (`mcp_access_denied`). Check the client's `Origin` header or your account details, respectively. |
-| `429` | The API rate-limited token verification. Wait for the delay in `Retry-After` before retrying. |
+| `429` | The edge limited requests from your IP, or the API rate-limited credential verification. Honor `Retry-After` before retrying. |
 | `503` | Token verification is temporarily unavailable. Wait for the delay in `Retry-After` and retry with the same credential. |
 
 All three paths share a default budget of 120 tool calls per minute per account on each server process, across all credentials for that account. If you use up this budget, the tool returns `rate_limited` with `retryAfter` in seconds.
@@ -37,6 +37,7 @@ Tool errors are returned separately from HTTP authentication errors.
 | `not_in_plan` | The applicable workspace plan excludes inbox or delivery history. |
 | `plan_required` | A build operation requires an Advanced or Pro account. |
 | `insufficient_balance` | The EUR balance cannot cover the plan purchase. |
+| `api_error` | For `buy_plan`, a pending checkout or a higher active plan can block purchase before any debit. The tool returns the API's message. Resolve the existing plan or checkout first. |
 | `x402_unavailable` | USDC top-ups are unavailable. |
 | `rate_unavailable` | The ECB reference rate is unavailable. |
 | `no_current_workspace` | The tool needs a current workspace and the API returned none. |
@@ -45,7 +46,7 @@ Tool errors are returned separately from HTTP authentication errors.
 | `retryable` | A chain data request failed upstream or the workspace has reached its test rate limit. |
 | `private_project_limit` | Creating the private agent project would exceed the account's project cap. |
 | `trigger_limit` | Activating the trigger would exceed the plan's trigger cap. |
-| `not_found` | The target is unavailable. Build calls can return this for an unknown chain, a missing verified ABI, or a missing IDL or unknown pallet identified by the runtime. A generic IDL or pallet lookup failure returns `retryable`. An unavailable event, draft or trigger can also return `not_found`. |
+| `not_found` | The target is unavailable. Build calls can return this for an unknown chain, a missing verified ABI, or a missing IDL or unknown pallet identified by the runtime. A generic IDL or pallet lookup failure returns `retryable`. An unavailable event, draft or trigger can also return `not_found`. A busy explorer can also produce the missing-ABI `not_found` response. If the contract is verified on the explorer, retry in a minute. |
 | `request_id_conflict` | The same activation `requestId` was already used for another draft in the workspace. |
 
 ## Upgrading existing clients
@@ -69,15 +70,15 @@ Agent tools use the key's bound workspace. Create a key in the other workspace t
 | Tool | What it does |
 | --- | --- |
 | `get_account` | Returns the account ID, name, tier, EUR wallet balance, tier limits, and active and total subscription counts for the current workspace when available, plus the key's scopes, expiry, monthly cap and spend when using a key. |
-| `get_topup_requirements` | Quotes a €5–€500 USDC top-up. Use an x402 client and your wallet to pay. Requires `manage`. |
+| `get_topup_requirements` | Quotes a €5–€500 USDC top-up. Use an x402 client and your wallet to pay. Requires `manage`. Check the [payment URL, network and asset](api-billing.md#post-api-billing-wallet-x402-topup) before signing. |
 | `buy_plan` | Buys Advanced or Pro from the EUR balance without auto-renewal. Requires `spend` and a `requestId` of 8–64 characters. Reuse the same ID for retries of the same purchase. |
 | `find_triggers` | Searches the public catalog for triggers from EVM and Substrate chains. It also searches the current workspace's triggers. |
 | `get_trigger` | Shows a trigger's runtime inputs, delivered event fields, and fields you can use in `conditions`. |
 | `list_webhooks` | Lists the `fullname`, name, and URL of each registered workspace webhook. The `signed` field indicates whether a webhook has a signing secret. |
 | `add_webhook` | Registers a webhook with an HTTPS URL without credentials. If the workspace already has a resource with that name when checked, the tool refuses the request with `webhook_exists`. The signing secret appears only in the `add_webhook` reply as `signingSecret`. Rotating it later replaces it for every receiver of that endpoint. |
 | `remove_webhook` | Deletes a webhook by fullname in the current workspace. Requires `manage`. Returns `webhook_in_use` if a live subscription in that workspace uses it. |
-| `create_subscription` | Subscribes to one trigger with one delivery destination, either `webhook` or `inbox: true`. Supply required inputs and optional `conditions`. |
-| `read_events` | Reads the paid workspace inbox oldest first. Poll with `nextCursor` as `after` in the same workspace. `gap: true` signals missing events between the cursor and the first result. An empty page can also report a gap if newer events had been stored. Requires `read`. |
+| `create_subscription` | Subscribes to one trigger with one delivery destination, either `webhook` or `inbox: true`. Supply required inputs and optional `conditions`. If `create_subscription` ends without a reply, call `list_subscriptions` before retrying. A retry can create a second subscription. |
+| `read_events` | Reads the paid workspace inbox oldest first. Poll with `nextCursor` as `after` in the same workspace. `gap: true` reports holes before or within a page of previously stored events. An empty page can report a gap if newer stored events are no longer retained. Use `get_delivery_log` for undelivered events when history is available. Requires `read`. |
 | `list_subscriptions` | Lists subscription IDs, titles, states, triggers, webhooks, and creation times. |
 | `set_subscription_state` | Pauses (`off`) or resumes (`on`) a subscription. |
 | `remove_subscription` | Deletes a subscription. Webhook retries stop within about 10 seconds. An attempt already due in that window can still be sent. |
@@ -149,8 +150,8 @@ Use `https://web3alert.io/mcp/agent/build` with the same client settings and bea
 | --- | --- | --- |
 | `find_contract` | `read` | Finds exact event signatures from a contract ABI, Solana IDL or Substrate metadata. EVM results include functions and a per-event `recentCount` over the last `recentBlocks` blocks, up to 1,000. The range can be shorter if the provider refuses a wide query. `recentBlocks` is `null` if no blocks could be read or the source is Solana or Substrate. A count of `0` means no matching logs in the reported range. |
 | `plan_trigger` | `manage` | Generates a draft for an event without custom code. Returns its `draftId`, preview fullname, inputs, filterable fields, output schema and expiry. |
-| `test_trigger` | `read` | Tests a draft on a recent sample or replays a supplied block or slot. If EVM discovery finds no match in the log windows it could read and the provider refuses older windows, the result is `no_match`. If discovery stops on a timeout, a transport failure or a runtime error with no specific cause, the result is `retryable`. To bypass discovery for an EVM or Substrate test, pass a recent `block` explicitly. |
-| `activate_trigger` | `manage` | Saves a draft whose latest test matched. The first successful activation creates the workspace's private agent project, which counts toward the account's private-project cap. Reuse `requestId` on retries for the same draft. Reusing it for a different draft returns `request_id_conflict`. The returned trigger fullname is ready for subscriptions. |
+| `test_trigger` | `read` | Tests a draft on a recent sample or replays a supplied block or slot. After an EVM scan reads some log windows, a refusal or opaque runtime error on older windows can end the scan with `no_match`. That result covers only the windows read. If you know the event occurred, pass its `block` to `test_trigger`. Timeouts, transport failures and a scan that cannot read any windows return `retryable`. You can bypass discovery with a recent `block` for EVM or Substrate. |
+| `activate_trigger` | `manage` | Saves a draft whose latest test matched. The first successful activation creates the workspace's private agent project, which counts toward the account's private-project cap. Reuse `requestId` on retries for the same draft. Reusing it for a different draft returns `request_id_conflict`. The returned trigger fullname is ready for subscriptions. If another member created the workspace's agent project, activation uses that creator's plan to check trigger units. It returns `plan_required` if that plan no longer allows trigger management. |
 | `remove_my_trigger` | `manage` | Removes a trigger from that project. Returns `trigger_in_use` if a live subscription in the trigger's workspace uses it. |
 
 Direct removal of a trigger or webhook checks live (`on`) subscriptions in that trigger's or webhook's workspace. Pause or remove those subscriptions before retrying. Removing a project, workspace or account blocks its affected subscriptions. A live subscription in another workspace to a public trigger does not prevent direct removal.

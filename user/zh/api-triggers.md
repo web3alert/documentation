@@ -337,7 +337,7 @@ Payload: trigger/source-specific search object.
 
 密钥需要 `read` 权限。发送 `chain`，并指定 `address`（EVM）、`program`（Solana）或 `pallet`（Substrate）中的一项。仅支持 Web3alert 内置链源。可以使用简称，如 `ethereum`、`base`、`arbitrum-one`、`polkadot` 或 `solana`，也可以使用 `common.<chain>` 或 `common.source.<chain>`。若无法识别链，API 返回 `404 not_found`，并在 `error.details.chains` 中列出该目标类型支持的简称。链数据暂时不可用时返回 `503 retryable`。
 
-EVM 合约没有已验证的 ABI 时返回 `404 not_found`。Solana 程序缺少 IDL 或 Substrate pallet 未知时，如果运行时明确指出该原因，则返回 `404 not_found`。如果运行时只报告一般故障，API 会返回 `503 retryable`。
+EVM 合约没有已验证的 ABI 时返回 `404 not_found`。Solana 程序缺少 IDL 或 Substrate pallet 未知时，如果运行时明确指出该原因，则返回 `404 not_found`。如果运行时只报告一般故障，API 会返回 `503 retryable`。 区块浏览器繁忙时，也可能出现找不到 ABI 的 `not_found`。如果合约已在区块浏览器上验证，请一分钟后重试。
 
 返回 `{ chain, source, events, recentBlocks, functions? }`，其中包含准确的事件签名。对于 EVM，每个事件的 `recentCount` 统计最近 `recentBlocks` 个区块中的日志，最多 1,000 个区块。如果提供方拒绝大范围查询，API 会缩小查询窗口重试，返回的覆盖范围可能更短。未能读取任何区块或链源为 Solana 或 Substrate 时，`recentBlocks` 为 `null`。`recentCount` 为 `null` 表示计数不可用或不适用。
 
@@ -353,13 +353,15 @@ EVM 合约没有已验证的 ABI 时返回 `404 not_found`。Solana 程序缺少
 
 对 EVM 或 Substrate 传入 `slot`、或对 Solana 传入 `block` 时，返回 `result: "invalid"`。
 
-如果 EVM 在可读取的日志区间内未找到匹配项，而提供方拒绝查询更早的区间，则返回 `no_match`。如果查找因超时、传输故障或原因不明的运行时错误而中断，则返回 `retryable`。对于 EVM 或 Substrate 测试，可显式指定近期的 `block` 来跳过查找。
+如果 EVM 查找已读取部分日志区间，更早的区间遭拒或遇到原因不明的运行时错误时，查找可能以 `no_match` 结束。该结果仅覆盖已读取的区间。如果你知道事件已发生，请将对应的 `block` 传给 `test_trigger`。超时、传输故障或未能读取任何区间时返回 `retryable`。对 EVM 或 Substrate，可指定近期的 `block` 跳过查找。
 
 ## POST /api/agent/build/drafts/:draftId/activate
 
 密钥需要 `manage` 权限。发送 `{ requestId }`，重试时沿用。返回工作区智能体私有项目的 `{ trigger, project }`。若最近测试结果并非 `matched`，则返回 `409 not_tested`。超出套餐上限时返回 `403 private_project_limit` 或 `403 trigger_limit`。草稿可用性错误与测试相同。
 
 首次成功激活会创建私有项目 `agent-triggers`，同名时会另加后缀。该项目计入账户的私有项目上限。Advanced 只有一个名额。若已用完，创建智能体项目时会返回 `403 private_project_limit`。在同一工作区对同一草稿沿用 `requestId` 会返回原结果。为其他草稿复用此 ID 会返回 `409 request_id_conflict`。
+
+如果工作区的智能体项目是另一位成员创建的，激活时按项目创建者的套餐检查触发器单位。如果该套餐已不允许管理触发器，则返回 `plan_required`。
 
 ## DELETE /api/agent/build/triggers/:fullname
 

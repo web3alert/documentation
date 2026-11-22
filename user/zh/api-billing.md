@@ -14,6 +14,8 @@
 
 ## POST /api/billing/wallet/crypto-topup
 
+需要账户会话令牌。使用智能体密钥会返回 `403 key_not_allowed`。
+
 <!-- api-contract: redirect-query=authoritative-externalReference; existing-value=replaced -->
 创建加密货币余额充值。提供 `returnUrl` 或 `cancelUrl` 时，API 会将其中的
 `externalReference` 查询参数设置为本次充值的准确引用，并替换旧值。请在支付服务商
@@ -23,20 +25,30 @@
 
 需要账户会话令牌或有 `manage` 权限的智能体密钥。发送 `{ amountEur }`，金额为 5–500 欧元，最多两位小数。使用 Base 网络上的 USDC 支付，采用欧洲央行的美元参考汇率，按 1 USDC = 1 USD 换算，不加价。
 
+签名前请核对付款 URL 必须为 `https://web3alert.io/api/billing/wallet/x402-topup`，网络为 Base（`eip155:8453`），资产为 USDC（`0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913`）。任一项不符就停止。仅向该 URL 发送智能体密钥和付款签名。
+
 没有 `PAYMENT-SIGNATURE` 的请求返回 `402`。响应体和 base64 编码的 `PAYMENT-REQUIRED` 包含同一份 x402 v2 `PaymentRequired` 报价。报价有效期为 300 秒。USDC 金额向上取整到美分，`resource.url` 始终使用配置的公开源地址。用钱包签名并保留 `accepts[0].extra.quoteId`，然后发送相同的请求体和 base64 编码的 `PAYMENT-SIGNATURE`。开始新付款时，如果报价已过期、不匹配或来自其他工作区，则返回带有新报价的 `402` 响应。
 
-支付结算后返回 `200`、`PAYMENT-RESPONSE` 和 `{ topupId, amountEur, usdcAmount, transaction, network, balanceEur }`。若收到 `202` 和 `{ status: "pending", topupId }`，请用同一签名重试。重放已结算付款会返回原结果。付款被拒时返回 `402`，响应体包含字符串 `error`，详情见 `PAYMENT-RESPONSE`。服务故障返回 `502 facilitator_unavailable`、`503 x402_unavailable` 或 `503 rate_unavailable`。
+支付结算后返回 `200`、`PAYMENT-RESPONSE` 和 `{ topupId, amountEur, usdcAmount, transaction, network, balanceEur }`。
+
+若收到 `202` 和 `{ status: "pending", topupId }`，请在同一工作区用相同的请求体和签名重试有限次数。如果仍待处理，请停止，保留 `topupId` 供运营人员对账，并且不要为同一目的授权另一笔付款。托管充值的刷新端点不适用于 x402 记录。
+
+重放已结算付款会返回原结果。付款被拒时返回 `402`，响应体包含字符串 `error`，详情见 `PAYMENT-RESPONSE`。服务故障返回 `502 facilitator_unavailable`、`503 x402_unavailable` 或 `503 rate_unavailable`。
 
 ## POST /api/billing/wallet/topup/refresh
+
+需要账户会话令牌。使用智能体密钥会返回 `403 key_not_allowed`。
 
 <!-- api-contract: target=exact-topupId-or-externalReference; recent-topup-fallback=forbidden; result-correlation=fail-closed-on-missing-or-ambiguous -->
 刷新由 `topupId` 或 `externalReference` 准确标识的充值状态。请使用创建响应或返回
 URL 中的标识符，不要根据“最近一次充值”推断目标。如果标识符缺失、重复或与另一个
 标识符冲突，返回页面不得发起刷新请求。
 
+该端点用于托管充值。处理 x402 记录时，请参照 [x402 充值流程](#post-api-billing-wallet-x402-topup)。
+
 ## POST /api/billing/account-plan/balance-purchase
 
-智能体密钥需要 `spend` 权限，并须使用 `autoRenew: false`。购买超出该密钥月度上限时返回 `403 spend_cap_exceeded`。 如果已有启用自动续订的有效套餐，使用密钥购买套餐会在扣款前返回 `403 key_not_allowed`。
+智能体密钥需要 `spend` 权限，并须使用 `autoRenew: false`。购买超出该密钥月度上限时返回 `403 spend_cap_exceeded`。 如果已有启用自动续订的有效套餐，使用密钥购买套餐会在扣款前返回 `403 key_not_allowed`。 待处理的结账或有效的更高套餐也可能在扣款前阻止购买。请先处理现有套餐或结账。
 
 <!-- api-contract: requestId=optional-backward-compatible-8-128-rfc3986-unreserved; requestId-omitted=not-retry-safe-across-http-attempts; autoRenew-default=false; same-intent=same-requestId-and-payload; exact-replay=original-subscriptionId-and-invoiceId-without-second-debit; conflicting-payload=rejected; new-intent=new-requestId -->
 使用钱包余额购买或升级账号套餐。
@@ -74,9 +86,13 @@ URL 中的标识符，不要根据“最近一次充值”推断目标。如果�
 
 ## POST /api/billing/account-plan/checkout
 
+需要账户会话令牌。使用智能体密钥会返回 `403 key_not_allowed`。
+
 为账号套餐创建 checkout。
 
 ## POST /api/billing/account-plan/crypto-checkout
+
+需要账户会话令牌。使用智能体密钥会返回 `403 key_not_allowed`。
 
 为账号套餐创建直接加密货币 checkout。
 
@@ -122,6 +138,8 @@ URL 中的标识符，不要根据“最近一次充值”推断目标。如果�
 
 ## POST /api/billing/project-addon/checkout
 
+需要账户会话令牌。使用智能体密钥会返回 `403 key_not_allowed`。
+
 <!-- api-contract: pending-hosted-retry=existing-subscriptionId-invoiceId-externalReference-and-fresh-signed-form -->
 为项目 add-on 创建 checkout。
 
@@ -134,6 +152,8 @@ URL 中的标识符，不要根据“最近一次充值”推断目标。如果�
 | `pending-hosted-retry` | 返回现有的 `subscriptionId`、`invoiceId` 和 `externalReference`，以及新签名的 `checkout` 表单。 |
 
 ## POST /api/billing/project-addon/crypto-checkout
+
+需要账户会话令牌。使用智能体密钥会返回 `403 key_not_allowed`。
 
 <!-- api-contract: pending-linked-provider-order-retry=same-providerOrderId-and-paymentUrl; ambiguous-provider-creation-or-linkage=fail-closed-pending; next-attempt=cancel-or-reconcile-first -->
 为项目 add-on 创建直接加密货币 checkout。
@@ -179,6 +199,8 @@ checkout 会保持待处理并以 fail-closed 方式阻止新尝试；请先取�
 
 ## POST /api/billing/coupon/gift-purchase
 
+需要账户会话令牌。使用智能体密钥会返回 `403 key_not_allowed`。
+
 <!-- api-contract: requestId=optional-backward-compatible-8-128-rfc3986-unreserved; requestId-omitted=not-retry-safe-across-http-attempts; same-intent=same-requestId-planId-durationMonths; exact-replay=same-couponId-and-code-without-second-debit-or-referral-reward; conflicting-payload=rejected; new-intent=new-requestId; response=couponId-code -->
 使用钱包余额购买礼品优惠券。
 
@@ -222,9 +244,13 @@ checkout 会保持待处理并以 fail-closed 方式阻止新尝试；请先取�
 
 ## POST /api/billing/subscription/update-renewal
 
+需要账户会话令牌。使用智能体密钥会返回 `403 key_not_allowed`。
+
 更新自动续费设置。
 
 ## POST /api/billing/crypto-checkout/refresh
+
+需要账户会话令牌。使用智能体密钥会返回 `403 key_not_allowed`。
 
 <!-- api-contract: late-payment-after-cancel-or-project-transfer=no-reactivation; disposition=reconciliation-or-refund -->
 刷新加密货币 checkout 状态。
@@ -237,6 +263,8 @@ checkout 会保持待处理并以 fail-closed 方式阻止新尝试；请先取�
 | `late-payment-after-cancel-or-project-transfer` | 保持 `no-reactivation`；执行 `reconciliation-or-refund`。 |
 
 ## POST /api/billing/crypto-checkout/cancel
+
+需要账户会话令牌。使用智能体密钥会返回 `403 key_not_allowed`。
 
 <!-- api-contract: late-payment-after-cancel-or-project-transfer=no-reactivation; disposition=reconciliation-or-refund -->
 取消加密货币 checkout。

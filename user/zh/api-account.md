@@ -50,6 +50,8 @@ Provider credentials 和返回的 token 都是敏感信息。仅通过 HTTPS 发
 
 带 `claim` 登录成功后，该登录方式会关联到钱包账户，链接随即失效，并会签发该账户的会话令牌。若登录方式已关联其他账户，则返回 `409 login_already_linked`，链接仍有效。认领令牌无效时返回 `404 claim_not_found`，且不会创建账户。
 
+认领账户后，此前通过钱包签发的密钥仍然有效。登录后，请在 [Agents 页面](https://web3alert.io/agents)检查密钥并撤销不想保留的密钥。
+
 ## DELETE /api/token
 
 撤销用于验证此请求的 token。
@@ -127,6 +129,8 @@ Payload: 无。
 ## POST /api/agent/siwe/nonce
 
 公开。无需请求体。返回 `{ nonce, issuedAt, expiresAt }`。nonce 有效期为 10 分钟，且只能使用一次。
+
+nonce 和验证端点共用边缘层的每 IP 限流，每秒 1 次请求，突发容量为 10。边缘层的 `429` 响应没有 API 的 `signup_limited` 响应体。请遵循 `Retry-After`，若签署的消息已失效，请获取新的 nonce。
 
 ## POST /api/agent/siwe/verify
 

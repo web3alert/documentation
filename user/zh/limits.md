@@ -389,6 +389,8 @@ Workspace-level limit 保护 workspace 内部的整体 alerts 流量。
 
 收件箱在两项限制内保留最新事件。事件保存和保留规则遵循工作区所有者的套餐，若无所有者则使用订阅创建者的套餐。不含告警历史的套餐不会保存事件。工作区没有所有者时，创建或读取收件箱使用调用者的套餐。
 
+每个事件沿用写入时设定的到期时间。数量上限在写入后执行，因此套餐降级后，事件数量可能超过新的上限，直到下次写入。
+
 ## Project Transfer
 
 Project transfer requests 有 anti-spam limits。
