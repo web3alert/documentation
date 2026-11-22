@@ -354,11 +354,15 @@ Las claves requieren `read`. Envía opcionalmente `block` (EVM o Substrate) o `s
 
 Usar `slot` para EVM o Substrate, o `block` para Solana, devuelve `result: "invalid"`.
 
-Si una búsqueda EVM ya leyó algunos intervalos de logs, un rechazo o un error del runtime sin causa específica en intervalos más antiguos puede acabar en `no_match`. Ese resultado solo abarca los intervalos leídos. Si sabes que ocurrió el evento, pasa su `block` a `test_trigger`. Los tiempos de espera agotados, fallos de transporte y búsquedas que no pudieron leer ningún intervalo devuelven `retryable`. Puedes omitir la búsqueda con un `block` reciente para EVM o Substrate.
+La búsqueda en Solana prueba hasta 12 slots recientes y en Substrate hasta 12 bloques recientes. Si una búsqueda de EVM lee al menos un intervalo de logs sin coincidencias, un error devuelto por el proveedor, incluido un tiempo de espera agotado en el proveedor, o un rechazo genérico del runtime en intervalos anteriores pueden terminar la búsqueda con `no_match`. El resultado solo abarca los intervalos leídos. Los fallos de transporte, agotar el plazo de la búsqueda y no poder leer ningún intervalo devuelven `retryable`.
+
+Si sabes dónde ocurrió el evento o quieres omitir la búsqueda, pasa a `test_trigger` su `slot` para Solana o su `block` para EVM o Substrate.
 
 ## POST /api/agent/build/drafts/:draftId/activate
 
 Las claves requieren `manage`. Envía `{ requestId }` y reutilízalo al reintentar. Devuelve `{ trigger, project }` para el proyecto privado del agente en el espacio. Si la última prueba no devolvió `matched`, responde `409 not_tested`. Los límites del plan devuelven `403 private_project_limit` o `403 trigger_limit`. Los errores de disponibilidad del borrador son los mismos que en la prueba.
+
+Para activar, se requiere un `requestId` de hasta 128 caracteres con al menos un carácter que no sea un espacio en blanco.
 
 La primera activación correcta crea el proyecto privado `agent-triggers` o usa un sufijo si el nombre ya está ocupado. El proyecto cuenta para el límite de proyectos privados de la cuenta. Advanced permite uno, así que la creación del proyecto del agente devuelve `403 private_project_limit` si ese cupo ya está ocupado. Reutilizar el `requestId` con el mismo borrador del espacio devuelve el resultado original. Usarlo con otro borrador devuelve `409 request_id_conflict`.
 

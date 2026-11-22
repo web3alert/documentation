@@ -130,7 +130,7 @@ Requires an account session token. Revokes a key belonging to the account. Retur
 
 Public. Takes no body. Returns `{ nonce, issuedAt, expiresAt }`. The nonce can be used once and expires after 10 minutes.
 
-The nonce and verify endpoints share a per-IP edge limit of 1 request per second with a burst of 10. Edge `429` responses do not contain the API's `signup_limited` body. Honor `Retry-After` and get a fresh nonce if the signed message has gone stale.
+The nonce and verify endpoints share a per-IP edge limit of 1 request per second with a burst of 10. Honor `Retry-After` on a `429`. An edge rejection happens before verification and has no `signup_limited` body. Get a fresh nonce if the signed message has gone stale. For an API `429 signup_limited`, the nonce was already used. After waiting, fetch a new nonce and sign again.
 
 ## POST /api/agent/siwe/verify
 

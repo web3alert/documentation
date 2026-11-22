@@ -130,7 +130,7 @@ Requiere un token de sesión. Revoca una clave de la cuenta. Si se revoca o ya e
 
 Público. No requiere cuerpo. Devuelve `{ nonce, issuedAt, expiresAt }`. El nonce caduca en 10 minutos y se usa una sola vez.
 
-Los endpoints de nonce y verificación comparten un límite por IP en el perímetro de 1 solicitud por segundo, con una ráfaga de 10. Los `429` del perímetro no incluyen el cuerpo `signup_limited` de la API. Respeta `Retry-After` y pide un nonce nuevo si el mensaje firmado ha quedado desactualizado.
+Los endpoints de nonce y verificación comparten un límite por IP en el perímetro de 1 solicitud por segundo, con una ráfaga de 10. Respeta `Retry-After` al recibir un `429`. El rechazo en el perímetro ocurre antes de la verificación y no incluye un cuerpo `signup_limited`. Pide un nonce nuevo si el mensaje firmado ha quedado desactualizado. Si la API devuelve `429 signup_limited`, el nonce ya se usó. Después de esperar, pide otro y firma de nuevo.
 
 ## POST /api/agent/siwe/verify
 

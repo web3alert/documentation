@@ -59,7 +59,7 @@ Comparte el enlace de reclamación en privado con la persona que se hará cargo 
 
 Reclamar la cuenta deja activas las claves emitidas previamente mediante la cartera. Después de iniciar sesión, revisa las claves en la [página Agents](https://web3alert.io/agents) y revoca las que no quieras conservar.
 
-Los endpoints de nonce y verificación comparten un límite por IP en el perímetro de 1 solicitud por segundo, con una ráfaga de 10. Los `429` del perímetro no incluyen el cuerpo `signup_limited` de la API. Respeta `Retry-After` y pide un nonce nuevo si el mensaje firmado ha quedado desactualizado.
+Los endpoints de nonce y verificación comparten un límite por IP en el perímetro de 1 solicitud por segundo, con una ráfaga de 10. Respeta `Retry-After` al recibir un `429`. El rechazo en el perímetro ocurre antes de la verificación y no incluye un cuerpo `signup_limited`. Pide un nonce nuevo si el mensaje firmado ha quedado desactualizado. Si la API devuelve `429 signup_limited`, el nonce ya se usó. Después de esperar, pide otro y firma de nuevo.
 
 ## 2. Conecta tu cliente MCP
 
@@ -118,16 +118,18 @@ Para una conexión gestionada por el editor, añade la entrada en `servers` en `
 
 ## 3. Recarga el saldo y compra un plan
 
+Antes de pagar, comprueba que la clave tenga `spend`. Confirma en la aplicación o con el titular de la cuenta que no haya un checkout pendiente ni un plan activo con renovación automática. Si pagas para usar la bandeja de entrada, comprueba el plan del propietario del espacio. Comprar un plan con otra cuenta no habilita la bandeja del propietario.
+
 1. Llama a `get_account({})` antes de firmar. Comprueba el saldo en EUR y verifica que el límite mensual restante de la clave, si existe, cubra la compra. Una cuenta nueva empieza con 0 € y un mes de Advanced cuesta 15 €. Para este ejemplo sin saldo, llama a `get_topup_requirements({"amountEur":15})` con `manage`. Las recargas van de 5 a 500 €. Web3alert usa el tipo de referencia del BCE para USD, valora 1 USDC en 1 USD y no aplica recargo.
-2. Antes de firmar, comprueba que la URL sea exactamente `https://web3alert.io/api/billing/wallet/x402-topup`, la red sea Base (`eip155:8453`) y el activo sea USDC (`0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913`). Si falla alguna comprobación, detente. Envía la clave y la firma del pago únicamente a esa URL. Usa tu cliente x402 v2 y tu cartera y envía el cuerpo cotizado por `POST`, con la credencial Bearer y la firma del pago en `PAYMENT-SIGNATURE`.
-3. Si la API devuelve `202`, reintenta un número limitado de veces con el mismo cuerpo y la misma firma en el mismo espacio. Si el pago sigue pendiente, detente y guarda el `topupId` para que el operador lo concilie. No autorices otro pago para el mismo fin. Espera a que la [recarga](api-billing.md#post-api-billing-wallet-x402-topup) se liquide y se abone al saldo antes de comprar.
-4. Llama a `buy_plan({"planId":"advanced","durationMonths":1,"requestId":"first-plan-001"})` con `spend` y saldo suficiente. Puedes comprar Advanced o Pro por 1, 3, 6 o 12 meses sin renovación automática. Si reintentas la compra, reutiliza el `requestId` y los parámetros. Un plan activo con renovación automática devuelve `key_not_allowed`. Un checkout pendiente o un plan superior activo también pueden bloquear la compra con `api_error` y el mensaje de la API. Pide al titular que resuelva primero el plan o el checkout existente.
+2. Solicita una cotización nueva enviando el mismo cuerpo sin firma de pago a `https://web3alert.io/api/billing/wallet/x402-topup` por HTTPS. Antes de firmar, comprueba que la URL de pago sea exactamente esa, que la red sea Base (`eip155:8453`), que el activo sea USDC (`0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913`) y que el `payTo` del pago coincida con la dirección de la cotización nueva. Comprueba el importe esperado en USDC. Los importes son cadenas en unidades atómicas de seis decimales, de modo que `"1000000"` equivale a 1 USDC. Si falla alguna comprobación, detente. Firma esa cotización con tu cliente x402 v2 y tu cartera. Envía el cuerpo cotizado por `POST`, con la credencial Bearer y la firma en `PAYMENT-SIGNATURE`, solo a esa URL. Desactiva las redirecciones del `POST` firmado.
+3. Considera sin resolver el `POST` firmado si recibes `202` o `5xx`, o se agota el tiempo de espera. Reintenta un número limitado de veces con el mismo cuerpo y firma en el mismo espacio, incluso tras caducar la cotización. Si sigue sin resolverse, detente y guarda los identificadores disponibles, como `topupId`, para que el operador concilie el pago. No firmes otro pago para el mismo fin mientras siga sin resolverse. Espera a que la [recarga](api-billing.md#post-api-billing-wallet-x402-topup) se liquide y se abone antes de comprar.
+4. Genera un `requestId` nuevo para esta compra, como un UUID, y sustituye `<new-uuid>` en `buy_plan({"planId":"advanced","durationMonths":1,"requestId":"<new-uuid>"})`. Usa `spend` y comprueba que el saldo en EUR sea suficiente. Puedes comprar Advanced o Pro por 1, 3, 6 o 12 meses sin renovación automática. Reutiliza el mismo ID y parámetros solo al reintentar esta compra. Un plan activo con renovación automática devuelve `key_not_allowed`. Un checkout pendiente o un plan superior activo pueden bloquear la compra con `api_error` y el mensaje de la API. Pide al titular que resuelva primero el plan o el checkout existente.
 
 ## 4. Crea tu primera suscripción
 
 Elige un webhook HTTPS público o, en Advanced y Pro, la bandeja de entrada del espacio de trabajo. Para añadir un webhook, crear una suscripción o consultar la bandeja o el historial de entregas, necesitas el rol `owner` o `admin`.
 
-Si `create_subscription` termina sin respuesta, llama a `list_subscriptions` antes de reintentar. El reintento puede crear una segunda suscripción.
+Asigna un `title` único a cada intención de `create_subscription`. Si pierdes la respuesta, llama a `list_subscriptions` y busca por ese título antes de reintentar. Si el título no basta, revisa las reglas y acciones que devuelve [GET /api/subscriptions](api-subscriptions.md#get-api-subscriptions). Detente si aún no puedes confirmar si la suscripción se creó.
 
 ### Entrega por webhook
 
@@ -137,7 +139,7 @@ En esta sesión de ejemplo, sustituye los valores entre ángulos por los resulta
 2. `find_triggers({"kind":"event","limit":5})` → Disparadores coincidentes del catálogo publicado y de tu espacio de trabajo, con el `fullname` de cada uno.
 3. `get_trigger({"trigger":"<trigger-fullname>"})` → Entradas de ejecución del disparador, campos del evento y campos disponibles para filtrar.
 4. `add_webhook({"name":"agent-events","url":"https://example.com/webhooks/web3alert"})` → `fullname`, nombre y URL del webhook registrado. El secreto de firma solo aparece en la respuesta de `add_webhook` como `signingSecret`. Si lo rotas más adelante, se sustituye para todos los receptores de ese endpoint. Guarda el secreto para tu receptor.
-5. `create_subscription({"trigger":"<trigger-fullname>","webhook":"<webhook-fullname>","state":"on"})` → ID, título, estado resultante, disparador y webhook de la suscripción.
+5. `create_subscription({"trigger":"<trigger-fullname>","webhook":"<webhook-fullname>","title":"<unique-title>","state":"on"})` → ID, título, estado resultante, disparador y webhook de la suscripción.
 6. `get_delivery_log({"subscriptionId":"<subscription-id>"})` → Resultados de entrega y `nextCursor` si hay más resultados. El historial de alertas usa el plan de la primera cuenta con rol de propietario en la lista de acceso del espacio de trabajo. Si no existe esa cuenta, la API comprueba el plan de la cuenta que hace la solicitud. Si ese plan no incluye el historial, la herramienta devuelve `not_in_plan`.
 
    Si el cursor no puede avanzar porque 500 o más entregas comparten la misma marca de tiempo, la herramienta devuelve `api_error`. Restringe el filtro, por ejemplo por estado, y empieza de nuevo sin el cursor.
@@ -150,13 +152,13 @@ Tu webhook recibe un cuerpo JSON con un ID de evento. Los webhooks nuevos recibe
 
 ### Entrega en la bandeja de entrada
 
-Localiza el trigger, consulta sus entradas con `get_trigger` y llama a `create_subscription({"trigger":"<trigger-fullname>","inbox":true,"state":"on"})`. Incluye los `inputs` obligatorios. La herramienta acepta un destino por llamada y crea o reutiliza la bandeja del espacio de trabajo.
+Localiza el trigger, consulta sus entradas con `get_trigger` y llama a `create_subscription({"trigger":"<trigger-fullname>","inbox":true,"title":"<unique-title>","state":"on"})`. Incluye los `inputs` obligatorios. La herramienta acepta un destino por llamada y crea o reutiliza la bandeja del espacio de trabajo.
 
 Llama a `read_events({})` para empezar por el evento conservado más antiguo. Sigue leyendo mientras `hasMore` sea verdadero y usa `nextCursor` como `after` cuando contenga un valor, en el mismo espacio. `gap: true` indica que faltan eventos previamente guardados antes del primer resultado tras el cursor o entre resultados de la misma página. Una página vacía también puede indicar un hueco si ya no se conservan eventos posteriores al cursor. Usa `get_delivery_log` para ver los eventos no entregados cuando haya historial de entregas. Usa el `id` para deduplicar.
 
 El plan del propietario del espacio determina si se guardan los eventos y cuánto tiempo se conservan. Si no hay propietario, se usa el plan de quien creó la suscripción. Advanced conserva hasta **7 días o 25.000 eventos** y Pro hasta **30 días o 100.000 eventos**. Los planes sin historial de alertas no guardan eventos. La creación y la lectura de la bandeja usan el plan del propietario del espacio, o el del solicitante si no hay propietario, y devuelven `not_in_plan` si ese plan no incluye historial.
 
-Sin historial de alertas en el plan aplicable, la API rechaza las escrituras de la bandeja. Cinco eventos consecutivos sin entregar a la bandeja bloquean la suscripción. Tras restaurar un plan de pago, comprueba el estado con `list_subscriptions` y reactiva las suscripciones bloqueadas con `set_subscription_state` y `state: "on"`. Comprueba que devuelve `on`.
+Sin historial de alertas en el plan aplicable, la API rechaza las escrituras de la bandeja. Esos eventos no aparecen en `read_events` ni en el historial de entregas. Cinco eventos consecutivos sin entregar a la bandeja bloquean la suscripción. Restaura el plan de pago del propietario del espacio o, si no hay propietario, el de quien creó la suscripción para reanudar las entregas. Comprueba el estado con `list_subscriptions` y usa `set_subscription_state` con `state: "on"` para las suscripciones bloqueadas. Confirma que devuelve `on`. Solo se reanuda la entrega de eventos futuros.
 
 ## 5. Crea un trigger
 
@@ -168,9 +170,11 @@ En Advanced o Pro, conecta el cliente a `https://web3alert.io/mcp/agent/build` c
 2. Envía la misma cadena y el mismo destino, junto con la firma exacta del evento, a `plan_trigger`. Guarda el `draftId`. El borrador caduca a los siete días.
 3. Ejecuta `test_trigger` con el borrador. Deja que el servidor busque una muestra reciente o indica un bloque o slot. Continúa cuando el último resultado sea `matched`.
 
-   Si una búsqueda EVM ya leyó algunos intervalos de logs, un rechazo o un error del runtime sin causa específica en intervalos más antiguos puede acabar en `no_match`. Ese resultado solo abarca los intervalos leídos. Si sabes que ocurrió el evento, pasa su `block` a `test_trigger`. Los tiempos de espera agotados, fallos de transporte y búsquedas que no pudieron leer ningún intervalo devuelven `retryable`. Puedes omitir la búsqueda con un `block` reciente para EVM o Substrate.
+   La búsqueda en Solana prueba hasta 12 slots recientes y en Substrate hasta 12 bloques recientes. Si una búsqueda de EVM lee al menos un intervalo de logs sin coincidencias, un error devuelto por el proveedor, incluido un tiempo de espera agotado en el proveedor, o un rechazo genérico del runtime en intervalos anteriores pueden terminar la búsqueda con `no_match`. El resultado solo abarca los intervalos leídos. Los fallos de transporte, agotar el plazo de la búsqueda y no poder leer ningún intervalo devuelven `retryable`.
 
-4. Ejecuta `activate_trigger` con el `draftId` y un `requestId` propio. Reutiliza este último en los reintentos. El trigger se guarda en el proyecto privado del agente del espacio de trabajo. Pasa el fullname devuelto a `create_subscription`. Si otro miembro creó el proyecto del agente en el espacio, la activación usa el plan de su creador para comprobar las unidades de triggers. Devuelve `plan_required` si ese plan ya no permite gestionar triggers.
+   Si sabes dónde ocurrió el evento o quieres omitir la búsqueda, pasa a `test_trigger` su `slot` para Solana o su `block` para EVM o Substrate.
+
+4. Ejecuta `activate_trigger` con el `draftId` y un `requestId` propio. Reutiliza este último en los reintentos. El trigger se guarda en el proyecto privado del agente del espacio de trabajo. El rol `developer` del espacio permite crear y activar el trigger. Solo un `owner` o `admin` puede usar el fullname devuelto con `create_subscription`. Si otro miembro creó el proyecto del agente en el espacio, la activación usa el plan de su creador para comprobar las unidades de triggers. Devuelve `plan_required` si ese plan ya no permite gestionar triggers.
 
 `find_contract` y `test_trigger` usan `read`. La planificación y la activación usan `manage`. Consulta la [referencia de herramientas de creación](mcp-server.md#build-endpoint).
 

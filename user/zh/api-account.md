@@ -130,7 +130,7 @@ Payload: 无。
 
 公开。无需请求体。返回 `{ nonce, issuedAt, expiresAt }`。nonce 有效期为 10 分钟，且只能使用一次。
 
-nonce 和验证端点共用边缘层的每 IP 限流，每秒 1 次请求，突发容量为 10。边缘层的 `429` 响应没有 API 的 `signup_limited` 响应体。请遵循 `Retry-After`，若签署的消息已失效，请获取新的 nonce。
+nonce 和验证端点共用边缘层的每 IP 限流，每秒 1 次请求，突发容量为 10。收到 `429` 时请遵循 `Retry-After`。边缘层在验证前拒绝请求，且没有 `signup_limited` 响应体。若签署的消息已失效，请获取新的 nonce。API 返回 `429 signup_limited` 时，原 nonce 已被使用。等待后请获取新的 nonce 并重新签名。
 
 ## POST /api/agent/siwe/verify
 

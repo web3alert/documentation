@@ -59,7 +59,7 @@ Share the claim link privately with the person taking control of the account. Th
 
 Claiming the account leaves previously issued wallet keys active. After signing in, review the keys on the [Agents page](https://web3alert.io/agents) and revoke any you do not want to keep.
 
-The nonce and verify endpoints share a per-IP edge limit of 1 request per second with a burst of 10. Edge `429` responses do not contain the API's `signup_limited` body. Honor `Retry-After` and get a fresh nonce if the signed message has gone stale.
+The nonce and verify endpoints share a per-IP edge limit of 1 request per second with a burst of 10. Honor `Retry-After` on a `429`. An edge rejection happens before verification and has no `signup_limited` body. Get a fresh nonce if the signed message has gone stale. For an API `429 signup_limited`, the nonce was already used. After waiting, fetch a new nonce and sign again.
 
 ## 2. Connect your MCP client
 
@@ -118,16 +118,18 @@ For an editor-managed connection, add the entry under `servers` in `.vscode/mcp.
 
 ## 3. Top up and buy a plan
 
+Before paying, confirm the key has `spend`. Confirm in the app or with the account owner that there is no pending checkout or active auto-renewing plan. If you are paying to use the inbox, check the workspace owner's plan. Buying a plan on a non-owner account leaves the owner's inbox eligibility unchanged.
+
 1. Call `get_account({})` before signing. Check the EUR balance and confirm that the planned purchase fits within the key's remaining monthly cap if one is set. A new account starts at €0 and one month of Advanced costs €15. For this zero-balance example, call `get_topup_requirements({"amountEur":15})` with `manage` to cover the purchase. Top-ups range from €5 to €500. Web3alert uses the ECB USD reference rate, values 1 USDC at 1 USD and applies no markup.
-2. Before signing, verify that the URL is exactly `https://web3alert.io/api/billing/wallet/x402-topup`, the network is Base (`eip155:8453`), and the asset is USDC (`0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913`). Stop if any check fails. Send your agent key and payment signature only to that URL. Use your own x402 v2 client and wallet, then POST the quoted body with the bearer credential and the payment signature in `PAYMENT-SIGNATURE`.
-3. If the API returns `202`, retry only a limited number of times with the same body and signature in the same workspace. If it stays pending, stop and keep the `topupId` for the operator to reconcile. Do not authorize another payment for the same purpose. Wait for the [top-up](api-billing.md#post-api-billing-wallet-x402-topup) to settle and credit the balance before buying.
-4. Call `buy_plan({"planId":"advanced","durationMonths":1,"requestId":"first-plan-001"})` with `spend` and enough balance. You can buy Advanced or Pro for 1, 3, 6 or 12 months without auto-renewal. Reuse the same `requestId` and purchase parameters when retrying that purchase. If an active plan renews automatically, the purchase returns `key_not_allowed`. A pending checkout or a higher active plan can also block the purchase with `api_error` and the API's message. Ask the account owner to resolve the existing plan or checkout first.
+2. Fetch a fresh quote by sending the same body without a payment signature to `https://web3alert.io/api/billing/wallet/x402-topup` over HTTPS. Before signing, check that the payment URL is exactly that URL, the network is Base (`eip155:8453`), the asset is USDC (`0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913`), and the payment's `payTo` matches the address in the fresh quote. Check the expected USDC amount. Amounts are strings in six-decimal atomic units, so `"1000000"` is 1 USDC. Stop if any check fails. Sign that quote with your x402 v2 client and wallet. POST the quoted body with the bearer credential and the payment signature in `PAYMENT-SIGNATURE` only to that URL. Disable redirects for the signed POST.
+3. Treat a `202`, timeout, or `5xx` from the signed POST as unresolved. Retry a limited number of times with the same body and signature in the same workspace, even after the quote expires. If the outcome is still unresolved, stop and keep any identifiers you have, such as `topupId`, for the operator to reconcile. Never sign another payment for the same purpose while this one is unresolved. Wait for the [top-up](api-billing.md#post-api-billing-wallet-x402-topup) to settle and credit the balance before buying.
+4. Generate a fresh `requestId` for this purchase, such as a UUID, and substitute it for `<new-uuid>` in `buy_plan({"planId":"advanced","durationMonths":1,"requestId":"<new-uuid>"})`. Use `spend` and ensure the EUR balance is sufficient. You can buy Advanced or Pro for 1, 3, 6 or 12 months without auto-renewal. Reuse that ID and the same parameters only when retrying this purchase. An active auto-renewing plan returns `key_not_allowed`. A pending checkout or a higher active plan can block the purchase with `api_error` and the API's message. Ask the account owner to resolve the existing plan or checkout first.
 
 ## 4. Create your first subscription
 
 Choose delivery to a public HTTPS webhook or, on Advanced and Pro, to the workspace inbox. Adding a webhook, creating a subscription, and accessing inbox or delivery history require the workspace `owner` or `admin` role.
 
-If `create_subscription` ends without a reply, call `list_subscriptions` before retrying. A retry can create a second subscription.
+Give each `create_subscription` intent a unique `title`. If the reply is lost, call `list_subscriptions` and match on the title before retrying. If the title is inconclusive, inspect the rules and actions returned by [GET /api/subscriptions](api-subscriptions.md#get-api-subscriptions). Stop if you still cannot tell whether the subscription was created.
 
 ### Webhook delivery
 
@@ -137,7 +139,7 @@ In this example session, replace the values in angle brackets with results from 
 2. `find_triggers({"kind":"event","limit":5})` → Matching triggers from the published catalog and your workspace, including each trigger's `fullname`.
 3. `get_trigger({"trigger":"<trigger-fullname>"})` → The trigger's runtime inputs, event fields, and fields available for filtering.
 4. `add_webhook({"name":"agent-events","url":"https://example.com/webhooks/web3alert"})` → The registered webhook's `fullname`, name, and URL. The signing secret appears only in the `add_webhook` reply as `signingSecret`. Rotating it later replaces it for every receiver of that endpoint. Store the secret for your receiver.
-5. `create_subscription({"trigger":"<trigger-fullname>","webhook":"<webhook-fullname>","state":"on"})` → The subscription's ID, title, resulting state, trigger, and webhook.
+5. `create_subscription({"trigger":"<trigger-fullname>","webhook":"<webhook-fullname>","title":"<unique-title>","state":"on"})` → The subscription's ID, title, resulting state, trigger, and webhook.
 6. `get_delivery_log({"subscriptionId":"<subscription-id>"})` → Delivery outcomes and `nextCursor` when there are more results. Alert history uses the plan of the first account with the owner role in the workspace's access list. If there is no such account, the API checks the caller's plan. Without history on that plan, the tool returns `not_in_plan`.
 
    If the cursor cannot advance because 500 or more deliveries share a timestamp, the tool returns `api_error`. Narrow the filter, for example by status, and start again without the cursor.
@@ -150,13 +152,13 @@ Your webhook receives a JSON body with an event ID. New webhooks receive signed 
 
 ### Inbox delivery
 
-After finding a trigger and inspecting its inputs with `get_trigger`, call `create_subscription({"trigger":"<trigger-fullname>","inbox":true,"state":"on"})`. Supply required `inputs` as for webhook delivery. The tool accepts one destination per call. It creates or reuses the workspace inbox when you pass `inbox: true`.
+After finding a trigger and inspecting its inputs with `get_trigger`, call `create_subscription({"trigger":"<trigger-fullname>","inbox":true,"title":"<unique-title>","state":"on"})`. Supply required `inputs` as for webhook delivery. The tool accepts one destination per call. It creates or reuses the workspace inbox when you pass `inbox: true`.
 
 Call `read_events({})` to start with the oldest retained event. While `hasMore` is true, keep reading. Pass a non-null `nextCursor` as `after` in the same workspace. `gap: true` reports previously stored events that are missing before the first result after the cursor or between results on the same page. An empty page can report a gap when newer stored events are no longer retained. Use `get_delivery_log` for undelivered events when delivery history is available. Use the event `id` to deduplicate.
 
 The workspace owner's plan governs whether events are stored and how long they are retained. Without an owner, storage follows the subscription creator's plan. Advanced retains up to **7 days or 25,000 events** and Pro up to **30 days or 100,000 events**. Plans without alert history store no events. Inbox creation and reading use the workspace owner's plan, or the caller's when there is no owner, and return `not_in_plan` when that plan has no alert history.
 
-While the applicable plan lacks alert history, the API refuses inbox writes. Five consecutive undelivered events to the inbox block the subscription. After restoring a paid plan, check the state with `list_subscriptions` and resume any blocked subscription with `set_subscription_state` and `state: "on"`. Check that it returns `on`.
+While the applicable plan lacks alert history, the API refuses inbox writes. Those events are absent from both `read_events` and the delivery log. Five consecutive undelivered events to the inbox block the subscription. Restore the workspace owner's paid plan, or the subscription creator's plan for delivery when there is no owner. Check the state with `list_subscriptions` and use `set_subscription_state` with `state: "on"` for any blocked subscription. Confirm that it returns `on`. Recovery only resumes delivery of future events.
 
 ## 5. Build a trigger
 
@@ -168,9 +170,11 @@ On Advanced or Pro, connect the same client to `https://web3alert.io/mcp/agent/b
 2. Pass the same chain and target plus the exact event signature to `plan_trigger`. Save the returned `draftId`. The draft expires after seven days.
 3. Run `test_trigger` on the draft. Let the server find a recent sample or supply a block or slot. Continue when the latest result is `matched`.
 
-   After an EVM scan reads some log windows, a refusal or opaque runtime error on older windows can end the scan with `no_match`. That result covers only the windows read. If you know the event occurred, pass its `block` to `test_trigger`. Timeouts, transport failures and a scan that cannot read any windows return `retryable`. You can bypass discovery with a recent `block` for EVM or Substrate.
+   Solana discovery tries up to 12 recent slots, and Substrate tries up to 12 recent blocks. After EVM discovery reads at least one log window without a match, an error response from the provider, including a provider-side timeout, or an opaque runtime refusal on older windows can end the scan with `no_match`. That result covers only the windows read. Transport failures, reaching the discovery deadline, and a scan that cannot read any windows return `retryable`.
 
-4. Call `activate_trigger` with the same `draftId` and your own `requestId`. Reuse the ID on retries. The saved trigger is in the workspace's private agent project. Pass its returned fullname to `create_subscription`. If another member created the workspace's agent project, activation uses that creator's plan to check trigger units. It returns `plan_required` if that plan no longer allows trigger management.
+   If you know where the event occurred or want to bypass discovery, pass its `slot` for Solana or `block` for EVM or Substrate to `test_trigger`.
+
+4. Call `activate_trigger` with the same `draftId` and your own `requestId`. Reuse the ID on retries. The saved trigger is in the workspace's private agent project. A workspace `developer` can build and activate the trigger. An `owner` or `admin` must use the returned fullname with `create_subscription`. If another member created the workspace's agent project, activation uses that creator's plan to check trigger units. It returns `plan_required` if that plan no longer allows trigger management.
 
 `find_contract` and `test_trigger` use `read`. Planning and activation use `manage`. See the [build tool reference](mcp-server.md#build-endpoint).
 

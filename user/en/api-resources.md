@@ -182,7 +182,7 @@ Use the returned fullname as `values.inbox` in the `common.builtin.inbox` subscr
 
 Event storage and retention follow the workspace owner's plan, or the subscription creator's when there is no owner. The inbox stores no events while that plan lacks alert history. See [Limits](limits.md).
 
-While the applicable plan lacks alert history, the API refuses inbox writes. Five consecutive undelivered events to the inbox block the subscription. After restoring a paid plan, check the state with `list_subscriptions` and resume any blocked subscription with `set_subscription_state` and `state: "on"`. Check that it returns `on`.
+While the applicable plan lacks alert history, the API refuses inbox writes. Those events are absent from both `read_events` and the delivery log. Five consecutive undelivered events to the inbox block the subscription. Restore the workspace owner's paid plan, or the subscription creator's plan for delivery when there is no owner. Check the state with `list_subscriptions` and use `set_subscription_state` with `state: "on"` for any blocked subscription. Confirm that it returns `on`. Recovery only resumes delivery of future events.
 
 ## GET /api/events
 

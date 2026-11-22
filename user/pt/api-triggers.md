@@ -354,11 +354,15 @@ As chaves requerem `read`. Envie opcionalmente `block` (EVM ou Substrate) ou `sl
 
 Usar `slot` para EVM ou Substrate, ou `block` para Solana, devolve `result: "invalid"`.
 
-Se uma pesquisa EVM tiver lido alguns intervalos de logs, uma recusa ou um erro do runtime sem causa específica em intervalos mais antigos pode terminar com `no_match`. O resultado só abrange os intervalos lidos. Se souber que o evento ocorreu, passe o seu `block` a `test_trigger`. Tempos limite, falhas de transporte e pesquisas que não conseguiram ler nenhum intervalo devolvem `retryable`. Pode dispensar a pesquisa com um `block` recente para EVM ou Substrate.
+A pesquisa em Solana tenta até 12 slots recentes e em Substrate até 12 blocos recentes. Se uma pesquisa EVM ler pelo menos um intervalo de logs sem correspondências, uma resposta de erro do fornecedor, incluindo um tempo limite do lado do fornecedor, ou uma recusa genérica do runtime em intervalos anteriores pode terminar a pesquisa com `no_match`. O resultado só abrange os intervalos lidos. Falhas de transporte, o fim do prazo da pesquisa e a impossibilidade de ler qualquer intervalo devolvem `retryable`.
+
+Se souber onde ocorreu o evento ou quiser dispensar a pesquisa, passe a `test_trigger` o seu `slot` para Solana ou o seu `block` para EVM ou Substrate.
 
 ## POST /api/agent/build/drafts/:draftId/activate
 
 As chaves requerem `manage`. Envie `{ requestId }` e reutilize-o ao repetir. Devolve `{ trigger, project }` para o projeto privado de agente do espaço. Se o último teste não devolver `matched`, responde `409 not_tested`. Os limites devolvem `403 private_project_limit` ou `403 trigger_limit`. Os erros de disponibilidade são os mesmos do teste.
+
+A ativação requer um `requestId` de até 128 caracteres com pelo menos um carácter que não seja espaço em branco.
 
 A primeira ativação bem-sucedida cria o projeto privado `agent-triggers` ou acrescenta um sufixo se o nome estiver ocupado. O projeto conta para o limite de projetos privados da conta. Advanced permite um, pelo que criar o projeto de agente devolve `403 private_project_limit` se essa vaga já estiver ocupada. Reutilizar o `requestId` para o mesmo rascunho no espaço devolve o resultado original. Usá-lo com outro rascunho devolve `409 request_id_conflict`.
 

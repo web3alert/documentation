@@ -353,11 +353,15 @@ EVM 合约没有已验证的 ABI 时返回 `404 not_found`。Solana 程序缺少
 
 对 EVM 或 Substrate 传入 `slot`、或对 Solana 传入 `block` 时，返回 `result: "invalid"`。
 
-如果 EVM 查找已读取部分日志区间，更早的区间遭拒或遇到原因不明的运行时错误时，查找可能以 `no_match` 结束。该结果仅覆盖已读取的区间。如果你知道事件已发生，请将对应的 `block` 传给 `test_trigger`。超时、传输故障或未能读取任何区间时返回 `retryable`。对 EVM 或 Substrate，可指定近期的 `block` 跳过查找。
+Solana 查找最多尝试近期 12 个 slot，Substrate 最多尝试近期 12 个区块。如果 EVM 已读取至少一个日志区间但没有匹配项，且提供方对更早的区间返回错误（包括提供方报告的超时），或运行时返回原因不明的拒绝，查找可能以 `no_match` 结束。该结果仅覆盖已读取的区间。传输故障、达到查找时限或未能读取任何区间时返回 `retryable`。
+
+如果你知道事件发生的位置或想跳过查找，请向 `test_trigger` 传入对应的位置，Solana 用 `slot`，EVM 或 Substrate 用 `block`。
 
 ## POST /api/agent/build/drafts/:draftId/activate
 
 密钥需要 `manage` 权限。发送 `{ requestId }`，重试时沿用。返回工作区智能体私有项目的 `{ trigger, project }`。若最近测试结果并非 `matched`，则返回 `409 not_tested`。超出套餐上限时返回 `403 private_project_limit` 或 `403 trigger_limit`。草稿可用性错误与测试相同。
+
+激活需要 `requestId`，最多 128 个字符，且至少包含一个非空白字符。
 
 首次成功激活会创建私有项目 `agent-triggers`，同名时会另加后缀。该项目计入账户的私有项目上限。Advanced 只有一个名额。若已用完，创建智能体项目时会返回 `403 private_project_limit`。在同一工作区对同一草稿沿用 `requestId` 会返回原结果。为其他草稿复用此 ID 会返回 `409 request_id_conflict`。
 

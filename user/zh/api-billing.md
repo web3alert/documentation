@@ -25,13 +25,13 @@
 
 需要账户会话令牌或有 `manage` 权限的智能体密钥。发送 `{ amountEur }`，金额为 5–500 欧元，最多两位小数。使用 Base 网络上的 USDC 支付，采用欧洲央行的美元参考汇率，按 1 USDC = 1 USD 换算，不加价。
 
-签名前请核对付款 URL 必须为 `https://web3alert.io/api/billing/wallet/x402-topup`，网络为 Base（`eip155:8453`），资产为 USDC（`0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913`）。任一项不符就停止。仅向该 URL 发送智能体密钥和付款签名。
+通过 HTTPS 直接从 `https://web3alert.io/api/billing/wallet/x402-topup` 获取报价。签名前请核对付款 URL 必须正是该地址，网络为 Base（`eip155:8453`），资产为 USDC（`0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913`），且付款的 `payTo` 与新报价中的地址一致。核对预期的 USDC 金额。金额以字符串表示，以六位小数的最小单位计。例如 `"1000000"` 等于 1 USDC。任一项不符就停止。仅向该 URL 发送智能体密钥和付款签名。已签名的 `POST` 不得跟随重定向。
 
 没有 `PAYMENT-SIGNATURE` 的请求返回 `402`。响应体和 base64 编码的 `PAYMENT-REQUIRED` 包含同一份 x402 v2 `PaymentRequired` 报价。报价有效期为 300 秒。USDC 金额向上取整到美分，`resource.url` 始终使用配置的公开源地址。用钱包签名并保留 `accepts[0].extra.quoteId`，然后发送相同的请求体和 base64 编码的 `PAYMENT-SIGNATURE`。开始新付款时，如果报价已过期、不匹配或来自其他工作区，则返回带有新报价的 `402` 响应。
 
 支付结算后返回 `200`、`PAYMENT-RESPONSE` 和 `{ topupId, amountEur, usdcAmount, transaction, network, balanceEur }`。
 
-若收到 `202` 和 `{ status: "pending", topupId }`，请在同一工作区用相同的请求体和签名重试有限次数。如果仍待处理，请停止，保留 `topupId` 供运营人员对账，并且不要为同一目的授权另一笔付款。托管充值的刷新端点不适用于 x402 记录。
+如果已签名的 `POST` 返回带 `{ status: "pending", topupId }` 的 `202`、返回 `5xx` 或超时，付款结果仍未确认。即使报价已过期，也可在同一工作区用相同的请求体和签名重试有限次数。如果结果仍未确认，请停止并保留已有的标识符，例如 `topupId`，以便运营人员对账。在结果确认之前，切勿为同一目的签署另一笔付款。托管充值的刷新端点不适用于 x402 记录。
 
 重放已结算付款会返回原结果。付款被拒时返回 `402`，响应体包含字符串 `error`，详情见 `PAYMENT-RESPONSE`。服务故障返回 `502 facilitator_unavailable`、`503 x402_unavailable` 或 `503 rate_unavailable`。
 
@@ -99,6 +99,8 @@ URL 中的标识符，不要根据“最近一次充值”推断目标。如果�
 ## POST /api/billing/project-addon/balance-purchase
 
 智能体密钥需要 `spend` 权限，并须使用 `autoRenew: false`。购买超出该密钥月度上限时返回 `403 spend_cap_exceeded`。
+
+调用者必须是项目的账单所有者，并拥有工作区编辑权限。使用智能体密钥时，该密钥必须绑定到项目所在的工作区。
 
 <!-- api-contract: requestId=optional-backward-compatible-8-128-rfc3986-unreserved; requestId-omitted=not-retry-safe-across-http-attempts; autoRenew-default=false; same-intent=same-requestId-and-full-payload; exact-replay=original-subscriptionId-and-invoiceId-without-second-debit; conflicting-projectFullname-addonCode-durationMonths-autoRenew=rejected; new-intent=new-requestId -->
 使用钱包余额购买项目免费访问 add-on。

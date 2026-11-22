@@ -387,9 +387,9 @@ Workspace-level limit protege o fluxo geral de alerts dentro do workspace.
 | Advanced | 7 dias | 25 000 |
 | Pro | 30 dias | 100 000 |
 
-A caixa de entrada guarda os eventos mais recentes dentro dos dois limites. O armazenamento e a retenção seguem o plano do proprietário do espaço, ou de quem criou a subscrição se não houver proprietário. Se esse plano não incluir histórico de alertas, não são guardados eventos. A criação e a leitura usam o plano de quem faz o pedido quando não há proprietário.
+O armazenamento e a retenção seguem o plano do proprietário do espaço, ou de quem criou a subscrição se não houver proprietário. Se esse plano não incluir histórico de alertas, não são guardados eventos. A criação e a leitura usam o plano de quem faz o pedido quando não há proprietário.
 
-Cada evento mantém a data de expiração atribuída quando foi guardado. O limite da contagem é aplicado após uma gravação. Uma descida de plano pode deixar mais eventos do que o novo limite permite até à próxima gravação.
+Cada evento mantém a data de expiração atribuída quando foi guardado. A contagem é um objetivo de limpeza aplicado após cada gravação confirmada, pelo que as leituras podem mostrar temporariamente mais eventos. Se o plano baixar, a gravação confirmada seguinte aplica o novo objetivo.
 
 ## Project Transfer
 

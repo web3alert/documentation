@@ -181,7 +181,7 @@ Use o fullname como `values.inbox` na ação de subscrição `common.builtin.inb
 
 O armazenamento e a retenção seguem o plano do proprietário ou de quem criou a subscrição quando não há proprietário. Se esse plano não incluir histórico de alertas, não são guardados eventos. Consulte [Limites](limits.md).
 
-Enquanto o plano aplicável não incluir histórico de alertas, a API recusa gravações na caixa de entrada. Cinco eventos consecutivos por entregar à caixa bloqueiam a subscrição. Depois de restaurar um plano pago, verifique o estado com `list_subscriptions` e reative as subscrições bloqueadas com `set_subscription_state` e `state: "on"`. Confirme que é devolvido `on`.
+Enquanto o plano aplicável não incluir histórico de alertas, a API recusa gravações na caixa de entrada. Esses eventos ficam ausentes de `read_events` e do histórico de entregas. Cinco eventos consecutivos por entregar à caixa bloqueiam a subscrição. Restaure o plano pago do proprietário do espaço, ou de quem criou a subscrição quando não há proprietário, para retomar a entrega. Verifique o estado com `list_subscriptions` e use `set_subscription_state` com `state: "on"` nas subscrições bloqueadas. Confirme que é devolvido `on`. Só é retomada a entrega de eventos futuros.
 
 ## GET /api/events
 

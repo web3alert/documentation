@@ -28,13 +28,13 @@ Conserva esa referencia durante la redirección del proveedor.
 
 Requiere una sesión o clave de agente con `manage`. Envía `{ amountEur }` de 5 a 500 €, con hasta dos decimales. Paga en USDC en Base al tipo de referencia del BCE para el USD, usando 1 USDC = 1 USD sin recargo.
 
-Antes de firmar, comprueba que la URL de pago sea exactamente `https://web3alert.io/api/billing/wallet/x402-topup`, la red sea Base (`eip155:8453`) y el activo sea USDC (`0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913`). Si falla alguna comprobación, detente. Envía la clave y la firma del pago únicamente a esa URL.
+Solicita la cotización directamente en `https://web3alert.io/api/billing/wallet/x402-topup` por HTTPS. Antes de firmar, comprueba que la URL de pago sea exactamente esa, que la red sea Base (`eip155:8453`), que el activo sea USDC (`0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913`) y que el `payTo` del pago coincida con la dirección de la cotización nueva. Comprueba el importe esperado en USDC. Los importes son cadenas en unidades atómicas de seis decimales, de modo que `"1000000"` equivale a 1 USDC. Si falla alguna comprobación, detente. Envía la clave y la firma solo a esa URL y desactiva las redirecciones del `POST` firmado.
 
 Una solicitud sin `PAYMENT-SIGNATURE` devuelve `402` con una cotización x402 v2 `PaymentRequired` en el cuerpo y la misma cotización codificada en base64 en `PAYMENT-REQUIRED`. La cotización dura 300 segundos. El importe en USDC se redondea hacia arriba al céntimo y `resource.url` usa el origen público configurado. Firma con tu cartera conservando `accepts[0].extra.quoteId` y envía el mismo cuerpo con `PAYMENT-SIGNATURE` en base64. Para un pago nuevo, una cotización caducada, que no coincide o de otro espacio devuelve una nueva cotización `402`.
 
 Un pago liquidado devuelve `200` con `PAYMENT-RESPONSE` y `{ topupId, amountEur, usdcAmount, transaction, network, balanceEur }`.
 
-Si recibes `202` con `{ status: "pending", topupId }`, reintenta un número limitado de veces con el mismo cuerpo y la misma firma en el mismo espacio. Si sigue pendiente, detente, guarda el `topupId` para que el operador lo concilie y no autorices otro pago para el mismo fin. El endpoint de actualización de recargas alojadas no se aplica a los registros x402.
+Considera sin resolver el `POST` firmado si recibes `202` con `{ status: "pending", topupId }` o `5xx`, o se agota el tiempo de espera. Reintenta un número limitado de veces con el mismo cuerpo y firma en el mismo espacio, incluso tras caducar la cotización. Si sigue sin resolverse, detente y guarda los identificadores disponibles, como `topupId`, para que el operador concilie el pago. No firmes otro pago para el mismo fin mientras siga sin resolverse. El endpoint de actualización de recargas alojadas no se aplica a los registros x402.
 
 Repetir un pago liquidado devuelve el resultado original. Un pago rechazado devuelve `402` con `error` como cadena en el cuerpo y los detalles del fallo en `PAYMENT-RESPONSE`. Los fallos de servicio devuelven `502 facilitator_unavailable`, `503 x402_unavailable` o `503 rate_unavailable`.
 
@@ -106,6 +106,8 @@ Crea un checkout directo con criptomonedas para un plan de cuenta.
 ## POST /api/billing/project-addon/balance-purchase
 
 Las claves de agente requieren `spend` y deben usar `autoRenew: false`. Si la compra supera el límite mensual, devuelve `403 spend_cap_exceeded`.
+
+El solicitante debe ser el titular de facturación del proyecto y tener acceso de edición al espacio de trabajo. Si usa una clave de agente, debe estar vinculada al espacio de trabajo del proyecto.
 
 <!-- api-contract: requestId=optional-backward-compatible-8-128-rfc3986-unreserved; requestId-omitted=not-retry-safe-across-http-attempts; autoRenew-default=false; same-intent=same-requestId-and-full-payload; exact-replay=original-subscriptionId-and-invoiceId-without-second-debit; conflicting-projectFullname-addonCode-durationMonths-autoRenew=rejected; new-intent=new-requestId -->
 Compra con saldo un add-on de acceso gratuito para un proyecto.

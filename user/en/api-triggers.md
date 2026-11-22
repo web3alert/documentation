@@ -354,11 +354,15 @@ Agent keys require `read`. Optionally send `block` (EVM or Substrate) or `slot` 
 
 Using `slot` for EVM or Substrate, or `block` for Solana, returns `result: "invalid"`.
 
-After an EVM scan reads some log windows, a refusal or opaque runtime error on older windows can end the scan with `no_match`. That result covers only the windows read. If you know the event occurred, pass its `block` to `test_trigger`. Timeouts, transport failures and a scan that cannot read any windows return `retryable`. You can bypass discovery with a recent `block` for EVM or Substrate.
+Solana discovery tries up to 12 recent slots, and Substrate tries up to 12 recent blocks. After EVM discovery reads at least one log window without a match, an error response from the provider, including a provider-side timeout, or an opaque runtime refusal on older windows can end the scan with `no_match`. That result covers only the windows read. Transport failures, reaching the discovery deadline, and a scan that cannot read any windows return `retryable`.
+
+If you know where the event occurred or want to bypass discovery, pass its `slot` for Solana or `block` for EVM or Substrate to `test_trigger`.
 
 ## POST /api/agent/build/drafts/:draftId/activate
 
 Agent keys require `manage`. Send `{ requestId }` and reuse it on retries. Returns `{ trigger, project }` for the workspace's private agent project. The latest test must return `matched` or activation returns `409 not_tested`. Tier caps return `403 private_project_limit` or `403 trigger_limit`. Draft availability errors are the same as for testing.
+
+Activation requires a `requestId` of at most 128 characters with at least one non-whitespace character.
 
 The first successful activation creates the private project `agent-triggers` or a suffixed name if that name is taken. It counts toward the account's private-project cap. Advanced has one slot, so creating the agent project when that slot is already used returns `403 private_project_limit`. Reusing a `requestId` for the same draft in the workspace returns the original result. Using that ID for a different draft returns `409 request_id_conflict`.
 

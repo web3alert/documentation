@@ -181,7 +181,7 @@ Usa el fullname como `values.inbox` en la acción de suscripción `common.builti
 
 El almacenamiento y la retención siguen el plan del propietario del espacio o el de quien creó la suscripción si no hay propietario. Si ese plan no incluye historial de alertas, no se guardan eventos. Consulta [Límites](limits.md).
 
-Sin historial de alertas en el plan aplicable, la API rechaza las escrituras de la bandeja. Cinco eventos consecutivos sin entregar a la bandeja bloquean la suscripción. Tras restaurar un plan de pago, comprueba el estado con `list_subscriptions` y reactiva las suscripciones bloqueadas con `set_subscription_state` y `state: "on"`. Comprueba que devuelve `on`.
+Sin historial de alertas en el plan aplicable, la API rechaza las escrituras de la bandeja. Esos eventos no aparecen en `read_events` ni en el historial de entregas. Cinco eventos consecutivos sin entregar a la bandeja bloquean la suscripción. Restaura el plan de pago del propietario del espacio o, si no hay propietario, el de quien creó la suscripción para reanudar las entregas. Comprueba el estado con `list_subscriptions` y usa `set_subscription_state` con `state: "on"` para las suscripciones bloqueadas. Confirma que devuelve `on`. Solo se reanuda la entrega de eventos futuros.
 
 ## GET /api/events
 

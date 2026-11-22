@@ -59,7 +59,7 @@ Content-Type: application/json
 
 认领账户后，此前通过钱包签发的密钥仍然有效。登录后，请在 [Agents 页面](https://web3alert.io/agents)检查密钥并撤销不想保留的密钥。
 
-nonce 和验证端点共用边缘层的每 IP 限流，每秒 1 次请求，突发容量为 10。边缘层的 `429` 响应没有 API 的 `signup_limited` 响应体。请遵循 `Retry-After`，若签署的消息已失效，请获取新的 nonce。
+nonce 和验证端点共用边缘层的每 IP 限流，每秒 1 次请求，突发容量为 10。收到 `429` 时请遵循 `Retry-After`。边缘层在验证前拒绝请求，且没有 `signup_limited` 响应体。若签署的消息已失效，请获取新的 nonce。API 返回 `429 signup_limited` 时，原 nonce 已被使用。等待后请获取新的 nonce 并重新签名。
 
 ## 2. 连接 MCP 客户端
 
@@ -118,16 +118,18 @@ claude mcp add --transport http web3alert-agent https://web3alert.io/mcp/agent \
 
 ## 3. 充值并购买套餐
 
+付款前请确认密钥具有 `spend` 权限。在应用中核对或请账户持有人确认没有待处理的结账，也没有启用自动续订的有效套餐。如果付款是为了使用收件箱，请检查工作区所有者的套餐。用其他账户购买套餐不会为所有者开通收件箱。
+
 1. 签名前调用 `get_account({})`，查看欧元余额，并在设有月度上限时确认本次购买在密钥的剩余额度内。新账户的余额为 0 欧元，Advanced 一个月为 15 欧元。在此零余额示例中，使用 `manage` 权限调用 `get_topup_requirements({"amountEur":15})`。充值范围为 5–500 欧元。Web3alert 使用欧洲央行的美元参考汇率，按 1 USDC 等于 1 USD 换算，不加价。
-2. 签名前请核对 URL 必须为 `https://web3alert.io/api/billing/wallet/x402-topup`，网络为 Base（`eip155:8453`），资产为 USDC（`0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913`）。任一项不符就停止。仅向该 URL 发送智能体密钥和付款签名。使用自己的 x402 v2 客户端和钱包，然后通过 `POST` 发送报价的请求体、Bearer 凭据及带有付款签名的 `PAYMENT-SIGNATURE` 请求头。
-3. 如果 API 返回 `202`，在同一工作区用相同的请求体和签名重试有限次数。如果付款仍待处理，请停止并保留 `topupId`，以便运营人员对账。请勿为同一目的授权另一笔付款。等[充值](api-billing.md#post-api-billing-wallet-x402-topup)结算并计入余额后再购买套餐。
-4. 余额充足时，使用 `spend` 权限调用 `buy_plan({"planId":"advanced","durationMonths":1,"requestId":"first-plan-001"})`。可购买 1、3、6 或 12 个月的 Advanced 或 Pro，不会自动续订。重试同一笔购买时沿用 `requestId` 和原参数。已有自动续订的有效套餐时返回 `key_not_allowed`。待处理的结账或有效的更高套餐也可能阻止购买，工具会返回 `api_error` 和 API 的消息。请让账户持有人先处理现有套餐或结账。
+2. 通过 HTTPS 向 `https://web3alert.io/api/billing/wallet/x402-topup` 发送相同的请求体，省略付款签名，以获取新报价。签名前请核对付款 URL 必须正是该地址，网络为 Base（`eip155:8453`），资产为 USDC（`0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913`），且付款的 `payTo` 与新报价中的地址一致。核对预期的 USDC 金额。金额以字符串表示，以六位小数的最小单位计。例如 `"1000000"` 等于 1 USDC。任一项不符就停止。使用自己的 x402 v2 客户端和钱包签署该报价。仅向该 URL 发送报价的请求体、Bearer 凭据及 `PAYMENT-SIGNATURE` 中的签名。已签名的 `POST` 不得跟随重定向。
+3. 如果已签名的 `POST` 返回 `202`、`5xx` 或超时，付款结果仍未确认。即使报价已过期，也可在同一工作区用相同的请求体和签名重试有限次数。如果结果仍未确认，请停止并保留已有的标识符，例如 `topupId`，以便运营人员对账。在结果确认之前，切勿为同一目的签署另一笔付款。等[充值](api-billing.md#post-api-billing-wallet-x402-topup)结算并计入余额后再购买套餐。
+4. 为本次购买生成新的 `requestId`，例如 UUID，然后替换 `buy_plan({"planId":"advanced","durationMonths":1,"requestId":"<new-uuid>"})` 中的 `<new-uuid>`。请使用 `spend` 权限并确认欧元余额充足。可购买 1、3、6 或 12 个月的 Advanced 或 Pro，不会自动续订。仅在重试本次购买时沿用该 ID 和原参数。已有启用自动续订的有效套餐时返回 `key_not_allowed`。待处理的结账或有效的更高套餐也可能阻止购买，工具会返回 `api_error` 和 API 的消息。请让账户持有人先处理现有套餐或结账。
 
 ## 4. 创建第一个订阅
 
 可以投递到公开的 HTTPS Webhook，也可以在 Advanced 或 Pro 套餐中投递到工作区收件箱。添加 Webhook、创建订阅、读取收件箱或投递历史需要 `owner` 或 `admin` 角色。
 
-如果 `create_subscription` 没有返回结果，请在重试前先调用 `list_subscriptions`。重试可能创建第二个订阅。
+每次准备通过 `create_subscription` 创建新订阅时，指定唯一的 `title`。如果没有收到响应，重试前先调用 `list_subscriptions` 并按标题查找。若仅凭标题无法判断，请检查 [GET /api/subscriptions](api-subscriptions.md#get-api-subscriptions) 返回的规则和操作。如果仍不能确认订阅是否已创建，请停止。
 
 ### Webhook 投递
 
@@ -137,7 +139,7 @@ claude mcp add --transport http web3alert-agent https://web3alert.io/mcp/agent \
 2. `find_triggers({"kind":"event","limit":5})` → 已发布目录和当前工作区中符合条件的触发器，包括各自的 `fullname`。
 3. `get_trigger({"trigger":"<trigger-fullname>"})` → 触发器的运行时输入、事件字段和可用于筛选的字段。
 4. `add_webhook({"name":"agent-events","url":"https://example.com/webhooks/web3alert"})` → 已注册 Webhook 的 `fullname`、名称和 URL。 签名密钥仅在 `add_webhook` 的回复中以 `signingSecret` 字段显示。之后轮换密钥会替换该端点所有接收方使用的密钥。请保存密钥供接收端使用。
-5. `create_subscription({"trigger":"<trigger-fullname>","webhook":"<webhook-fullname>","state":"on"})` → 订阅的 ID、标题、最终状态、触发器和 Webhook。
+5. `create_subscription({"trigger":"<trigger-fullname>","webhook":"<webhook-fullname>","title":"<unique-title>","state":"on"})` → 订阅的 ID、标题、最终状态、触发器和 Webhook。
 6. `get_delivery_log({"subscriptionId":"<subscription-id>"})` → 投递结果，以及有更多结果时返回的 `nextCursor`。告警历史按工作区访问列表中第一个具有所有者角色的账户的套餐检查。如果没有这样的账户，API 会检查请求方账户的套餐。如果该套餐不含历史记录，工具返回 `not_in_plan`。
 
    如果有 500 条或更多投递记录使用同一时间戳，导致游标无法继续翻页，工具会返回 `api_error`。请缩小筛选范围，例如按状态筛选，然后不带游标重新查询。
@@ -150,13 +152,13 @@ claude mcp add --transport http web3alert-agent https://web3alert.io/mcp/agent \
 
 ### 收件箱投递
 
-找到触发器，用 `get_trigger` 查看输入，然后调用 `create_subscription({"trigger":"<trigger-fullname>","inbox":true,"state":"on"})`。传入必填的 `inputs`。每次调用只能指定一个投递目标。该工具会创建或复用工作区收件箱。
+找到触发器，用 `get_trigger` 查看输入，然后调用 `create_subscription({"trigger":"<trigger-fullname>","inbox":true,"title":"<unique-title>","state":"on"})`。传入必填的 `inputs`。每次调用只能指定一个投递目标。该工具会创建或复用工作区收件箱。
 
 调用 `read_events({})` 从保留的最旧事件开始读取。当 `hasMore` 为真时继续读取，并在同一工作区将非空的 `nextCursor` 用作 `after`。`gap: true` 表示游标之后、首条结果之前或同一页的结果之间缺少此前保存过的事件。如果较新的已保存事件不再保留，空页也可能报告缺口。投递历史可用时，通过 `get_delivery_log` 查看未投递事件。使用事件的 `id` 去重。
 
 是否保存事件以及保留时长取决于工作区所有者的套餐。若无所有者，则使用订阅创建者的套餐。Advanced 最多保留 **7 天或 25,000 条事件**，Pro 最多保留 **30 天或 100,000 条事件**。不含告警历史的套餐不会保存事件。创建和读取收件箱时检查工作区所有者的套餐，若无所有者则检查调用者的套餐。若该套餐不包含告警历史，则返回 `not_in_plan`。
 
-适用套餐不含告警历史时，API 会拒绝写入收件箱。连续 5 条事件未能投递到收件箱后，订阅会被阻止。恢复付费套餐后，用 `list_subscriptions` 检查状态，再调用 `set_subscription_state` 并传入 `state: "on"` 重新启用被阻止的订阅。确认返回状态为 `on`。
+适用套餐不含告警历史时，API 会拒绝写入收件箱。这些事件不会出现在 `read_events` 或投递日志中。连续 5 条事件未能投递到收件箱后，订阅会被阻止。请恢复工作区所有者的付费套餐来恢复投递。若没有所有者，请恢复订阅创建者的付费套餐。用 `list_subscriptions` 检查状态，再对被阻止的订阅调用 `set_subscription_state` 并传入 `state: "on"`，确认返回状态为 `on`。恢复后只会投递后续发生的事件。
 
 ## 5. 构建触发器
 
@@ -168,9 +170,11 @@ claude mcp add --transport http web3alert-agent https://web3alert.io/mcp/agent \
 2. 将同一条链、同一目标和准确的事件签名传给 `plan_trigger`，保存返回的 `draftId`。草稿七天后过期。
 3. 对草稿运行 `test_trigger`。可让服务端查找近期样本，也可提供区块或 slot。最近一次结果为 `matched` 后即可继续。
 
-   如果 EVM 查找已读取部分日志区间，更早的区间遭拒或遇到原因不明的运行时错误时，查找可能以 `no_match` 结束。该结果仅覆盖已读取的区间。如果你知道事件已发生，请将对应的 `block` 传给 `test_trigger`。超时、传输故障或未能读取任何区间时返回 `retryable`。对 EVM 或 Substrate，可指定近期的 `block` 跳过查找。
+   Solana 查找最多尝试近期 12 个 slot，Substrate 最多尝试近期 12 个区块。如果 EVM 已读取至少一个日志区间但没有匹配项，且提供方对更早的区间返回错误（包括提供方报告的超时），或运行时返回原因不明的拒绝，查找可能以 `no_match` 结束。该结果仅覆盖已读取的区间。传输故障、达到查找时限或未能读取任何区间时返回 `retryable`。
 
-4. 用原 `draftId` 和自己的 `requestId` 调用 `activate_trigger`。重试时沿用该 ID。触发器将保存到工作区的智能体私有项目。把返回的完整名称传给 `create_subscription`。 如果工作区的智能体项目是另一位成员创建的，激活时按项目创建者的套餐检查触发器单位。如果该套餐已不允许管理触发器，则返回 `plan_required`。
+   如果你知道事件发生的位置或想跳过查找，请向 `test_trigger` 传入对应的位置，Solana 用 `slot`，EVM 或 Substrate 用 `block`。
+
+4. 用原 `draftId` 和自己的 `requestId` 调用 `activate_trigger`。重试时沿用该 ID。触发器将保存到工作区的智能体私有项目。具有工作区 `developer` 角色的成员可以构建和激活触发器。只有 `owner` 或 `admin` 能用返回的完整名称调用 `create_subscription`。 如果工作区的智能体项目是另一位成员创建的，激活时按项目创建者的套餐检查触发器单位。如果该套餐已不允许管理触发器，则返回 `plan_required`。
 
 `find_contract` 和 `test_trigger` 需要 `read`。规划和激活需要 `manage`。参见[构建工具参考](mcp-server.md#build-endpoint)。
 
