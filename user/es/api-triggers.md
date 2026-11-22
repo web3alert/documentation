@@ -332,9 +332,11 @@ Respuesta: [LatestBlockResult](types.md#latestblockresult).
 
 Las cinco rutas admiten una sesión de cuenta o una clave de agente en el espacio actual. La cuenta debe tener Advanced o Pro (en caso contrario, `403 plan_required`). La búsqueda y las pruebas requieren acceso de lectura al espacio. La planificación, activación y eliminación requieren acceso de edición.
 
+Si la creación de triggers está desactivada, las rutas devuelven HTTP `400` con `builder is disabled` en `error.message`.
+
 ## POST /api/agent/build/contracts
 
-Las claves requieren `read`. Envía `chain` y uno de `address` (EVM), `program` (Solana) o `pallet` (Substrate). Usa una fuente de cadena integrada de Web3alert con un nombre corto como `ethereum`, `base`, `arbitrum-one`, `polkadot` o `solana`, o usa `common.<chain>` o `common.source.<chain>`. Una cadena desconocida devuelve `404 not_found` y los nombres cortos admitidos para el tipo de destino en `error.details.chains`. Un fallo temporal de datos de cadena devuelve `503 retryable`.
+Las claves requieren `read`. Envía `chain` y uno de `address` (EVM), `program` (Solana) o `pallet` (Substrate). Usa una fuente de cadena integrada de Web3alert con un nombre corto como `ethereum`, `base`, `arbitrum-one`, `polkadot` o `solana`, o usa `common.<chain>` o `common.source.<chain>`. Una cadena desconocida devuelve `404 not_found` y los nombres cortos admitidos para el tipo de destino en `error.details.chains`. Un fallo temporal de datos de cadena devuelve `503 retryable`. Un contrato sin ABI verificado, un programa de Solana sin IDL o un pallet de Substrate desconocido también devuelve `404 not_found`.
 
 Devuelve `{ chain, source, events, recentBlocks, functions? }` con firmas exactas de eventos. Para EVM, el `recentCount` de cada evento cuenta los logs de los últimos `recentBlocks` bloques, hasta 1.000. Si el proveedor rechaza una consulta amplia, la API reintenta con intervalos más pequeños y puede devolver un intervalo menor. `recentBlocks` es `null` si no se pudo leer ningún bloque y para Solana o Substrate. Un `recentCount` de `null` indica que el recuento no está disponible o no se aplica.
 
@@ -342,13 +344,19 @@ Devuelve `{ chain, source, events, recentBlocks, functions? }` con firmas exacta
 
 Las claves requieren `manage`. Envía `chain` en uno de los formatos admitidos por la [búsqueda de contratos](#post-api-agent-build-contracts), junto con el destino y un nombre o una firma exacta en `event`. Puedes incluir `title` y `description`. Devuelve `{ draftId, fullnamePreview, inputs, filterable, outputSchema, expiresAt }`. El borrador dura siete días. Una cadena desconocida devuelve `404 not_found` con `error.details.chains`. Un evento desconocido también devuelve `404 not_found`. Un fallo temporal de datos de cadena devuelve `503 retryable`.
 
+Un contrato sin ABI verificado, un programa de Solana sin IDL o un pallet de Substrate desconocido también devuelve `404 not_found`. Un nombre de evento sobrecargado devuelve HTTP `400`. Usa la firma exacta.
+
 ## POST /api/agent/build/drafts/:draftId/test
 
 Las claves requieren `read`. Envía opcionalmente `block` (EVM o Substrate) o `slot` (Solana). Omite ambos para buscar en un intervalo reciente acotado. Devuelve `{ result, block?, slot?, output? }` con `matched`, `no_match`, `invalid` o `retryable`. Un borrador no disponible devuelve `404 not_found`, o `410 draft_expired` si sigue guardado tras vencer.
 
+Usar `slot` para EVM o Substrate, o `block` para Solana, devuelve `result: "invalid"`.
+
 ## POST /api/agent/build/drafts/:draftId/activate
 
 Las claves requieren `manage`. Envía `{ requestId }` y reutilízalo al reintentar. Devuelve `{ trigger, project }` para el proyecto privado del agente en el espacio. Si la última prueba no devolvió `matched`, responde `409 not_tested`. Los límites del plan devuelven `403 private_project_limit` o `403 trigger_limit`. Los errores de disponibilidad del borrador son los mismos que en la prueba.
+
+La primera activación correcta crea el proyecto privado `agent-triggers` o usa un sufijo si el nombre ya está ocupado. El proyecto cuenta para el límite de proyectos privados de la cuenta. Advanced permite uno, así que la creación del proyecto del agente devuelve `403 private_project_limit` si ese cupo ya está ocupado. Reutilizar el `requestId` con el mismo borrador del espacio devuelve el resultado original. Usarlo con otro borrador devuelve `409 request_id_conflict`.
 
 ## DELETE /api/agent/build/triggers/:fullname
 

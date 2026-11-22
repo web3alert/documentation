@@ -21,6 +21,8 @@ Payload: 无。
 
 响应：[ResourceView[]](types.md#resourceview)。
 
+用没有 `manage` 权限的智能体密钥认证时，响应会省略外部资源写入令牌。
+
 ## GET /api/resources/:fullname
 
 返回一个 resource。
@@ -34,6 +36,8 @@ Payload: 无。
 Payload: 无。
 
 响应：[ResourceView](types.md#resourceview)。
+
+用没有 `manage` 权限的智能体密钥认证时，响应会省略外部资源写入令牌。
 
 ## PUT /api/resources/:fullname
 
@@ -89,7 +93,7 @@ Payload:
 
 Payload: 无。
 
-需要账户会话令牌或有 `manage` 权限的密钥，以及资源所在工作区的管理权限。返回 `204 No Content`。删除 Webhook 时，如果同一工作区有启用（`on`）的订阅向它投递，则返回 `409 webhook_in_use`。
+需要账户会话令牌或有 `manage` 权限的密钥，以及资源所在工作区的管理权限。返回 `204 No Content`。删除 Webhook 时，如果同一工作区有启用（`on`）的订阅向它投递，则返回 `409 webhook_in_use`。 启用的收件箱订阅不会阻止删除收件箱资源。
 
 以下三个 setup-session endpoints 仅在服务器启用安全 Telegram destination setup 时可用。
 
@@ -164,13 +168,17 @@ Payload: 无。
 
 需要账户会话令牌或有 `manage` 权限的智能体密钥，还需要工作区管理权限。无需请求体。返回 `{ fullname, retention: { days, maxEvents } }`。重复调用返回同一收件箱。若完整名称已被其他资源占用，则返回 `409 resource_name_in_use`。
 
-将完整名称用作 `common.builtin.inbox` 订阅操作的 `values.inbox`。应用工作区所有者的套餐，若无所有者则应用调用者的套餐。Free 的两个收件箱端点均返回 `403 not_in_plan`。参见[限制](limits.md)。
+将完整名称用作 `common.builtin.inbox` 订阅操作的 `values.inbox`。创建和读取收件箱时检查工作区所有者的套餐，若无所有者则检查调用者的套餐。如果该套餐不含告警历史，两个端点均返回 `403 not_in_plan`。
+
+保存和保留事件时使用工作区所有者的套餐，若无所有者则使用订阅创建者的套餐。若该套餐不含告警历史，则不保存事件。参见[限制](limits.md)。
 
 ## GET /api/events
 
-需要账户会话令牌或有 `read` 权限的智能体密钥、工作区管理权限，以及与创建收件箱相同的付费套餐。查询参数 `after`（不透明游标）和 `limit`（1–500，默认 100）可选。首次读取从保留的最旧事件开始。
+需要账户会话令牌或有 `read` 权限的智能体密钥、工作区管理权限，并采用与创建收件箱相同的套餐检查。查询参数 `after`（不透明游标）和 `limit`（1–500，默认 100）可选。首次读取从保留的最旧事件开始。游标仅可在原工作区使用。格式错误或来自其他工作区的游标会返回 HTTP `400`，`error.message` 为 `invalid inbox cursor`。
 
-返回 `{ events, nextCursor, hasMore, gap }`。每条事件包含 `cursor`、`id`、`receivedAt`、`subscription`、`trigger` 和 `body`。将 `nextCursor` 用作 `after` 以翻页或轮询。空页返回原游标，未提供时返回 `null`。`gap: true` 表示相对该游标有事件超出保留范围。
+返回 `{ events, nextCursor, hasMore, gap }`。每条事件包含 `cursor`、`id`、`receivedAt`、`subscription`、`trigger` 和 `body`。大于 64 KB 的事件体在保存时会移除 `object` 并添加 `truncated: true`。
+
+将 `nextCursor` 用作 `after` 以翻页或轮询。空页返回原游标，未提供时返回 `null`。使用游标时，`gap: true` 表示游标与首条返回事件之间有一条或多条事件超出保留范围。如果此前保存过游标之后的事件，空页也可能返回这个值。
 
 ## GET /api/resources/external/:token
 

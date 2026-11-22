@@ -25,7 +25,9 @@ https://web3alert.io
 Authorization: Bearer YOUR_AGENT_KEY
 ```
 
-每个密钥代表账户在一个工作区执行操作。`read` 可读取数据，`manage` 可创建订阅或请求充值报价等，`spend` 可用欧元余额购买套餐或项目附加项。管理密钥、撤销令牌和切换工作区需要账户会话。具体端点见下文及面向智能体的 [OpenAPI 文档](api-openapi.md)。
+每个密钥沿用账户在所属工作区的角色。`read` 可读取数据，`manage` 可创建订阅或请求充值报价等，`spend` 可用欧元余额购买套餐或项目附加项。管理密钥、撤销令牌、切换工作区、创建或更新工作区、购买礼品券，以及创建、接受、拒绝或取消项目转移请求，均需要账户会话。具体端点见下文及面向智能体的 [OpenAPI 文档](api-openapi.md)。
+
+没有 `manage` 权限的密钥不会收到外部资源写入令牌。账单响应会对所有智能体密钥隐藏未使用的优惠券和礼品券代码。
 
 使用密钥的请求可能返回 HTTP `403`。权限不足时返回 `insufficient_scope`，操作要求账户会话时返回 `key_not_allowed`，购买将超出月度上限时返回 `spend_cap_exceeded`。
 
@@ -44,16 +46,18 @@ External API requests 会按 tier 限制。`DELETE /api/token` 和 `DELETE /api/
 
 详细的 response body 结构见 [Types](types.md)。
 
-API 路由处理错误时会返回 JSON 对象，包含 `error.message` 和可选字段 `error.details`。
+JSON 格式的 API 错误通常包含 `error.message`，还可能包含 `error.code` 和 `error.details`。
 
 ```json
 {
   "error": {
-    "message": "error message",
-    "details": {}
+    "message": "This key lacks the \"manage\" scope.",
+    "code": "insufficient_scope"
   }
 }
 ```
+
+智能体端点会返回具体的 HTTP 状态码，例如 `401`、`403`、`404`、`409`、`410`、`429` 和 `503`。请同时读取状态码和 `error.code` 来处理响应。[x402 充值](api-billing.md#post-api-billing-wallet-x402-topup)的 `402` 响应会包含 x402 v2 `PaymentRequired` 报价，或者包含字符串 `error` 的付款失败结果。
 
 如果请求体中的 JSON 格式有误，API 可能在调用路由处理程序之前拒绝请求，并返回纯文本 `400 Bad Request`。将响应解析为 JSON 前，请先检查响应的 `Content-Type`。
 

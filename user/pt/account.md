@@ -38,7 +38,7 @@ Neste menu estão disponíveis:
 - `Account parameters`;
 - `Log out`.
 
-`Log out` termina a sessão atual e revoga o token de sessão deste navegador. Antes de sair, é mostrada uma confirmação.
+`Log out` pede confirmação, termina a sessão neste navegador e solicita a revogação do token. Se a aplicação não conseguir contactar o servidor, o token pode continuar válido.
 
 ## Account Parameters
 
@@ -91,6 +91,10 @@ Limites:
 Id read-only do utilizador atual.
 
 É usado para diagnóstico, suporte e identificação precisa do account quando o display name não é suficiente.
+
+### Sessions
+
+Em `Account parameters` → `Information` → `Sessions`, escolha `Revoke all tokens` e depois `Revoke and sign out`. Esta ação revoga todos os tokens de sessão da conta e termina a sessão em todos os dispositivos. Faça a gestão das chaves de agente na [página Agents](#agents).
 
 ## Agents {#agents}
 

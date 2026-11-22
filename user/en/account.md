@@ -38,7 +38,7 @@ The menu contains:
 - `Account parameters`;
 - `Log out`.
 
-`Log out` ends the current session and revokes this browser's session token. A confirmation is shown before signing out.
+`Log out` asks for confirmation, then ends the current browser session and requests token revocation. If the app cannot reach the server, the token may stay valid.
 
 ## Account Parameters
 
@@ -91,6 +91,10 @@ Limits:
 Read-only id of the current user.
 
 It is used for diagnostics, support, and precise account identification when a display name is not enough.
+
+### Sessions
+
+In `Account parameters` → `Information` → `Sessions`, choose `Revoke all tokens`, then `Revoke and sign out`. This revokes all account session tokens and signs you out on every device. Manage agent keys on the [Agents page](#agents).
 
 ## Agents {#agents}
 

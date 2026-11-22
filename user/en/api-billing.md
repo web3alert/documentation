@@ -12,6 +12,8 @@ Returns the current account billing overview.
 
 Returns the account balance and wallet overview.
 
+When authenticated with an agent key, the response omits unused gift coupon codes.
+
 ## POST /api/billing/wallet/crypto-topup
 
 <!-- api-contract: redirect-query=authoritative-externalReference; existing-value=replaced -->
@@ -24,9 +26,9 @@ across the provider redirect.
 
 Requires an account session or an agent key with `manage`. Send `{ amountEur }` from €5 to €500 with up to two decimals. Pay in USDC on Base at the ECB USD reference rate, using 1 USDC = 1 USD with no markup.
 
-A request without `PAYMENT-SIGNATURE` returns `402` with an x402 v2 quote in the body and base64-encoded in `PAYMENT-REQUIRED`. Sign with your wallet, preserving `accepts[0].extra.quoteId`, then send the same body with the base64-encoded `PAYMENT-SIGNATURE`.
+A request without `PAYMENT-SIGNATURE` returns `402` with an x402 v2 `PaymentRequired` quote in the body and the same quote base64-encoded in `PAYMENT-REQUIRED`. The quote lasts 300 seconds. The USDC amount is rounded up to the next cent, and `resource.url` uses the configured public origin. Sign with your wallet, preserving `accepts[0].extra.quoteId`, then send the same body with the base64-encoded `PAYMENT-SIGNATURE`. For a new payment, an expired or mismatched quote, including a quote from another workspace, returns a fresh `402` quote.
 
-A settled payment returns `200` with `PAYMENT-RESPONSE` and `{ topupId, amountEur, usdcAmount, transaction, network, balanceEur }`. For `202` with `{ status: "pending", topupId }`, retry the same signature. Replaying a settled payment returns the original result. A refused payment returns `402` with a failure in `PAYMENT-RESPONSE`. Service failures return `502 facilitator_unavailable`, `503 x402_unavailable` or `503 rate_unavailable`.
+A settled payment returns `200` with `PAYMENT-RESPONSE` and `{ topupId, amountEur, usdcAmount, transaction, network, balanceEur }`. For `202` with `{ status: "pending", topupId }`, retry the same signature. Replaying a settled payment returns the original result. A refused payment returns `402` with a string `error` in the body and failure details in `PAYMENT-RESPONSE`. Service failures return `502 facilitator_unavailable`, `503 x402_unavailable` or `503 rate_unavailable`.
 
 ## POST /api/billing/wallet/topup/refresh
 
@@ -39,7 +41,7 @@ conflicts with another identifier.
 
 ## POST /api/billing/account-plan/balance-purchase
 
-Agent keys require `spend` and must use `autoRenew: false`. A purchase over the key's monthly cap returns `403 spend_cap_exceeded`.
+Agent keys require `spend` and must use `autoRenew: false`. A purchase over the key's monthly cap returns `403 spend_cap_exceeded`. Buying an account plan with a key while an auto-renewing plan is active returns `403 key_not_allowed` before any debit.
 
 <!-- api-contract: requestId=optional-backward-compatible-8-128-rfc3986-unreserved; requestId-omitted=not-retry-safe-across-http-attempts; autoRenew-default=false; same-intent=same-requestId-and-payload; exact-replay=original-subscriptionId-and-invoiceId-without-second-debit; conflicting-payload=rejected; new-intent=new-requestId -->
 Purchases or upgrades an account plan using the wallet balance.

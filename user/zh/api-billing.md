@@ -10,6 +10,8 @@
 
 返回账号余额和钱包概览。
 
+用智能体密钥认证时，响应会省略未使用的礼品券代码。
+
 ## POST /api/billing/wallet/crypto-topup
 
 <!-- api-contract: redirect-query=authoritative-externalReference; existing-value=replaced -->
@@ -21,9 +23,9 @@
 
 需要账户会话令牌或有 `manage` 权限的智能体密钥。发送 `{ amountEur }`，金额为 5–500 欧元，最多两位小数。使用 Base 网络上的 USDC 支付，采用欧洲央行的美元参考汇率，按 1 USDC = 1 USD 换算，不加价。
 
-没有 `PAYMENT-SIGNATURE` 的请求返回 `402`，响应体和 base64 编码的 `PAYMENT-REQUIRED` 均包含 x402 v2 报价。用钱包签名并保留 `accepts[0].extra.quoteId`，然后发送相同的请求体和 base64 编码的 `PAYMENT-SIGNATURE`。
+没有 `PAYMENT-SIGNATURE` 的请求返回 `402`。响应体和 base64 编码的 `PAYMENT-REQUIRED` 包含同一份 x402 v2 `PaymentRequired` 报价。报价有效期为 300 秒。USDC 金额向上取整到美分，`resource.url` 始终使用配置的公开源地址。用钱包签名并保留 `accepts[0].extra.quoteId`，然后发送相同的请求体和 base64 编码的 `PAYMENT-SIGNATURE`。开始新付款时，如果报价已过期、不匹配或来自其他工作区，则返回带有新报价的 `402` 响应。
 
-支付结算后返回 `200`、`PAYMENT-RESPONSE` 和 `{ topupId, amountEur, usdcAmount, transaction, network, balanceEur }`。若收到 `202` 和 `{ status: "pending", topupId }`，请用同一签名重试。重放已结算付款会返回原结果。付款被拒时返回 `402`，原因见 `PAYMENT-RESPONSE`。服务故障返回 `502 facilitator_unavailable`、`503 x402_unavailable` 或 `503 rate_unavailable`。
+支付结算后返回 `200`、`PAYMENT-RESPONSE` 和 `{ topupId, amountEur, usdcAmount, transaction, network, balanceEur }`。若收到 `202` 和 `{ status: "pending", topupId }`，请用同一签名重试。重放已结算付款会返回原结果。付款被拒时返回 `402`，响应体包含字符串 `error`，详情见 `PAYMENT-RESPONSE`。服务故障返回 `502 facilitator_unavailable`、`503 x402_unavailable` 或 `503 rate_unavailable`。
 
 ## POST /api/billing/wallet/topup/refresh
 
@@ -34,7 +36,7 @@ URL 中的标识符，不要根据“最近一次充值”推断目标。如果�
 
 ## POST /api/billing/account-plan/balance-purchase
 
-智能体密钥需要 `spend` 权限，并须使用 `autoRenew: false`。购买超出该密钥月度上限时返回 `403 spend_cap_exceeded`。
+智能体密钥需要 `spend` 权限，并须使用 `autoRenew: false`。购买超出该密钥月度上限时返回 `403 spend_cap_exceeded`。 如果已有启用自动续订的有效套餐，使用密钥购买套餐会在扣款前返回 `403 key_not_allowed`。
 
 <!-- api-contract: requestId=optional-backward-compatible-8-128-rfc3986-unreserved; requestId-omitted=not-retry-safe-across-http-attempts; autoRenew-default=false; same-intent=same-requestId-and-payload; exact-replay=original-subscriptionId-and-invoiceId-without-second-debit; conflicting-payload=rejected; new-intent=new-requestId -->
 使用钱包余额购买或升级账号套餐。

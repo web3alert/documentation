@@ -22,6 +22,8 @@ Payload: ninguno.
 
 Respuesta: [ResourceView[]](types.md#resourceview).
 
+Con una clave de agente sin `manage`, la respuesta omite los tokens de escritura de recursos externos.
+
 ## GET /api/resources/:fullname
 
 Devuelve un resource.
@@ -35,6 +37,8 @@ Argumentos:
 Payload: ninguno.
 
 Respuesta: [ResourceView](types.md#resourceview).
+
+Con una clave de agente sin `manage`, la respuesta omite los tokens de escritura de recursos externos.
 
 ## PUT /api/resources/:fullname
 
@@ -90,7 +94,7 @@ Argumentos:
 
 Payload: ninguno.
 
-Requiere una sesión o clave con `manage` y control del espacio del recurso. Devuelve `204 No Content`. Al eliminar un webhook, devuelve `409 webhook_in_use` si una suscripción activa (`on`) del mismo espacio le envía eventos.
+Requiere una sesión o clave con `manage` y control del espacio del recurso. Devuelve `204 No Content`. Al eliminar un webhook, devuelve `409 webhook_in_use` si una suscripción activa (`on`) del mismo espacio le envía eventos. Las suscripciones activas a la bandeja no impiden eliminar el recurso de bandeja de entrada.
 
 Los tres endpoints de setup session siguientes solo están disponibles cuando el
 setup seguro del destino de Telegram está habilitado en el servidor.
@@ -173,13 +177,17 @@ Respuesta: respuesta de éxito vacía.
 
 Requiere una sesión o clave de agente con `manage`, además de control del espacio. No requiere cuerpo. Devuelve `{ fullname, retention: { days, maxEvents } }`. Los reintentos devuelven la misma bandeja. Si otro recurso ocupa el fullname, devuelve `409 resource_name_in_use`.
 
-Usa el fullname como `values.inbox` en la acción de suscripción `common.builtin.inbox`. Se aplica el plan del propietario del espacio o el del solicitante si no hay propietario. Ambas rutas devuelven `403 not_in_plan` en Free. Consulta [Límites](limits.md).
+Usa el fullname como `values.inbox` en la acción de suscripción `common.builtin.inbox`. La creación y la lectura comprueban el plan del propietario del espacio, o el del solicitante si no hay propietario. Ambas devuelven `403 not_in_plan` si ese plan no incluye historial.
+
+El almacenamiento y la retención siguen el plan del propietario del espacio o el de quien creó la suscripción si no hay propietario. Si ese plan no incluye historial de alertas, no se guardan eventos. Consulta [Límites](limits.md).
 
 ## GET /api/events
 
-Requiere una sesión o clave de agente con `read`, control del espacio y el mismo plan de pago que para crear la bandeja. Parámetros opcionales: `after` (cursor opaco) y `limit` (1–500, 100 por defecto). La primera lectura empieza en el evento conservado más antiguo.
+Requiere una sesión o una clave de agente con `read`, control del espacio y la misma comprobación de plan que la creación de la bandeja. Los parámetros `after` (cursor opaco) y `limit` (1–500, 100 por defecto) son opcionales. La primera lectura empieza en el evento conservado más antiguo. El cursor solo funciona en su espacio original. Un cursor de otro espacio o con formato incorrecto devuelve HTTP `400` con `invalid inbox cursor` en `error.message`.
 
-Devuelve `{ events, nextCursor, hasMore, gap }`. Cada evento contiene `cursor`, `id`, `receivedAt`, `subscription`, `trigger` y `body`. Pasa `nextCursor` como `after` al leer o consultar de nuevo. Una página vacía devuelve el cursor enviado o `null` si se omitió. `gap: true` indica una pérdida por retención respecto al cursor.
+Devuelve `{ events, nextCursor, hasMore, gap }`. Cada evento contiene `cursor`, `id`, `receivedAt`, `subscription`, `trigger` y `body`. Los cuerpos de más de 64 KB se guardan con `truncated: true` y sin `object`.
+
+Pasa `nextCursor` como `after` para seguir leyendo. Una página vacía devuelve el cursor enviado o `null` si lo omitiste. Con un cursor, `gap: true` indica que uno o más eventos entre el cursor y el primer resultado ya no se conservan. También puede aparecer en una página vacía si se habían guardado eventos posteriores a ese cursor.
 
 ## GET /api/resources/external/:token
 

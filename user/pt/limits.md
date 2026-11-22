@@ -387,7 +387,7 @@ Workspace-level limit protege o fluxo geral de alerts dentro do workspace.
 | Advanced | 7 dias | 25 000 |
 | Pro | 30 dias | 100 000 |
 
-A caixa de entrada guarda os eventos mais recentes dentro dos dois limites. Usa o plano do proprietário do espaço de trabalho, ou o de quem faz o pedido se não houver proprietário.
+A caixa de entrada guarda os eventos mais recentes dentro dos dois limites. O armazenamento e a retenção seguem o plano do proprietário do espaço, ou de quem criou a subscrição se não houver proprietário. Se esse plano não incluir histórico de alertas, não são guardados eventos. A criação e a leitura usam o plano de quem faz o pedido quando não há proprietário.
 
 ## Project Transfer
 

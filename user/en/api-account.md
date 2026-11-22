@@ -84,7 +84,7 @@ On success, the server returns `204 No Content` with an empty body. This endpoin
 
 Returns current account, identity, tier, memberships, and selected workspace.
 
-An agent-key request requires `read` and adds `key` with `id`, `name`, `scopes`, `monthlyCapEur`, `spentThisMonthEur` and `expiresAt`.
+An agent-key request requires `read` and adds `key` with `id`, `name`, `scopes`, `monthlyCapEur`, `spentThisMonthEur` and `expiresAt`. It lists only the key's workspace in `memberships`.
 
 Arguments: none.
 
@@ -105,6 +105,8 @@ The response also includes `limits` for the authenticated account's tier.
 | `limits.alertHistory.maxRecords` | `number \| null` | Maximum records retained. `null` means there is no record cap. |
 
 ## POST /api/keys
+
+Any member of the current workspace can create a key. The key acts with the account's role in that workspace.
 
 Requires an account session token. Creates a key bound to the current workspace. Send `{ name, scopes, monthlyCapEur?, expiresInDays? }`. The name is 1–64 characters. Include `read` and optionally `manage` and `spend`. A cap can be €0–€10,000 with up to two decimal places, and expiry can be 30, 90 or 365 days. Omit either optional field or pass `null` for no limit of that kind.
 
@@ -130,7 +132,9 @@ Public. Takes no body. Returns `{ nonce, issuedAt, expiresAt }`. The nonce can b
 
 Public. Send `{ message, signature }` signed by an Ethereum externally owned account (EOA). Use an EIP-4361 version `1` message with the returned nonce, the `web3alert.io` sign-in domain, a URI on that origin and an `issuedAt` within five minutes of the server clock. Any chain ID is accepted.
 
-Returns `{ account: { id, created }, key, secret, claimUrl }`. A first sign-in creates a Free account and workspace. Each success issues a fresh key with all scopes and no cap or expiry. `claimUrl` is `null` after a Telegram or Google login is linked. Use the `secret` as the bearer credential.
+Returns `{ account: { id, created }, key, secret, claimUrl }`. A first sign-in creates a Free account and workspace. Each success issues a fresh key with all scopes and no cap or expiry. Use `secret` as the bearer credential. Wallet verification issues a claim link when it creates the account or when there is no active link. With an active link, `claimUrl` is `null`. Use `POST /api/agent/claim-link` to replace it.
+
+After a person claims the account with Telegram or Google, wallet sign-in returns `403 account_claimed` and issues no key or link. Ask that person for an agent key.
 
 Failed verification returns `401 invalid_siwe`. New accounts are limited to 10 per IP per rolling hour and 200 overall per rolling day. Hitting a limit returns `429 signup_limited` with `Retry-After`. See the [SIWE example](agents.md).
 

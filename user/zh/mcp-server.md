@@ -32,16 +32,27 @@ Token 撤销后，API 会立即拒绝该 token。MCP 仍有验证缓存时，到
 | 工具错误 | 含义 |
 | --- | --- |
 | `insufficient_scope` | 密钥缺少所需权限。 |
-| `key_not_allowed` | 操作需要账户会话。 |
+| `key_not_allowed` | 操作需要账户会话。已有自动续订的有效套餐时，使用密钥买套餐也会遇到此错误。 |
 | `spend_cap_exceeded` | 购买将超过该密钥的欧元月度支出上限。 |
 | `not_in_plan` | 适用的工作区套餐不包含收件箱或投递历史。 |
 | `plan_required` | 构建操作需要 Advanced 或 Pro 账户。 |
+| `insufficient_balance` | 欧元余额不足以购买套餐。 |
+| `x402_unavailable` | USDC 充值不可用。 |
+| `rate_unavailable` | 欧洲央行参考汇率不可用。 |
+| `no_current_workspace` | 工具需要当前工作区，而 API 未返回工作区。 |
+| `not_tested` | 激活前，草稿最近一次测试必须返回 `matched`。 |
+| `draft_expired` | 草稿已过期。 |
+| `retryable` | 上游链数据请求失败，或工作区已达到测试频率上限。 |
+| `private_project_limit` | 创建智能体的私有项目将超出账户的项目上限。 |
+| `trigger_limit` | 激活触发器将超出套餐的触发器上限。 |
+| `not_found` | 目标不可用。构建时可能是链未知、缺少 ABI 或 IDL、pallet 未知，或事件、草稿或触发器不可用。 |
+| `request_id_conflict` | 该激活请求的 `requestId` 已在同一工作区用于另一份草稿。 |
 
 ## 升级现有客户端
 
 请通过请求头 `Authorization: Bearer <agent-key>` 发送密钥。`/mcp` 的每个请求都需要此请求头。服务器采用无状态模式。请从 URL 和请求体中移除凭据。
 
-现有会话令牌可用到持有人退出登录或撤销令牌为止。
+现有会话令牌可用到服务器撤销它们为止。新连接请使用智能体密钥。
 
 在使用 Web3alert 的 Claude Code 项目中运行以下命令。
 
@@ -59,7 +70,7 @@ Token 撤销后，API 会立即拒绝该 token。MCP 仍有验证缓存时，到
 | --- | --- |
 | `get_account` | 返回账户 ID、名称、套餐、欧元余额、套餐限制和可用的订阅计数，以及密钥权限、有效期、月度上限和本月支出。 |
 | `get_topup_requirements` | 获取 5–500 欧元的 USDC 充值报价。使用自己的 x402 客户端和钱包付款。需要 `manage`。 |
-| `buy_plan` | 使用欧元余额购买 Advanced 或 Pro，无自动续订。重试时沿用 `requestId`。需要 `spend`。 |
+| `buy_plan` | 使用欧元余额购买 Advanced 或 Pro，无自动续订。需要 `spend` 权限和 8–64 个字符的 `requestId`。重试同一次购买时沿用该 ID。 |
 | `find_triggers` | 在公开目录中搜索 EVM 和 Substrate 链的触发器，也会搜索当前工作区中的触发器。 |
 | `get_trigger` | 查看 trigger 的运行时 inputs、投递的事件字段以及可在 `conditions` 中使用的字段。 |
 | `list_webhooks` | 列出 workspace 中已注册的 webhooks 的 `fullname`、名称和 URL。 `signed` 字段表示该 Webhook 是否有签名密钥。 |
@@ -69,7 +80,7 @@ Token 撤销后，API 会立即拒绝该 token。MCP 仍有验证缓存时，到
 | `list_subscriptions` | 列出 subscriptions 的 ID、标题、状态、triggers、webhooks 和创建时间。 |
 | `set_subscription_state` | 暂停（`off`）或恢复（`on`）subscription。 |
 | `remove_subscription` | 删除订阅。Webhook 重试会在约 10 秒内停止。在此期间到期的尝试仍可能发出。 |
-| `read_events` | 在付费工作区从最旧的事件开始读取收件箱。轮询时将 `nextCursor` 作为 `after`。 `gap` 表示有事件超出保留范围。需要 `read`。 |
+| `read_events` | 在付费工作区从最旧的事件开始读取收件箱。在同一工作区轮询时将 `nextCursor` 作为 `after`。`gap: true` 表示游标和首条结果之间有事件丢失，或已保存过游标之后的事件但本页为空。需要 `read`。 |
 | `get_delivery_log` | 查看工作区或单个订阅的投递结果。 告警历史按工作区访问列表中第一个具有所有者角色的账户的套餐检查。如果没有这样的账户，API 会检查请求方账户的套餐。如果该套餐不含历史记录，工具返回 `not_in_plan`。 Webhook 渠道条目包含 `eventId` 和 `attempt`。`nextAttemptAt` 是写入该条目时为下一次尝试安排的时间，采用 ISO 格式。如果条目未记录已安排的重试，则为 `null`。 |
 
 即使重试已经执行或取消，`nextAttemptAt` 也保持不变。要查看投递结果，请查找具有相同 `eventId` 的后续条目。如果订阅被暂停或删除导致重试停止，或重试已过期，Web3alert 不会写入最终条目，因此缺少最终条目时，无法确定投递结果或重试是否仍待执行。
@@ -139,7 +150,7 @@ printf 'Web3alert 智能体密钥： ' && read -rs WEB3ALERT_KEY && echo && [ -n
 | `find_contract` | `read` | 从合约 ABI、Solana IDL 或 Substrate 元数据查找准确的事件签名。EVM 结果包含函数和每个事件的 `recentCount`，统计最近 `recentBlocks` 个区块中的日志，最多 1,000 个区块。如果提供方拒绝大范围查询，覆盖范围可能缩小。未能读取任何区块或链源为 Solana 或 Substrate 时，`recentBlocks` 为 `null`。计数为 `0` 表示返回的范围内没有匹配的日志。 |
 | `plan_trigger` | `manage` | 无需编写代码即可生成事件草稿。返回 `draftId`、完整名称预览、输入、可筛选字段、输出结构和有效期。 |
 | `test_trigger` | `read` | 用近期样本测试草稿，或重放指定区块或 slot。 |
-| `activate_trigger` | `manage` | 将最近一次测试匹配的草稿保存到智能体的私有项目。重试时沿用 `requestId`。可用返回的完整名称创建订阅。 |
+| `activate_trigger` | `manage` | 保存最近一次测试匹配的草稿。首次成功激活会创建智能体的私有项目，并计入账户的项目上限。重试同一草稿时沿用 `requestId`。其他草稿复用该 ID 会返回 `request_id_conflict`。可用返回的完整名称创建订阅。 |
 | `remove_my_trigger` | `manage` | 删除该项目中的触发器。如果同一工作区有启用的订阅使用该触发器，则返回 `trigger_in_use`。 |
 
 直接删除触发器或 Webhook 时，系统检查它所在工作区中已启用（`on`）的订阅。请先暂停或删除这些订阅，再重试。删除项目、工作区或账户会阻止受影响的订阅继续投递。其他工作区中订阅公开触发器的启用订阅不会阻止直接删除该触发器。

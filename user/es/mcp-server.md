@@ -32,16 +32,27 @@ Los errores de las herramientas son independientes de los errores de autenticaci
 | Error | Significado |
 | --- | --- |
 | `insufficient_scope` | La clave carece de un permiso obligatorio. |
-| `key_not_allowed` | La operación requiere una sesión de la cuenta. |
+| `key_not_allowed` | La operación requiere una sesión de la cuenta. También se aplica al comprar un plan con una clave mientras hay un plan activo con renovación automática. |
 | `spend_cap_exceeded` | La compra superaría el límite mensual en EUR de la clave. |
 | `not_in_plan` | El plan del espacio de trabajo no incluye la bandeja de entrada o el historial de entregas. |
 | `plan_required` | La operación de creación requiere una cuenta Advanced o Pro. |
+| `insufficient_balance` | El saldo en EUR no alcanza para comprar el plan. |
+| `x402_unavailable` | Las recargas en USDC no están disponibles. |
+| `rate_unavailable` | El tipo de referencia del BCE no está disponible. |
+| `no_current_workspace` | La herramienta requiere un espacio de trabajo actual y la API no devolvió ninguno. |
+| `not_tested` | La última prueba del borrador debe devolver `matched` antes de activarlo. |
+| `draft_expired` | El borrador ha caducado. |
+| `retryable` | Falló una solicitud al proveedor de datos de la cadena o se alcanzó el límite de pruebas del espacio. |
+| `private_project_limit` | Crear el proyecto privado del agente superaría el límite de proyectos de la cuenta. |
+| `trigger_limit` | Activar el trigger superaría el límite del plan. |
+| `not_found` | El destino no está disponible. Al crear un trigger, puede indicar una cadena desconocida, falta de ABI o IDL, un pallet desconocido o un evento, borrador o trigger no disponible. |
+| `request_id_conflict` | Ya se usó el mismo `requestId` de activación para otro borrador del espacio. |
 
 ## Actualizar clientes existentes
 
 Envía la clave en la cabecera `Authorization: Bearer <agent-key>`. `/mcp` exige esta cabecera en cada solicitud y funciona sin sesiones de MCP. Retira la credencial de la URL o del cuerpo de la solicitud.
 
-Los tokens de sesión existentes funcionan hasta que su titular cierra la sesión o los revoca.
+Los tokens de sesión existentes funcionan hasta que el servidor los revoca. Usa claves de agente para las conexiones nuevas.
 
 En Claude Code, ejecuta estos comandos desde el proyecto en el que usas Web3alert.
 
@@ -59,7 +70,7 @@ Las herramientas actúan en el espacio de trabajo al que está vinculada la clav
 | --- | --- |
 | `get_account` | Devuelve ID, nombre, plan, saldo en EUR, límites del plan y recuentos de suscripciones si están disponibles, además de los permisos, el vencimiento, el límite y el gasto mensual de la clave. |
 | `get_topup_requirements` | Cotiza una recarga de 5 a 500 € en USDC. Paga con un cliente x402 y tu cartera. Requiere `manage`. |
-| `buy_plan` | Compra Advanced o Pro con el saldo en EUR, sin renovación automática. Reutiliza `requestId` en los reintentos. Requiere `spend`. |
+| `buy_plan` | Compra Advanced o Pro con el saldo en EUR, sin renovación automática. Requiere `spend` y un `requestId` de 8–64 caracteres. Reutiliza el mismo ID al reintentar la compra. |
 | `find_triggers` | Busca disparadores de redes EVM y Substrate en el catálogo público. También busca en los disparadores del espacio de trabajo actual. |
 | `get_trigger` | Muestra los inputs de ejecución del trigger, los campos de los eventos entregados y los campos que puedes usar en `conditions`. |
 | `list_webhooks` | Muestra el `fullname`, el nombre y la URL de cada webhook registrado en el workspace. El campo `signed` indica si el webhook tiene un secreto de firma. |
@@ -69,7 +80,7 @@ Las herramientas actúan en el espacio de trabajo al que está vinculada la clav
 | `list_subscriptions` | Lista los IDs, títulos, estados, triggers, webhooks y fechas de creación de las subscriptions. |
 | `set_subscription_state` | Pausa (`off`) o reanuda (`on`) una subscription. |
 | `remove_subscription` | Elimina una suscripción. Los reintentos de webhook se detienen en unos 10 segundos. Todavía puede enviarse un intento previsto para ese intervalo. |
-| `read_events` | Lee la bandeja de un espacio con plan de pago, empezando por el evento más antiguo. Pasa `nextCursor` como `after` al volver a consultar. `gap` indica pérdida por retención. Requiere `read`. |
+| `read_events` | Lee la bandeja de un espacio con plan de pago, desde el evento más antiguo. Pasa `nextCursor` como `after` en el mismo espacio. `gap: true` indica eventos perdidos entre el cursor y el primer resultado, o una página vacía cuando se habían guardado eventos posteriores al cursor. Requiere `read`. |
 | `get_delivery_log` | Muestra los resultados de entrega del espacio de trabajo o de una suscripción. El historial de alertas usa el plan de la primera cuenta con rol de propietario en la lista de acceso del espacio de trabajo. Si no existe esa cuenta, la API comprueba el plan de la cuenta que hace la solicitud. Si ese plan no incluye el historial, la herramienta devuelve `not_in_plan`. Los registros de canales webhook incluyen `eventId` y `attempt`. `nextAttemptAt` es la marca de tiempo ISO para la que se había programado el siguiente intento al guardar el registro, o `null` si el registro no indica un reintento programado. |
 
 La marca de tiempo `nextAttemptAt` permanece fija aunque el reintento se ejecute o se cancele. Para conocer el resultado de la entrega, busca un registro posterior con el mismo `eventId`. Si los reintentos se detienen porque se pausa o elimina la suscripción, o si un reintento caduca, Web3alert no guarda un registro final y, sin ese registro, se desconocen tanto el resultado de la entrega como el estado actual de los reintentos.
@@ -139,7 +150,7 @@ Usa `https://web3alert.io/mcp/agent/build` con la misma configuración y cabecer
 | `find_contract` | `read` | Busca firmas exactas de eventos en el ABI de un contrato, el IDL de Solana o los metadatos de Substrate. Para EVM, devuelve funciones y un `recentCount` por evento en los últimos `recentBlocks` bloques, hasta 1.000. El intervalo puede ser menor si el proveedor rechaza una consulta amplia. `recentBlocks` es `null` si no se pudo leer ningún bloque o si la fuente es Solana o Substrate. Un recuento de `0` indica que no hubo logs coincidentes en el intervalo indicado. |
 | `plan_trigger` | `manage` | Genera un borrador para un evento sin escribir código. Devuelve `draftId`, fullname previsto, inputs, campos filtrables, esquema de salida y vencimiento. |
 | `test_trigger` | `read` | Prueba un borrador con una muestra reciente o reproduce el bloque o slot indicado. |
-| `activate_trigger` | `manage` | Guarda un borrador cuya última prueba coincidió en el proyecto privado del agente. Reutiliza `requestId` al reintentar. El fullname devuelto sirve para crear suscripciones. |
+| `activate_trigger` | `manage` | Guarda un borrador cuya última prueba coincidió. La primera activación correcta crea el proyecto privado del agente, que cuenta para el límite de la cuenta. Reutiliza `requestId` al reintentar el mismo borrador. Si lo usas con otro borrador, devuelve `request_id_conflict`. El fullname devuelto sirve para crear suscripciones. |
 | `remove_my_trigger` | `manage` | Elimina un trigger de ese proyecto. Devuelve `trigger_in_use` si lo usa una suscripción activa del mismo espacio. |
 
 La eliminación directa de un trigger o webhook comprueba las suscripciones activas (`on`) en el espacio de trabajo del trigger o webhook. Páusalas o elimínalas antes de reintentar. Al eliminar un proyecto, un espacio de trabajo o una cuenta, se bloquean las suscripciones afectadas. Una suscripción activa a un trigger público en otro espacio permite eliminar directamente el trigger.

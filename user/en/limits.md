@@ -387,7 +387,7 @@ Workspace-level limit protects the overall alert flow inside a workspace.
 | Advanced | 7 days | 25,000 |
 | Pro | 30 days | 100,000 |
 
-The workspace inbox keeps the newest events within both limits. It uses the workspace owner's plan, or the caller's plan when there is no owner.
+The inbox keeps the newest events within both limits. Storage and retention use the workspace owner's plan, or the subscription creator's if the workspace lacks an owner. A plan without alert history stores no events. Creating or reading the inbox uses the caller's plan when the workspace has no owner.
 
 ## Project Transfer
 

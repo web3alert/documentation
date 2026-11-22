@@ -38,7 +38,7 @@ Workspace 及其设置在 [Workspaces](workspaces.md) 中有更详细的说明�
 - `Account parameters`；
 - `Log out`。
 
-`Log out` 会结束当前会话并撤销此浏览器的会话令牌。退出前会显示确认。
+`Log out` 会在确认后结束当前浏览器会话，并请求撤销会话令牌。如果应用无法连接服务器，令牌可能仍然有效。
 
 ## Account Parameters
 
@@ -91,6 +91,10 @@ Title 可以通过名称旁边的编辑按钮修改。编辑时：
 当前用户的 read-only id。
 
 当 display name 不足以精确识别 account 时，它用于诊断、支持和准确识别 account。
+
+### Sessions
+
+在 `Account parameters` → `Information` → `Sessions` 中，选择 `Revoke all tokens`，然后选择 `Revoke and sign out`。此操作会撤销账户的所有会话令牌，并退出所有设备上的登录。智能体密钥可在 [Agents 页面](#agents)管理。
 
 ## Agents {#agents}
 

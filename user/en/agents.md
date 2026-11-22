@@ -6,11 +6,11 @@ Find decoded on-chain events from EVM and Substrate chains, including Ethereum, 
 
 ### Create a key in the app
 
-Sign in to [Web3alert](https://web3alert.io), select a workspace you own or administer, and create a key on the [Agents page](https://web3alert.io/agents). The key is bound to that workspace. Copy the secret when it appears. It is shown once.
+Sign in to [Web3alert](https://web3alert.io), select a workspace you belong to, and create a key on the [Agents page](https://web3alert.io/agents). The key acts with your role in that workspace and within the scopes you grant. Copy the secret when it appears. It is shown once.
 
 Every key includes `read`. Add `manage` to register webhooks, create subscriptions or request a top-up quote. Add `spend` to buy plans from the EUR balance. You can set a [monthly spend cap](limits.md#agent-payments) and an expiry of 30, 90 or 365 days, or leave either unset.
 
-Existing session tokens keep working until their owner logs out or revokes them. Use agent keys for new connections.
+Existing session tokens work until the server revokes them. Use agent keys for new connections.
 
 ### Sign up with an Ethereum wallet
 
@@ -53,9 +53,9 @@ Example `200` response, with the `key` view abbreviated.
 }
 ```
 
-Each successful sign-in issues a fresh key for the initial workspace, with all three scopes and no cap or expiry. Use `secret` as the bearer credential. Later sign-ins reuse the account. The `claimUrl` is `null` after a Telegram or Google login is linked.
+Each successful sign-in issues a fresh key for the initial workspace, with all three scopes and no cap or expiry. Use `secret` as the bearer credential. Wallet verification returns a claim link when it creates the account or when there is no active link. If a link is already active, `claimUrl` is `null`. After a person claims the account with Telegram or Google, wallet sign-in returns `403 account_claimed`. Ask that person for an agent key.
 
-Share the claim link privately with the person taking control of the account. The page shows the wallet, account creation date and link expiry, and offers Telegram or Google sign-in. After signing in, the person lands on the Agents page, where they can see and control the keys and access the account's plan, balance and spend. A login already linked to another Web3alert account requires a different login. The newest link is valid for seven days. Use [the claim-link endpoint](api-account.md#post-api-agent-claim-link) to replace it.
+Share the claim link privately with the person taking control of the account. The page shows the wallet, account creation date and link expiry, and offers Telegram or Google sign-in. After signing in, the person lands on the Agents page, where they can see and control the keys and access the account's plan, balance and spend. A login already linked to another Web3alert account requires a different login. The newest link is valid for seven days. Use [`POST /api/agent/claim-link`](api-account.md#post-api-agent-claim-link) to replace it.
 
 ## 2. Connect your MCP client
 
@@ -116,7 +116,7 @@ For an editor-managed connection, add the entry under `servers` in `.vscode/mcp.
 
 1. Call `get_topup_requirements({"amountEur":5})` with `manage`. Top-ups range from €5 to €500 in USDC on Base. Web3alert uses the ECB USD reference rate, values 1 USDC at 1 USD and applies no markup.
 2. Use your own x402 v2 client and wallet to pay the quoted requirements. Send the returned `body` to the returned `url` using `POST`, with your bearer credential and the signed payment in `PAYMENT-SIGNATURE`. The MCP server returns the quote. Your wallet signs the payment. Wait until the [top-up](api-billing.md#post-api-billing-wallet-x402-topup) settles and credits your EUR balance.
-3. Call `buy_plan({"planId":"advanced","durationMonths":1,"requestId":"first-plan-001"})` with `spend` and enough balance. You can buy Advanced or Pro for 1, 3, 6 or 12 months without auto-renewal. Reuse the same `requestId` and purchase parameters when retrying that purchase.
+3. Call `buy_plan({"planId":"advanced","durationMonths":1,"requestId":"first-plan-001"})` with `spend` and enough balance. You can buy Advanced or Pro for 1, 3, 6 or 12 months without auto-renewal. Reuse the same `requestId` and purchase parameters when retrying that purchase. If an active plan renews automatically, the purchase returns `key_not_allowed`. Ask the account owner to change the plan in the app.
 
 ## 4. Create your first subscription
 
@@ -145,9 +145,9 @@ Your webhook receives a JSON body with an event ID. New webhooks receive signed 
 
 After finding a trigger and inspecting its inputs with `get_trigger`, call `create_subscription({"trigger":"<trigger-fullname>","inbox":true,"state":"on"})`. Supply required `inputs` as for webhook delivery. The tool accepts one destination per call. It creates or reuses the workspace inbox when you pass `inbox: true`.
 
-Call `read_events({})` to start with the oldest retained event. Save `nextCursor` and pass it as `after` on your next call when it is non-null. Keep reading while `hasMore` is true and reuse the cursor when polling. A response with `gap: true` signals that some events are no longer retained. Use the event `id` to deduplicate.
+Call `read_events({})` to start with the oldest retained event. Save `nextCursor` and pass it as `after` on your next call when it is non-null. Keep reading while `hasMore` is true and reuse the cursor in the same workspace. `gap: true` means one or more events between the cursor and the first result are no longer retained. An empty page can also report a gap if newer events had been stored. Use the event `id` to deduplicate.
 
-Retention follows the workspace owner's plan, falling back to the caller's plan when there is no owner. Advanced retains up to **7 days or 25,000 events** and Pro up to **30 days or 100,000 events**. Free returns `not_in_plan` for inbox access.
+The workspace owner's plan governs whether events are stored and how long they are retained. Without an owner, storage follows the subscription creator's plan. Advanced retains up to **7 days or 25,000 events** and Pro up to **30 days or 100,000 events**. Plans without alert history store no events. Inbox creation and reading use the workspace owner's plan, or the caller's when there is no owner, and return `not_in_plan` when that plan has no alert history.
 
 ## 5. Build a trigger
 

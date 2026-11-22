@@ -6,11 +6,11 @@ Encontre no catálogo do Web3alert eventos on-chain descodificados de redes EVM 
 
 ### Crie uma chave na aplicação
 
-Inicie sessão no [Web3alert](https://web3alert.io), selecione um espaço de trabalho de que seja proprietário ou administrador e crie uma chave na [página Agents](https://web3alert.io/agents). A chave fica associada a esse espaço. Copie o segredo quando aparecer. Só é mostrado uma vez.
+Inicie sessão no [Web3alert](https://web3alert.io), selecione um espaço de trabalho de que seja membro e crie uma chave na [página Agents](https://web3alert.io/agents). A chave atua com a sua função nesse espaço e com as permissões que lhe atribuir. Copie o segredo quando aparecer. Só é mostrado uma vez.
 
 Todas as chaves incluem `read`. Adicione `manage` para registar webhooks, criar subscrições ou pedir uma cotação de carregamento. Adicione `spend` para comprar planos com o saldo em EUR. Pode definir um [limite mensal de gastos](limits.md#agent-payments) e uma validade de 30, 90 ou 365 dias. Ambos são opcionais.
 
-Os tokens de sessão existentes continuam a funcionar até o titular terminar a sessão ou os revogar. Use chaves de agente para novas ligações.
+Os tokens de sessão existentes funcionam até serem revogados pelo servidor. Use chaves de agente para novas ligações.
 
 ### Registe-se com uma carteira Ethereum
 
@@ -53,9 +53,9 @@ Exemplo de resposta `200` com o objeto `key` abreviado.
 }
 ```
 
-Cada início de sessão emite uma nova chave para o espaço inicial com as três permissões, sem limite nem validade. Use `secret` como credencial Bearer. Inícios de sessão posteriores reutilizam a conta. `claimUrl` fica a `null` depois de associar um início de sessão do Telegram ou Google.
+Cada início de sessão bem-sucedido emite uma chave para o espaço inicial com as três permissões, sem limite nem validade. Use `secret` como credencial Bearer. A verificação devolve uma ligação de reivindicação quando cria a conta ou se não houver uma ligação ativa. Caso já haja uma, `claimUrl` fica a `null`. Quando uma pessoa reivindica a conta com Telegram ou Google, o início de sessão com carteira devolve `403 account_claimed`. Peça a essa pessoa uma chave de agente.
 
-Partilhe a ligação de reivindicação em privado com a pessoa que vai assumir a conta. A página mostra a carteira, a data de criação da conta e a validade da ligação, e permite iniciar sessão com Telegram ou Google. Em seguida, a página Agents permite ver e controlar as chaves e consultar o plano, o saldo e os gastos. Se o início de sessão já estiver associado a outra conta Web3alert, use um diferente. A ligação mais recente é válida durante sete dias. Pode substituí-la pelo [endpoint de reivindicação](api-account.md#post-api-agent-claim-link).
+Partilhe a ligação de reivindicação em privado com a pessoa que vai assumir a conta. A página mostra a carteira, a data de criação da conta e a validade da ligação, e permite iniciar sessão com Telegram ou Google. Em seguida, a página Agents permite ver e controlar as chaves e consultar o plano, o saldo e os gastos. Se o início de sessão já estiver associado a outra conta Web3alert, use um diferente. A ligação mais recente é válida durante sete dias. Pode substituí-la pelo endpoint [`POST /api/agent/claim-link`](api-account.md#post-api-agent-claim-link).
 
 ## 2. Ligue o cliente MCP
 
@@ -116,7 +116,7 @@ Para uma ligação gerida pelo editor, adicione a entrada em `servers` em `.vsco
 
 1. Chame `get_topup_requirements({"amountEur":5})` com `manage`. Pode carregar entre 5 € e 500 € em USDC na Base. O Web3alert usa a taxa de referência do BCE para USD, assume 1 USDC = 1 USD e não aplica margem.
 2. Pague com o seu cliente x402 v2 e a sua carteira. Envie o `body` devolvido por `POST` para o `url` devolvido, com a credencial Bearer e o pagamento assinado em `PAYMENT-SIGNATURE`. Aguarde até que o [carregamento](api-billing.md#post-api-billing-wallet-x402-topup) seja liquidado e creditado no saldo em EUR.
-3. Chame `buy_plan({"planId":"advanced","durationMonths":1,"requestId":"first-plan-001"})` com `spend` e saldo suficiente. Pode comprar Advanced ou Pro por 1, 3, 6 ou 12 meses sem renovação automática. Se repetir o pedido, reutilize o `requestId` e os mesmos parâmetros.
+3. Chame `buy_plan({"planId":"advanced","durationMonths":1,"requestId":"first-plan-001"})` com `spend` e saldo suficiente. Pode comprar Advanced ou Pro por 1, 3, 6 ou 12 meses sem renovação automática. Se repetir o pedido, reutilize o `requestId` e os mesmos parâmetros. Se um plano ativo tiver renovação automática, a compra devolve `key_not_allowed`. Peça ao titular da conta para alterar o plano na aplicação.
 
 ## 4. Crie a sua primeira subscrição
 
@@ -145,9 +145,9 @@ O seu webhook recebe um corpo JSON com um ID de evento. Os novos webhooks recebe
 
 Localize o trigger, consulte os valores de entrada com `get_trigger` e chame `create_subscription({"trigger":"<trigger-fullname>","inbox":true,"state":"on"})`. Inclua os `inputs` obrigatórios. A ferramenta aceita um destino por chamada e cria ou reutiliza a caixa de entrada do espaço de trabalho.
 
-Chame `read_events({})` para começar pelo evento retido mais antigo. Guarde `nextCursor` quando tiver um valor e passe-o como `after` na próxima chamada. Continue enquanto `hasMore` for verdadeiro e reutilize o cursor em consultas periódicas. `gap: true` indica que alguns eventos já não estão retidos. Use o `id` para eliminar duplicados.
+Chame `read_events({})` para começar pelo evento retido mais antigo. Guarde `nextCursor` quando tiver um valor e passe-o como `after` na próxima chamada. Continue enquanto `hasMore` for verdadeiro e reutilize o cursor no mesmo espaço. `gap: true` indica que se perderam eventos entre o cursor e o primeiro resultado, ou que a página está vazia apesar de terem sido guardados eventos posteriores ao cursor. Use o `id` para eliminar duplicados.
 
-A retenção segue o plano do proprietário do espaço de trabalho, ou o de quem faz o pedido se o espaço não tiver proprietário. Advanced retém até **7 dias ou 25 000 eventos** e Pro até **30 dias ou 100 000 eventos**. Free devolve `not_in_plan`.
+O plano do proprietário do espaço determina se os eventos são guardados e durante quanto tempo. Se não houver proprietário, aplica-se o plano de quem criou a subscrição. Advanced retém até **7 dias ou 25 000 eventos** e Pro até **30 dias ou 100 000 eventos**. Planos sem histórico de alertas não guardam eventos. A criação e a leitura da caixa usam o plano do proprietário ou, se este não existir, o de quem faz o pedido. Se esse plano não incluir histórico, devolvem `not_in_plan`.
 
 ## 5. Crie um trigger
 

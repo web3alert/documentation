@@ -25,7 +25,9 @@ Most endpoints accept an account session or an agent key as a bearer credential.
 Authorization: Bearer YOUR_AGENT_KEY
 ```
 
-Each key acts as its account in one workspace. Agent keys include `read` for reads, add `manage` for mutations such as creating a subscription or quoting a top-up, and add `spend` for account plan or project add-on purchases from the EUR balance. Session-only actions include key management, token revocation and workspace switching. For individual routes, see the details below and the agent-facing [OpenAPI document](api-openapi.md).
+Each key acts with its account's role in one workspace. Agent keys include `read` for reads, add `manage` for mutations such as creating a subscription or quoting a top-up, and add `spend` for account plan or project add-on purchases from the EUR balance. Session-only actions include key management, token revocation, workspace switching, creating or updating a workspace, buying gift coupons, and creating, accepting, rejecting or canceling project transfer requests. See the individual routes and the agent-facing [OpenAPI document](api-openapi.md).
+
+Keys without `manage` receive no external resource write tokens. Billing responses omit unused coupon and gift codes for all agent keys.
 
 An agent-key request can return HTTP `403` with `insufficient_scope`, `key_not_allowed` for a session-only operation, or `spend_cap_exceeded` for a purchase over the key's monthly cap.
 
@@ -44,16 +46,18 @@ Successful responses with a body contain JSON. A `204 No Content` response, such
 
 Detailed response body structures are described in [Types](types.md).
 
-API route errors return a JSON object with `error.message` and optional `error.details`.
+JSON API errors generally contain `error.message`, with optional `error.code` and `error.details`.
 
 ```json
 {
   "error": {
-    "message": "error message",
-    "details": {}
+    "message": "This key lacks the \"manage\" scope.",
+    "code": "insufficient_scope"
   }
 }
 ```
+
+The agent routes can use specific HTTP statuses such as `401`, `403`, `404`, `409`, `410`, `429` and `503`. Read the status and `error.code` together to decide how to handle each response. For [x402 top-ups](api-billing.md#post-api-billing-wallet-x402-topup), a `402` contains an x402 v2 `PaymentRequired` quote or a payment failure with a string `error`.
 
 The API can reject a malformed JSON request body before the route handler runs, with a plain-text `400 Bad Request`. Check the response's `Content-Type` before parsing it as JSON.
 

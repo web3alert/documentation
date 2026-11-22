@@ -387,7 +387,7 @@ Workspace-level limit protege el flujo general de alerts dentro del workspace.
 | Advanced | 7 días | 25.000 |
 | Pro | 30 días | 100.000 |
 
-La bandeja conserva los eventos más recientes dentro de ambos límites. Usa el plan del propietario del espacio de trabajo o el del solicitante si no hay propietario.
+La bandeja conserva los eventos más recientes dentro de ambos límites. El almacenamiento y la retención siguen el plan del propietario del espacio o el de quien creó la suscripción si no hay propietario. Si ese plan no incluye historial de alertas, no se guardan eventos. La creación y la lectura usan el plan del solicitante cuando no hay propietario.
 
 ## Project Transfer
 

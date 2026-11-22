@@ -84,7 +84,7 @@ Authorization: Bearer YOUR_SESSION_TOKEN
 
 返回当前 account、identity、tier、memberships 和选中的 workspace。
 
-使用密钥时需要 `read` 权限。响应会附带 `key`，包含 `id`、`name`、`scopes`、`monthlyCapEur`、`spentThisMonthEur` 和 `expiresAt`。
+使用密钥时需要 `read` 权限。响应会附带 `key`，包含 `id`、`name`、`scopes`、`monthlyCapEur`、`spentThisMonthEur` 和 `expiresAt`。`memberships` 只包含密钥绑定的工作区。
 
 参数：无。
 
@@ -105,6 +105,8 @@ Payload: 无。
 | `limits.alertHistory.maxRecords` | `number \| null` | 最多保留的记录数。`null` 表示记录数没有上限。 |
 
 ## POST /api/keys
+
+当前工作区的任何成员都能创建密钥。密钥沿用账户在该工作区的角色。
 
 需要账户会话令牌。创建绑定到当前工作区的密钥。发送 `{ name, scopes, monthlyCapEur?, expiresInDays? }`。名称为 1–64 个字符。包含 `read`，可选 `manage` 和 `spend`。支出上限为 0–10,000 欧元，最多两位小数。有效期可以是 30、90 或 365 天。省略这两个可选字段或传 `null` 即不限制对应项目。
 
@@ -130,7 +132,9 @@ Payload: 无。
 
 公开。发送由以太坊外部账户（EOA）签署的 `{ message, signature }`。使用版本为 `1` 的 EIP-4361 消息，包含返回的 nonce、域名 `web3alert.io`、同源 URI，以及与服务器时间相差不超过五分钟的 `issuedAt`。接受任意链 ID。
 
-返回 `{ account: { id, created }, key, secret, claimUrl }`。首次登录会创建 Free 账户和工作区。每次成功登录都会签发具有全部权限的新密钥，无上限和有效期。关联 Telegram 或 Google 后，`claimUrl` 为 `null`。使用 `secret` 作为 Bearer 凭据。
+返回 `{ account: { id, created }, key, secret, claimUrl }`。首次登录会创建 Free 账户和工作区。每次成功登录都会签发具有全部权限的新密钥，无上限和有效期。使用 `secret` 作为 Bearer 凭据。验证会在创建账户或没有有效链接时签发认领链接。若已有有效链接，`claimUrl` 为 `null`。可调用 `POST /api/agent/claim-link` 替换链接。
+
+账户由用户通过 Telegram 或 Google 认领后，钱包登录会返回 `403 account_claimed`，且不再签发密钥或链接。请向该用户索取智能体密钥。
 
 验证失败返回 `401 invalid_siwe`。每个 IP 在滚动一小时内最多创建 10 个账户，所有 IP 在滚动一天内最多创建 200 个账户。达到限制时返回 `429 signup_limited` 和 `Retry-After`。参见 [SIWE 示例](agents.md)。
 

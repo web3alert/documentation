@@ -6,11 +6,11 @@ Web3alert 目录提供来自 EVM 和 Substrate 链的已解码链上事件，涵
 
 ### 在应用中创建密钥
 
-登录 [Web3alert](https://web3alert.io)，选择你拥有或管理的工作区，然后在 [Agents 页面](https://web3alert.io/agents)创建密钥。密钥绑定到该工作区。请在密钥显示时复制，它只显示一次。
+登录 [Web3alert](https://web3alert.io)，选择你已加入的工作区，然后在 [Agents 页面](https://web3alert.io/agents)创建密钥。密钥在该工作区内沿用你的角色，并受你授予的权限范围限制。请在密钥显示时复制，它只显示一次。
 
 每个密钥都包含 `read` 权限。添加 `manage` 可注册 Webhook、创建订阅或请求充值报价。添加 `spend` 可使用欧元余额购买套餐。你可以设置[每月支出上限](limits.md#agent-payments)，也可以设置 30、90 或 365 天的有效期，两项均可留空。
 
-现有会话令牌可用到持有人退出登录或撤销令牌为止。新连接请使用智能体密钥。
+现有会话令牌可用到服务器撤销它们为止。新连接请使用智能体密钥。
 
 ### 使用以太坊钱包注册
 
@@ -53,9 +53,9 @@ Content-Type: application/json
 }
 ```
 
-每次登录成功都会为初始工作区签发新密钥，包含三种权限，无支出上限和过期时间。使用 `secret` 作为 Bearer 凭据。再次登录会使用原账户。关联 Telegram 或 Google 登录方式后，`claimUrl` 为 `null`。
+每次登录成功都会为初始工作区签发新密钥，包含三种权限，无支出上限和过期时间。使用 `secret` 作为 Bearer 凭据。验证只在创建账户或没有有效链接时返回认领链接。若已有有效链接，`claimUrl` 为 `null`。账户由用户通过 Telegram 或 Google 认领后，钱包登录会返回 `403 account_claimed`。请向该用户索取智能体密钥。
 
-请私下将认领链接交给要接管账户的人。页面会显示钱包、账户创建日期和链接到期时间，并提供 Telegram 和 Google 登录选项。登录后会转到 Agents 页面，可查看和管理密钥，以及查看套餐、余额和支出。如果所选登录方式已关联到另一个 Web3alert 账户，请使用其他账号。最新链接在七天内有效。可用[认领链接端点](api-account.md#post-api-agent-claim-link)替换该链接。
+请私下将认领链接交给要接管账户的人。页面会显示钱包、账户创建日期和链接到期时间，并提供 Telegram 和 Google 登录选项。登录后会转到 Agents 页面，可查看和管理密钥，以及查看套餐、余额和支出。如果所选登录方式已关联到另一个 Web3alert 账户，请使用其他账号。最新链接在七天内有效。可用[`POST /api/agent/claim-link`](api-account.md#post-api-agent-claim-link)替换该链接。
 
 ## 2. 连接 MCP 客户端
 
@@ -116,7 +116,7 @@ claude mcp add --transport http web3alert-agent https://web3alert.io/mcp/agent \
 
 1. 使用 `manage` 权限调用 `get_topup_requirements({"amountEur":5})`。可在 Base 网络用 USDC 充值 5–500 欧元。Web3alert 使用欧洲央行的美元参考汇率，按 1 USDC 等于 1 USD 换算，不加价。
 2. 使用自己的 x402 v2 客户端和钱包支付。向返回的 `url` 发送 `POST` 请求，带上返回的 `body`、Bearer 凭据及 `PAYMENT-SIGNATURE` 中的付款签名。等待[充值](api-billing.md#post-api-billing-wallet-x402-topup)结算并计入欧元余额。
-3. 余额充足时，使用 `spend` 权限调用 `buy_plan({"planId":"advanced","durationMonths":1,"requestId":"first-plan-001"})`。可购买 1、3、6 或 12 个月的 Advanced 或 Pro，且不会自动续订。重试同一笔购买时沿用 `requestId` 和原参数。
+3. 余额充足时，使用 `spend` 权限调用 `buy_plan({"planId":"advanced","durationMonths":1,"requestId":"first-plan-001"})`。可购买 1、3、6 或 12 个月的 Advanced 或 Pro，且不会自动续订。重试同一笔购买时沿用 `requestId` 和原参数。 若已有启用自动续订的有效套餐，购买会返回 `key_not_allowed`。请让账户持有人在应用中更改套餐。
 
 ## 4. 创建第一个订阅
 
@@ -145,9 +145,9 @@ claude mcp add --transport http web3alert-agent https://web3alert.io/mcp/agent \
 
 找到触发器，用 `get_trigger` 查看输入，然后调用 `create_subscription({"trigger":"<trigger-fullname>","inbox":true,"state":"on"})`。传入必填的 `inputs`。每次调用只能指定一个投递目标。该工具会创建或复用工作区收件箱。
 
-调用 `read_events({})` 从仍保留的最旧事件开始读取。若 `nextCursor` 非空，保存该值并在下次调用中作为 `after`。当 `hasMore` 为真时继续读取，轮询时沿用游标。若 `gap: true`，说明部分事件已超出保留范围。使用事件的 `id` 去重。
+调用 `read_events({})` 从保留的最旧事件开始读取。若 `nextCursor` 非空，保存该值并在下次调用中作为 `after`。当 `hasMore` 为真时继续读取，并在同一工作区沿用游标。`gap: true` 表示游标与第一条返回的事件之间有事件已超出保留范围，也可能表示此前已保存游标之后的事件，但本页为空。使用事件的 `id` 去重。
 
-保留规则遵循工作区所有者的套餐。如果没有所有者，则使用调用者的套餐。Advanced 最多保留 **7 天或 25,000 条事件**，Pro 最多保留 **30 天或 100,000 条事件**。Free 会返回 `not_in_plan`。
+是否保存事件以及保留时长取决于工作区所有者的套餐。若无所有者，则使用订阅创建者的套餐。Advanced 最多保留 **7 天或 25,000 条事件**，Pro 最多保留 **30 天或 100,000 条事件**。不含告警历史的套餐不会保存事件。创建和读取收件箱时检查工作区所有者的套餐，若无所有者则检查调用者的套餐。若该套餐不包含告警历史，则返回 `not_in_plan`。
 
 ## 5. 构建触发器
 

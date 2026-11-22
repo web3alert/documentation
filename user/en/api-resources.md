@@ -22,6 +22,8 @@ Payload: none.
 
 Response: [ResourceView[]](types.md#resourceview).
 
+When authenticated with an agent key that lacks `manage`, the response omits external resource write tokens.
+
 ## GET /api/resources/:fullname
 
 Returns a resource.
@@ -35,6 +37,8 @@ Arguments:
 Payload: none.
 
 Response: [ResourceView](types.md#resourceview).
+
+When authenticated with an agent key that lacks `manage`, the response omits external resource write tokens.
 
 ## PUT /api/resources/:fullname
 
@@ -90,7 +94,7 @@ Arguments:
 
 Payload: none.
 
-Requires an account session or agent key with `manage`, plus control of the resource's workspace. Returns `204 No Content`. Deleting a webhook returns `409 webhook_in_use` while a live (`on`) subscription in that workspace delivers to it.
+Requires an account session or agent key with `manage`, plus control of the resource's workspace. Returns `204 No Content`. Deleting a webhook returns `409 webhook_in_use` while a live (`on`) subscription in that workspace delivers to it. Live inbox subscriptions do not block deletion of the inbox resource.
 
 The three setup-session endpoints below are available only when secure Telegram
 destination setup is enabled on the server.
@@ -174,13 +178,17 @@ Response: empty success response.
 
 Requires an account session or an agent key with `manage`, plus workspace control. Takes no body. Returns `{ fullname, retention: { days, maxEvents } }`. Repeated calls return the same inbox. If another resource already uses the fullname, the response is `409 resource_name_in_use`.
 
-Use the returned fullname as `values.inbox` in the `common.builtin.inbox` subscription action. The plan is the workspace owner's, or the caller's when the workspace has no owner. Both inbox routes return `403 not_in_plan` on Free. See [Limits](limits.md).
+Use the returned fullname as `values.inbox` in the `common.builtin.inbox` subscription action. Inbox creation and reading check the workspace owner's plan, or the caller's if the workspace has no owner. Both return `403 not_in_plan` if that plan lacks alert history.
+
+Event storage and retention follow the workspace owner's plan, or the subscription creator's when there is no owner. The inbox stores no events while that plan lacks alert history. See [Limits](limits.md).
 
 ## GET /api/events
 
-Requires an account session or an agent key with `read`, plus workspace control and the same paid plan as inbox creation. Pass the optional query parameters `after` (opaque cursor) and `limit` (1–500, default 100). The initial read starts at the oldest retained event.
+Requires an account session or an agent key with `read`, plus workspace control and the same paid-plan check as inbox creation. Pass the optional query parameters `after` (opaque cursor) and `limit` (1–500, default 100). The initial read starts at the oldest retained event. A cursor works only in its original workspace. A foreign or malformed cursor returns HTTP `400` with `error.message` set to `invalid inbox cursor`.
 
-Returns `{ events, nextCursor, hasMore, gap }`. Each event contains `cursor`, `id`, `receivedAt`, `subscription`, `trigger` and `body`. Pass `nextCursor` as `after` for the next page or poll. An empty page returns the supplied cursor or `null` if omitted. `gap: true` signals retention loss relative to the cursor.
+Returns `{ events, nextCursor, hasMore, gap }`. Each event contains `cursor`, `id`, `receivedAt`, `subscription`, `trigger` and `body`. A body over 64 KB is stored with `truncated: true` and without `object`.
+
+Pass `nextCursor` as `after` for the next page or poll. An empty page returns the supplied cursor, or `null` if it was omitted. With a cursor, `gap: true` means one or more events between the cursor and the first returned event are no longer retained. It can also occur on an empty page if newer events had been stored after that cursor.
 
 ## GET /api/resources/external/:token
 

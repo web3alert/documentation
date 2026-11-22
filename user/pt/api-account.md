@@ -84,7 +84,7 @@ Em caso de sucesso, o servidor devolve `204 No Content` com o corpo vazio. Este 
 
 Devolve o account atual, identity, tier, memberships e workspace selecionado.
 
-Um pedido com chave requer `read` e acrescenta `key` com `id`, `name`, `scopes`, `monthlyCapEur`, `spentThisMonthEur` e `expiresAt`.
+Um pedido com chave requer `read` e acrescenta `key` com `id`, `name`, `scopes`, `monthlyCapEur`, `spentThisMonthEur` e `expiresAt`. Em `memberships`, só aparece o espaço associado à chave.
 
 Argumentos: nenhum.
 
@@ -105,6 +105,8 @@ A resposta também inclui `limits` para o plano da conta autenticada.
 | `limits.alertHistory.maxRecords` | `number \| null` | Número máximo de registos guardados. `null` significa que não há limite de registos. |
 
 ## POST /api/keys
+
+Qualquer membro do espaço atual pode criar uma chave. A chave atua com a função da conta nesse espaço.
 
 Requer um token de sessão. Cria uma chave associada ao espaço de trabalho atual. Envie `{ name, scopes, monthlyCapEur?, expiresInDays? }`. O nome tem 1–64 caracteres. Inclua `read` e, se necessário, `manage` e `spend`. O limite pode ser de 0 € a 10 000 € com até duas casas decimais e a validade de 30, 90 ou 365 dias. Omita esses campos ou envie `null` para os deixar por definir.
 
@@ -130,7 +132,9 @@ Público. Sem corpo de pedido. Devolve `{ nonce, issuedAt, expiresAt }`. O nonce
 
 Público. Envie `{ message, signature }` assinado por uma conta externa (EOA) Ethereum. Use uma mensagem EIP-4361 versão `1`, o nonce recebido, o domínio `web3alert.io`, um URI dessa origem e um `issuedAt` dentro de cinco minutos do relógio do servidor. Qualquer ID de cadeia é aceite.
 
-Devolve `{ account: { id, created }, key, secret, claimUrl }`. O primeiro início de sessão cria uma conta Free e o seu espaço. Cada início bem-sucedido emite uma chave com todas as permissões, sem limite nem validade. Após associar Telegram ou Google, `claimUrl` fica a `null`. Use `secret` como credencial Bearer.
+Devolve `{ account: { id, created }, key, secret, claimUrl }`. O primeiro início de sessão cria uma conta Free e o seu espaço. Cada início bem-sucedido emite uma chave com todas as permissões, sem limite nem validade. Use `secret` como credencial Bearer. A verificação emite uma ligação ao criar a conta ou quando não há uma ligação ativa. Se já houver uma, `claimUrl` fica a `null`. Use `POST /api/agent/claim-link` para a substituir.
+
+Quando uma pessoa reivindica a conta com Telegram ou Google, o início de sessão com carteira devolve `403 account_claimed` e não emite chave nem ligação. Peça a essa pessoa uma chave de agente.
 
 Uma verificação falhada devolve `401 invalid_siwe`. São permitidas 10 novas contas por IP numa hora móvel e 200 no total num dia móvel. Ao atingir o limite, devolve `429 signup_limited` com `Retry-After`. Consulte o [exemplo SIWE](agents.md).
 

@@ -12,6 +12,8 @@ Devolve a visão geral da faturação da conta atual.
 
 Devolve a visão geral do saldo e da carteira da conta.
 
+Se for usada uma chave de agente, a resposta omite os códigos dos cupões de oferta ainda não utilizados.
+
 ## POST /api/billing/wallet/crypto-topup
 
 <!-- api-contract: redirect-query=authoritative-externalReference; existing-value=replaced -->
@@ -25,9 +27,9 @@ fornecedor.
 
 Requer uma sessão ou chave de agente com `manage`. Envie `{ amountEur }` de 5 € a 500 €, com até duas casas decimais. Pague em USDC na Base à taxa de referência do BCE para USD, usando 1 USDC = 1 USD sem margem.
 
-Um pedido sem `PAYMENT-SIGNATURE` devolve `402` com a cotação x402 v2 no corpo e codificada em base64 em `PAYMENT-REQUIRED`. Assine com a sua carteira, mantendo `accepts[0].extra.quoteId`, e envie o mesmo corpo com `PAYMENT-SIGNATURE` em base64.
+Um pedido sem `PAYMENT-SIGNATURE` devolve `402` com uma cotação x402 v2 `PaymentRequired` no corpo e a mesma cotação codificada em base64 em `PAYMENT-REQUIRED`. A cotação é válida por 300 segundos. O montante em USDC é arredondado para cima ao cêntimo e `resource.url` usa a origem pública configurada. Assine com a sua carteira, mantendo `accepts[0].extra.quoteId`, e envie o mesmo corpo com `PAYMENT-SIGNATURE` em base64. Num pagamento novo, uma cotação expirada, incompatível ou de outro espaço devolve uma nova cotação `402`.
 
-Um pagamento liquidado devolve `200` com `PAYMENT-RESPONSE` e `{ topupId, amountEur, usdcAmount, transaction, network, balanceEur }`. Para `202` com `{ status: "pending", topupId }`, repita com a mesma assinatura. Repetir um pagamento liquidado devolve o resultado original. Um pagamento recusado devolve `402` com a falha em `PAYMENT-RESPONSE`. Falhas de serviço devolvem `502 facilitator_unavailable`, `503 x402_unavailable` ou `503 rate_unavailable`.
+Um pagamento liquidado devolve `200` com `PAYMENT-RESPONSE` e `{ topupId, amountEur, usdcAmount, transaction, network, balanceEur }`. Para `202` com `{ status: "pending", topupId }`, repita com a mesma assinatura. Repetir um pagamento liquidado devolve o resultado original. Um pagamento recusado devolve `402` com `error` como texto no corpo e detalhes da falha em `PAYMENT-RESPONSE`. Falhas de serviço devolvem `502 facilitator_unavailable`, `503 x402_unavailable` ou `503 rate_unavailable`.
 
 ## POST /api/billing/wallet/topup/refresh
 
@@ -40,7 +42,7 @@ ausente, repetido ou em conflito com outro identificador.
 
 ## POST /api/billing/account-plan/balance-purchase
 
-As chaves de agente requerem `spend` e devem usar `autoRenew: false`. Uma compra acima do limite mensal devolve `403 spend_cap_exceeded`.
+As chaves de agente requerem `spend` e devem usar `autoRenew: false`. Uma compra acima do limite mensal devolve `403 spend_cap_exceeded`. Comprar um plano com uma chave enquanto está ativo um plano com renovação automática devolve `403 key_not_allowed` antes de debitar o saldo.
 
 <!-- api-contract: requestId=optional-backward-compatible-8-128-rfc3986-unreserved; requestId-omitted=not-retry-safe-across-http-attempts; autoRenew-default=false; same-intent=same-requestId-and-payload; exact-replay=original-subscriptionId-and-invoiceId-without-second-debit; conflicting-payload=rejected; new-intent=new-requestId -->
 Compra ou atualiza um plano de conta usando o saldo da carteira.

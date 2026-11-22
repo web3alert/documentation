@@ -22,6 +22,8 @@ Payload: nenhum.
 
 Resposta: [ResourceView[]](types.md#resourceview).
 
+Se for usada uma chave de agente sem `manage`, a resposta omite os tokens de escrita de recursos externos.
+
 ## GET /api/resources/:fullname
 
 Devolve um resource.
@@ -35,6 +37,8 @@ Argumentos:
 Payload: nenhum.
 
 Resposta: [ResourceView](types.md#resourceview).
+
+Se for usada uma chave de agente sem `manage`, a resposta omite os tokens de escrita de recursos externos.
 
 ## PUT /api/resources/:fullname
 
@@ -90,7 +94,7 @@ Argumentos:
 
 Payload: nenhum.
 
-Requer uma sessão ou chave com `manage` e controlo do espaço do recurso. Devolve `204 No Content`. Ao eliminar um webhook, devolve `409 webhook_in_use` se uma subscrição ativa (`on`) no mesmo espaço lhe enviar eventos.
+Requer uma sessão ou chave com `manage` e controlo do espaço do recurso. Devolve `204 No Content`. Ao eliminar um webhook, devolve `409 webhook_in_use` se uma subscrição ativa (`on`) no mesmo espaço lhe enviar eventos. As subscrições ativas da caixa de entrada não impedem a remoção do recurso.
 
 Os três endpoints de setup session seguintes só estão disponíveis quando o
 setup seguro do destino Telegram está ativado no servidor.
@@ -173,13 +177,17 @@ Resposta: resposta de sucesso vazia.
 
 Requer uma sessão ou chave de agente com `manage`, além de controlo do espaço. Sem corpo de pedido. Devolve `{ fullname, retention: { days, maxEvents } }`. Pedidos repetidos devolvem a mesma caixa. Se outro recurso já usar o fullname, devolve `409 resource_name_in_use`.
 
-Use o fullname como `values.inbox` na ação de subscrição `common.builtin.inbox`. Aplica-se o plano do proprietário do espaço ou de quem faz o pedido se não houver proprietário. As duas rotas devolvem `403 not_in_plan` em Free. Consulte [Limites](limits.md).
+Use o fullname como `values.inbox` na ação de subscrição `common.builtin.inbox`. A criação e a leitura verificam o plano do proprietário do espaço, ou de quem faz o pedido quando não há proprietário. Ambas devolvem `403 not_in_plan` se esse plano não incluir histórico.
+
+O armazenamento e a retenção seguem o plano do proprietário ou de quem criou a subscrição quando não há proprietário. Se esse plano não incluir histórico de alertas, não são guardados eventos. Consulte [Limites](limits.md).
 
 ## GET /api/events
 
-Requer uma sessão ou chave de agente com `read`, controlo do espaço e o mesmo plano pago que a criação da caixa. Parâmetros opcionais: `after` (cursor opaco) e `limit` (1–500, 100 por predefinição). A leitura inicial começa no evento retido mais antigo.
+Requer uma sessão ou chave de agente com `read`, mais controlo do espaço e a mesma verificação do plano que a criação da caixa. Os parâmetros `after` (cursor opaco) e `limit` (1–500, 100 por predefinição) são opcionais. A leitura inicial começa no evento retido mais antigo. O cursor só funciona no seu espaço original. Um cursor de outro espaço ou malformado devolve HTTP `400` com `invalid inbox cursor` em `error.message`.
 
-Devolve `{ events, nextCursor, hasMore, gap }`. Cada evento contém `cursor`, `id`, `receivedAt`, `subscription`, `trigger` e `body`. Passe `nextCursor` como `after` na próxima página ou consulta. Uma página vazia devolve o cursor enviado ou `null` se foi omitido. `gap: true` indica perda por retenção relativamente ao cursor.
+Devolve `{ events, nextCursor, hasMore, gap }`. Cada evento contém `cursor`, `id`, `receivedAt`, `subscription`, `trigger` e `body`. Um corpo superior a 64 KB é guardado com `truncated: true` e sem `object`.
+
+Passe `nextCursor` como `after` na próxima página ou consulta. Uma página vazia devolve o cursor enviado, ou `null` se este tiver sido omitido. Com um cursor, `gap: true` indica que um ou mais eventos entre o cursor e o primeiro resultado já não estão retidos. Também pode ocorrer numa página vazia se tinham sido guardados eventos posteriores ao cursor.
 
 ## GET /api/resources/external/:token
 

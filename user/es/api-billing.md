@@ -12,6 +12,8 @@ Devuelve el resumen de facturación de la cuenta actual.
 
 Devuelve el resumen del saldo y del monedero de la cuenta.
 
+Con una clave de agente, la respuesta omite los códigos de los cupones regalo sin usar.
+
 ## POST /api/billing/wallet/crypto-topup
 
 <!-- api-contract: redirect-query=authoritative-externalReference; existing-value=replaced -->
@@ -24,9 +26,9 @@ Conserva esa referencia durante la redirección del proveedor.
 
 Requiere una sesión o clave de agente con `manage`. Envía `{ amountEur }` de 5 a 500 €, con hasta dos decimales. Paga en USDC en Base al tipo de referencia del BCE para el USD, usando 1 USDC = 1 USD sin recargo.
 
-Una solicitud sin `PAYMENT-SIGNATURE` devuelve `402` con la cotización x402 v2 en el cuerpo y codificada en base64 en `PAYMENT-REQUIRED`. Firma con tu cartera conservando `accepts[0].extra.quoteId` y envía el mismo cuerpo con `PAYMENT-SIGNATURE` en base64.
+Una solicitud sin `PAYMENT-SIGNATURE` devuelve `402` con una cotización x402 v2 `PaymentRequired` en el cuerpo y la misma cotización codificada en base64 en `PAYMENT-REQUIRED`. La cotización dura 300 segundos. El importe en USDC se redondea hacia arriba al céntimo y `resource.url` usa el origen público configurado. Firma con tu cartera conservando `accepts[0].extra.quoteId` y envía el mismo cuerpo con `PAYMENT-SIGNATURE` en base64. Para un pago nuevo, una cotización caducada, que no coincide o de otro espacio devuelve una nueva cotización `402`.
 
-Un pago liquidado devuelve `200` con `PAYMENT-RESPONSE` y `{ topupId, amountEur, usdcAmount, transaction, network, balanceEur }`. Si recibes `202` con `{ status: "pending", topupId }`, reintenta con la misma firma. Repetir un pago liquidado devuelve el resultado original. Si se rechaza el pago, devuelve `402` con el fallo en `PAYMENT-RESPONSE`. Los fallos de servicio devuelven `502 facilitator_unavailable`, `503 x402_unavailable` o `503 rate_unavailable`.
+Un pago liquidado devuelve `200` con `PAYMENT-RESPONSE` y `{ topupId, amountEur, usdcAmount, transaction, network, balanceEur }`. Si recibes `202` con `{ status: "pending", topupId }`, reintenta con la misma firma. Repetir un pago liquidado devuelve el resultado original. Un pago rechazado devuelve `402` con `error` como cadena en el cuerpo y los detalles del fallo en `PAYMENT-RESPONSE`. Los fallos de servicio devuelven `502 facilitator_unavailable`, `503 x402_unavailable` o `503 rate_unavailable`.
 
 ## POST /api/billing/wallet/topup/refresh
 
@@ -39,7 +41,7 @@ identificador, está repetido o entra en conflicto con otro identificador.
 
 ## POST /api/billing/account-plan/balance-purchase
 
-Las claves de agente requieren `spend` y deben usar `autoRenew: false`. Si la compra supera el límite mensual, devuelve `403 spend_cap_exceeded`.
+Las claves de agente requieren `spend` y deben usar `autoRenew: false`. Si la compra supera el límite mensual, devuelve `403 spend_cap_exceeded`. Comprar un plan con una clave mientras hay un plan activo con renovación automática devuelve `403 key_not_allowed` antes de efectuar el cargo.
 
 <!-- api-contract: requestId=optional-backward-compatible-8-128-rfc3986-unreserved; requestId-omitted=not-retry-safe-across-http-attempts; autoRenew-default=false; same-intent=same-requestId-and-payload; exact-replay=original-subscriptionId-and-invoiceId-without-second-debit; conflicting-payload=rejected; new-intent=new-requestId -->
 Compra o mejora un plan de cuenta usando el saldo del monedero.

@@ -25,7 +25,9 @@ A maioria dos endpoints aceita uma sessão de conta ou chave de agente como cred
 Authorization: Bearer YOUR_AGENT_KEY
 ```
 
-A chave atua em nome da conta num espaço de trabalho. O âmbito `read` permite ler, `manage` permite operações como criar subscrições ou cotar carregamentos, e `spend` permite comprar planos e extras de projetos com o saldo em EUR. Gerir chaves, revogar tokens e mudar de espaço requerem uma sessão. Consulte os endpoints abaixo e o [documento OpenAPI](api-openapi.md) para agentes.
+A chave atua com a função da conta num espaço de trabalho. O âmbito `read` permite ler, `manage` permite operações como criar subscrições ou cotar carregamentos, e `spend` permite comprar planos e extras de projetos com o saldo em EUR. Gerir chaves, revogar tokens, mudar de espaço, criar ou atualizar espaços, comprar cupões de oferta e criar, aceitar, rejeitar ou cancelar pedidos de transferência de projetos requerem uma sessão. Consulte os endpoints e o [documento OpenAPI](api-openapi.md) para agentes.
+
+As chaves sem `manage` não recebem tokens de escrita de recursos externos. As respostas de faturação ocultam os códigos de cupões não utilizados, incluindo os de oferta, a todas as chaves de agente.
 
 Um pedido com chave pode devolver HTTP `403` com `insufficient_scope` se faltar uma permissão, `key_not_allowed` se a operação exigir uma sessão ou `spend_cap_exceeded` se a compra exceder o limite mensal da chave.
 
@@ -44,16 +46,18 @@ As respostas bem-sucedidas com corpo devolvem JSON. Uma resposta `204 No Content
 
 As estruturas detalhadas do response body estão descritas em [Types](types.md).
 
-Os erros das rotas da API devolvem um objeto JSON com `error.message` e o campo opcional `error.details`.
+Os erros JSON da API incluem normalmente `error.message` e os campos opcionais `error.code` e `error.details`.
 
 ```json
 {
   "error": {
-    "message": "error message",
-    "details": {}
+    "message": "This key lacks the \"manage\" scope.",
+    "code": "insufficient_scope"
   }
 }
 ```
+
+As rotas para agentes podem devolver estados HTTP específicos, como `401`, `403`, `404`, `409`, `410`, `429` e `503`. Leia o estado e `error.code` em conjunto para decidir como tratar a resposta. Nos [carregamentos x402](api-billing.md#post-api-billing-wallet-x402-topup), um `402` inclui uma cotação x402 v2 `PaymentRequired` ou uma falha de pagamento com `error` como texto.
 
 Se o corpo do pedido contiver JSON malformado, a API pode rejeitá-lo antes de executar o controlador da rota e devolver um `400 Bad Request` em texto simples. Verifique o `Content-Type` da resposta antes de a interpretar como JSON.
 

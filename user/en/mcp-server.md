@@ -32,16 +32,27 @@ Tool errors are returned separately from HTTP authentication errors.
 | Tool error | Meaning |
 | --- | --- |
 | `insufficient_scope` | The key lacks a required scope. |
-| `key_not_allowed` | The operation requires an account session. |
+| `key_not_allowed` | The operation requires an account session. This also applies to buying a plan with a key while an auto-renewing plan is active. |
 | `spend_cap_exceeded` | The purchase would exceed the key's monthly EUR cap. |
 | `not_in_plan` | The applicable workspace plan excludes inbox or delivery history. |
 | `plan_required` | A build operation requires an Advanced or Pro account. |
+| `insufficient_balance` | The EUR balance cannot cover the plan purchase. |
+| `x402_unavailable` | USDC top-ups are unavailable. |
+| `rate_unavailable` | The ECB reference rate is unavailable. |
+| `no_current_workspace` | The tool needs a current workspace and the API returned none. |
+| `not_tested` | The draft's latest test must return `matched` before activation. |
+| `draft_expired` | The draft has expired. |
+| `retryable` | A chain data request failed upstream or the workspace has reached its test rate limit. |
+| `private_project_limit` | Creating the private agent project would exceed the account's project cap. |
+| `trigger_limit` | Activating the trigger would exceed the plan's trigger cap. |
+| `not_found` | The target is unavailable. On build calls, this can mean an unknown chain, missing ABI or IDL, unknown pallet, or unavailable event, draft or trigger. |
+| `request_id_conflict` | The same activation `requestId` was already used for another draft in the workspace. |
 
 ## Upgrading existing clients
 
 The `/mcp` endpoint now accepts the token only in the `Authorization: Bearer <token>` header on every request. Requests that supply the token only in the query string or request body receive HTTP `401`. The server is stateless and creates no sessions.
 
-Update your client to send the agent key in the header. Existing session tokens keep working until their owner logs out or revokes them.
+Existing session tokens work until the server revokes them. Use agent keys for new connections.
 
 In Claude Code, run these commands from the project where you use Web3alert.
 
@@ -59,14 +70,14 @@ Agent tools use the key's bound workspace. Create a key in the other workspace t
 | --- | --- |
 | `get_account` | Returns the account ID, name, tier, EUR wallet balance, tier limits, and active and total subscription counts for the current workspace when available, plus the key's scopes, expiry, monthly cap and spend when using a key. |
 | `get_topup_requirements` | Quotes a €5–€500 USDC top-up. Use an x402 client and your wallet to pay. Requires `manage`. |
-| `buy_plan` | Buys Advanced or Pro from the EUR balance without auto-renewal. Reuse `requestId` on retries. Requires `spend`. |
+| `buy_plan` | Buys Advanced or Pro from the EUR balance without auto-renewal. Requires `spend` and a `requestId` of 8–64 characters. Reuse the same ID for retries of the same purchase. |
 | `find_triggers` | Searches the public catalog for triggers from EVM and Substrate chains. It also searches the current workspace's triggers. |
 | `get_trigger` | Shows a trigger's runtime inputs, delivered event fields, and fields you can use in `conditions`. |
 | `list_webhooks` | Lists the `fullname`, name, and URL of each registered workspace webhook. The `signed` field indicates whether a webhook has a signing secret. |
 | `add_webhook` | Registers a webhook with an HTTPS URL without credentials. If the workspace already has a resource with that name when checked, the tool refuses the request with `webhook_exists`. The signing secret appears only in the `add_webhook` reply as `signingSecret`. Rotating it later replaces it for every receiver of that endpoint. |
 | `remove_webhook` | Deletes a webhook by fullname in the current workspace. Requires `manage`. Returns `webhook_in_use` if a live subscription in that workspace uses it. |
 | `create_subscription` | Subscribes to one trigger with one delivery destination, either `webhook` or `inbox: true`. Supply required inputs and optional `conditions`. |
-| `read_events` | Reads the paid workspace inbox oldest first. Poll with `nextCursor` as `after`. A `gap` signals retention loss. Requires `read`. |
+| `read_events` | Reads the paid workspace inbox oldest first. Poll with `nextCursor` as `after` in the same workspace. `gap: true` signals missing events between the cursor and the first result. An empty page can also report a gap if newer events had been stored. Requires `read`. |
 | `list_subscriptions` | Lists subscription IDs, titles, states, triggers, webhooks, and creation times. |
 | `set_subscription_state` | Pauses (`off`) or resumes (`on`) a subscription. |
 | `remove_subscription` | Deletes a subscription. Webhook retries stop within about 10 seconds. An attempt already due in that window can still be sent. |
@@ -139,7 +150,7 @@ Use `https://web3alert.io/mcp/agent/build` with the same client settings and bea
 | `find_contract` | `read` | Finds exact event signatures from a contract ABI, Solana IDL or Substrate metadata. EVM results include functions and a per-event `recentCount` over the last `recentBlocks` blocks, up to 1,000. The range can be shorter if the provider refuses a wide query. `recentBlocks` is `null` if no blocks could be read or the source is Solana or Substrate. A count of `0` means no matching logs in the reported range. |
 | `plan_trigger` | `manage` | Generates a draft for an event without custom code. Returns its `draftId`, preview fullname, inputs, filterable fields, output schema and expiry. |
 | `test_trigger` | `read` | Tests a draft on a recent sample or replays a supplied block or slot. |
-| `activate_trigger` | `manage` | Saves a draft whose latest test matched to the workspace's private agent project. Reuse `requestId` on retries. The returned trigger fullname is ready for subscriptions. |
+| `activate_trigger` | `manage` | Saves a draft whose latest test matched. The first successful activation creates the workspace's private agent project, which counts toward the account's private-project cap. Reuse `requestId` on retries for the same draft. Reusing it for a different draft returns `request_id_conflict`. The returned trigger fullname is ready for subscriptions. |
 | `remove_my_trigger` | `manage` | Removes a trigger from that project. Returns `trigger_in_use` if a live subscription in the trigger's workspace uses it. |
 
 Direct removal of a trigger or webhook checks live (`on`) subscriptions in that trigger's or webhook's workspace. Pause or remove those subscriptions before retrying. Removing a project, workspace or account blocks its affected subscriptions. A live subscription in another workspace to a public trigger does not prevent direct removal.
