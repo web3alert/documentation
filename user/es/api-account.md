@@ -21,6 +21,7 @@ Payload:
 | `app` | Sí | Nombre de auth app/provider. |
 | `credentials` | Sí | Objeto credentials específico del provider. |
 | `claim` | No | Token del enlace de reclamación de una cuenta creada con cartera, para iniciar sesión con Telegram o Google. |
+| `claimHandoff` | No | Identificador temporal que usa el callback de Telegram en lugar de `claim`. Enviar ambos campos devuelve HTTP `400`. |
 
 Respuesta: [TokenResponse](types.md#tokenresponse).
 
@@ -149,6 +150,8 @@ Requiere una clave de agente con `manage`. No requiere cuerpo. Devuelve `{ claim
 ## GET /api/agent/claims/:token
 
 Público para quien tenga el enlace. Devuelve `{ wallet, account: { name }, createdAt, expiresAt }`. Un enlace desconocido, caducado, sustituido o usado devuelve `404 claim_not_found`. Completa la reclamación con el campo opcional `claim` de `POST /api/token`.
+
+Para iniciar sesión con Telegram al cambiar de navegador, la página de reclamación llama a `POST /api/agent/claim-handoffs` sin credenciales de cuenta. Envía el token de reclamación vigente como `{ token }` en el cuerpo JSON y recibe `{ handoff, expiresAt }`. El nuevo identificador sustituye al anterior para ese enlace. Caduca a los 15 minutos o cuando caduca el enlace, lo que ocurra primero. En el navegador que abre Telegram, el callback lo envía como `claimHandoff` a `POST /api/token`. Si el inicio de sesión tiene éxito, se consumen tanto el identificador como el enlace. Un identificador inválido devuelve `404 claim_not_found`.
 
 ## DELETE /api/me
 

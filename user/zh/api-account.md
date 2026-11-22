@@ -21,6 +21,7 @@ Payload:
 | `app` | 是 | Auth app/provider 名称。 |
 | `credentials` | 是 | Provider 专用 credentials 对象。 |
 | `claim` | 否 | 钱包账户认领链接中的令牌，用于 Telegram 或 Google 登录。 |
+| `claimHandoff` | 否 | Telegram 回调使用的短期交接令牌，用于替代 `claim`。同时发送这两个字段会返回 HTTP `400`。 |
 
 响应：[TokenResponse](types.md#tokenresponse)。
 
@@ -149,6 +150,8 @@ nonce 和验证端点共用边缘层的每 IP 限流，每秒 1 次请求，突�
 ## GET /api/agent/claims/:token
 
 持有链接即可访问。返回 `{ wallet, account: { name }, createdAt, expiresAt }`。未知、已过期、已替换或已使用的链接均返回 `404 claim_not_found`。可通过 `POST /api/token` 的可选字段 `claim` 完成认领。
+
+为支持 Telegram 跨浏览器登录，认领页面无需账户凭据即可调用 `POST /api/agent/claim-handoffs`。页面在 JSON 请求体中以 `{ token }` 发送有效的认领令牌，并收到 `{ handoff, expiresAt }`。新的交接令牌会替换同一链接的上一个令牌。交接令牌最多有效 15 分钟，认领链接若提前到期，令牌也随之失效。Telegram 回调在 Telegram 打开的浏览器中将它作为 `claimHandoff` 发送至 `POST /api/token`。登录成功后，交接令牌和认领链接都会被消耗。交接令牌无效时返回 `404 claim_not_found`。
 
 ## DELETE /api/me
 

@@ -55,7 +55,7 @@ Content-Type: application/json
 
 每次登录成功都会为初始工作区签发新密钥，包含三种权限，无支出上限和过期时间。使用 `secret` 作为 Bearer 凭据。验证只在创建账户或没有有效链接时返回认领链接。若已有有效链接，`claimUrl` 为 `null`。账户由用户通过 Telegram 或 Google 认领后，钱包登录会返回 `403 account_claimed`。请向该用户索取智能体密钥。
 
-请私下将认领链接交给要接管账户的人。页面会显示钱包、账户创建日期和链接到期时间，并提供 Telegram 和 Google 登录选项。登录后会转到 Agents 页面，可查看和管理密钥，以及查看套餐、余额和支出。如果所选登录方式已关联到另一个 Web3alert 账户，请使用其他账号。最新链接在七天内有效。可用[`POST /api/agent/claim-link`](api-account.md#post-api-agent-claim-link)替换该链接。
+请私下将认领链接交给要接管账户的人。页面会显示钱包、账户创建日期和链接到期时间，并提供 Telegram 和 Google 登录选项。登录后会转到 Agents 页面，可查看和管理密钥，以及查看套餐、余额和支出。如果所选登录方式已关联到另一个 Web3alert 账户，请使用其他账号。最新链接在七天内有效。可用[`POST /api/agent/claim-link`](api-account.md#post-api-agent-claim-link)替换该链接。如果 Telegram 在手机上打开应用内浏览器，用户可以在那里完成认领。登录成功后，用户会在同一浏览器中进入 Agents 页面。
 
 认领账户后，此前通过钱包签发的密钥仍然有效。登录后，请在 [Agents 页面](https://web3alert.io/agents)检查密钥并撤销不想保留的密钥。
 
@@ -121,9 +121,11 @@ claude mcp add --transport http web3alert-agent https://web3alert.io/mcp/agent \
 付款前请确认密钥具有 `spend` 权限，并通过 [GET /api/billing/overview](api-billing.md#get-api-billing-overview) 查看调用者账户当前的套餐。在应用中核对或请账户持有人确认，没有生效的更高档套餐、待处理的结账或启用自动续订的有效套餐会阻止这次购买。设置或读取收件箱需要工作区的 `owner` 或 `admin` 角色。能否使用收件箱取决于工作区访问列表中第一个拥有 `owner` 角色的账户的套餐。用其他账户购买套餐不会为该所有者开通收件箱。
 
 1. 签名前调用 `get_account({})`，查看欧元余额，并在设有月度上限时确认本次购买在密钥的剩余额度内。新账户的余额为 0 欧元，Advanced 一个月为 15 欧元。在此零余额示例中，使用 `manage` 权限调用 `get_topup_requirements({"amountEur":15})`。充值范围为 5–500 欧元。Web3alert 使用欧洲央行的美元参考汇率，按 1 USDC 等于 1 USD 换算，不加价。
-2. 通过 HTTPS 向 `https://web3alert.io/api/billing/wallet/x402-topup` 发送相同的请求体，省略付款签名，以获取新报价。 两次 POST 均须发送 `Authorization: Bearer <agent-key>` 和 `Content-Type: application/json`。仅在第二次 POST 中发送 `PAYMENT-SIGNATURE`。 签名前请核对付款 URL 必须正是该地址，网络为 Base（`eip155:8453`），资产为 USDC（`0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913`），且付款的 `payTo` 与新报价中的地址一致。核对预期的 USDC 金额。金额以字符串表示，以六位小数的最小单位计。例如 `"1000000"` 等于 1 USDC。任一项不符就停止。使用自己的 x402 v2 客户端和钱包签署该报价。仅向该 URL 发送报价的请求体、Bearer 凭据及 `PAYMENT-SIGNATURE` 中的签名。已签名的 `POST` 不得跟随重定向。
+2. 通过 HTTPS 向 `https://web3alert.io/api/billing/wallet/x402-topup` 发送相同的请求体，省略付款签名，以获取新报价。 两次 POST 均须发送 `Authorization: Bearer <agent-key>` 和 `Content-Type: application/json`。仅在第二次 POST 中发送 `PAYMENT-SIGNATURE`。 签名前请核对付款 URL 必须正是该地址，网络为 Base（`eip155:8453`），资产为 USDC（`0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913`），且付款的 `payTo` 与新报价中的地址一致。核对预期的 USDC 金额。金额以字符串表示，以六位小数的最小单位计。例如 `"1000000"` 等于 1 USDC。任一项不符就停止。
+
+   请将 x402 客户端的单笔支付上限设为至少等于报价中的 USDC 金额。`@x402/core` 2.30.0 对 USDC 的默认单笔支付上限为 1 美元。若报价不超过 20 USDC，可在注册 EVM 支付方案之前调用 `x402Client.fromConfig({ schemes: [], spendControls: { maxAmountPerPayment: 20 } })`。付款方无需持有 ETH 来支付 gas，因为智能体签署 EIP-3009 授权后，由支付服务方提交转账并支付 gas 费。使用自己的 x402 v2 客户端和钱包签署该报价。仅向该 URL 发送报价的请求体、Bearer 凭据及 `PAYMENT-SIGNATURE` 中的签名。已签名的 `POST` 不得跟随重定向。
 3. 如果已签名的 `POST` 返回 `202`、`5xx` 或超时，付款结果仍未确认。 逐次延长重试间隔。 即使报价已过期，也可在同一工作区用相同的请求体和签名重试有限次数。 如果重试返回带有 `PAYMENT-REQUIRED` 且没有 `PAYMENT-RESPONSE` 的新 `402` 报价，第一笔付款的结果仍未确认。请停止重试，不要签署新报价。 付款被拒时，解码后的 `PAYMENT-RESPONSE` 包含 `success: false`。 如果结果仍未确认，请停止并保留已有的标识符，例如 `topupId`，以便运营人员对账。在结果确认之前，切勿为同一目的签署另一笔付款。等[充值](api-billing.md#post-api-billing-wallet-x402-topup)结算并计入余额后再购买套餐。
-4. 为本次购买生成新的 `requestId`，例如 UUID，然后替换 `buy_plan({"planId":"advanced","durationMonths":1,"requestId":"<new-uuid>"})` 中的 `<new-uuid>`。请使用 `spend` 权限并确认欧元余额充足。可购买 1、3、6 或 12 个月的 Advanced 或 Pro，不会自动续订。仅在重试本次购买时沿用该 ID 和原参数。已有启用自动续订的有效套餐时返回 `key_not_allowed`。待处理的结账或有效的更高套餐也可能阻止购买，工具会返回 `api_error` 和 API 的消息。请让账户持有人先处理现有套餐或结账。
+4. 为本次购买生成新的 `requestId`，例如 UUID，然后替换 `buy_plan({"planId":"advanced","durationMonths":1,"requestId":"<new-uuid>"})` 中的 `<new-uuid>`。请使用 `spend` 权限并确认欧元余额充足。可购买 1、3、6 或 12 个月的 Advanced 或 Pro，不会自动续订。仅在重试本次购买时沿用该 ID 和原参数。已有启用自动续订的有效套餐时返回 `key_not_allowed`。待处理的结账或有效的更高套餐也可能阻止购买，工具会返回 `api_error` 和 API 的消息。请让账户持有人先处理现有套餐或结账。`buy_plan` 的响应会立即返回所购套餐的 `tier`。MCP 会缓存该账户的 `/me` 响应，因此 `get_account` 最多可能继续显示原套餐 30 秒。
 
 ## 4. 创建第一个订阅
 
@@ -188,7 +190,7 @@ Free 账户在所有工作区中，最多可保留 **5 个由该账户创建且�
 
 Free 套餐每分钟允许 60 次外部 API 请求。订阅测试和告警历史在 Advanced 和 Pro 套餐中可用。两项功能均按工作区首位所有者的套餐检查，找不到所有者时按第 6 步所述规则处理。完整数值见[限制](limits.md)。
 
-MCP 服务器默认允许每个账户每分钟调用工具 120 次。每个服务进程中的三个端点共享此额度。`get_account` 返回账户套餐以及与 `GET /api/me` 相同的[套餐限制](api-account.md#me-limits)。API 未提供套餐限制时，工具返回的 `limits` 为 `null`。MCP 最多可使用缓存的 `/me` 响应 30 秒，因此套餐变更最多可能需要 30 秒才会反映在 `get_account` 中。
+MCP 服务器默认允许每个账户每分钟调用工具 120 次。每个服务进程中的三个端点共享此额度。`get_account` 返回账户套餐以及与 `GET /api/me` 相同的[套餐限制](api-account.md#me-limits)。API 未提供套餐限制时，工具返回的 `limits` 为 `null`。
 
 ## 机器可读资料
 

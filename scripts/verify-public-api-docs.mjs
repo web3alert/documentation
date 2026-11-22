@@ -489,16 +489,18 @@ function validateTokenContract(section, requirementTokens, contractMarker) {
   } else {
     const [payload] = payloadTables;
     const payloadFields = payload.rows.map(tableField);
-    if (payload.header.length != 3 || !exactValues(payloadFields, ['app', 'credentials', 'claim'])) {
-      errors.push('token payload table must contain exactly app, credentials and claim');
+    if (payload.header.length != 3 || !exactValues(payloadFields, ['app', 'credentials', 'claim', 'claimHandoff'])) {
+      errors.push('token payload table must contain exactly app, credentials, claim and claimHandoff');
     }
     for (const field of ['app', 'credentials']) {
       if (payload.rows.find(row => tableField(row) == field)?.[1] != requirementTokens.required) {
         errors.push(`token payload ${field} field must be required`);
       }
     }
-    if (payload.rows.find(row => tableField(row) == 'claim')?.[1] != requirementTokens.optional) {
-      errors.push('token payload claim field must be optional');
+    for (const field of ['claim', 'claimHandoff']) {
+      if (payload.rows.find(row => tableField(row) == field)?.[1] != requirementTokens.optional) {
+        errors.push(`token payload ${field} field must be optional`);
+      }
     }
   }
 

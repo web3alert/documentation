@@ -21,6 +21,7 @@ Payload:
 | `app` | Sim | Nome da auth app/provider. |
 | `credentials` | Sim | Objeto credentials específico do provider. |
 | `claim` | Não | Token da ligação de reivindicação de uma conta criada com carteira, para iniciar sessão com Telegram ou Google. |
+| `claimHandoff` | Não | Identificador temporário que o callback do Telegram usa em vez de `claim`. Enviar ambos os campos devolve HTTP `400`. |
 
 Resposta: [TokenResponse](types.md#tokenresponse).
 
@@ -149,6 +150,8 @@ Requer chave de agente com `manage`. Sem corpo de pedido. Devolve `{ claimUrl, e
 ## GET /api/agent/claims/:token
 
 Público para quem tem a ligação. Devolve `{ wallet, account: { name }, createdAt, expiresAt }`. Uma ligação desconhecida, expirada, substituída ou usada devolve `404 claim_not_found`. Complete a reivindicação com o campo opcional `claim` de `POST /api/token`.
+
+Para iniciar sessão com o Telegram ao mudar de navegador, a página de reivindicação chama `POST /api/agent/claim-handoffs` sem credenciais da conta. Envia o token de reivindicação válido no corpo JSON como `{ token }` e recebe `{ handoff, expiresAt }`. O novo identificador substitui o anterior para essa ligação. Expira após 15 minutos ou quando a ligação expirar, consoante o que ocorrer primeiro. O callback envia-o como `claimHandoff` para `POST /api/token` no navegador que o Telegram abrir. Um início de sessão bem-sucedido consome o identificador e a ligação. Um identificador inválido devolve `404 claim_not_found`.
 
 ## DELETE /api/me
 

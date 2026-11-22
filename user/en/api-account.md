@@ -21,6 +21,7 @@ Payload:
 | `app` | Yes | Auth app/provider name. |
 | `credentials` | Yes | Provider-specific credentials object. |
 | `claim` | No | Token from a wallet account's claim link, for Telegram or Google sign-in. |
+| `claimHandoff` | No | Short-lived handoff used by the Telegram callback in place of `claim`. Sending both fields returns HTTP `400`. |
 
 Response: [TokenResponse](types.md#tokenresponse).
 
@@ -149,6 +150,8 @@ Requires an agent key with `manage`. Takes no body. Returns `{ claimUrl, expires
 ## GET /api/agent/claims/:token
 
 Public to the link holder. Returns `{ wallet, account: { name }, createdAt, expiresAt }`. An unknown, expired, replaced or used link returns `404 claim_not_found`. Complete the claim with the optional `claim` field in `POST /api/token`.
+
+For Telegram sign-in across browsers, the claim page calls `POST /api/agent/claim-handoffs` without an account credential. It sends the live claim token in the JSON body as `{ token }` and receives `{ handoff, expiresAt }`. A new handoff replaces the previous one for the same link. It expires after 15 minutes or when the link expires, whichever comes first. The Telegram callback sends it as `claimHandoff` to `POST /api/token` in the browser Telegram opens. A successful sign-in consumes both the handoff and the claim link. An invalid handoff returns `404 claim_not_found`.
 
 ## DELETE /api/me
 
