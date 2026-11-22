@@ -13,6 +13,7 @@
 | Field | Type | Description |
 | --- | --- | --- |
 | `token` | `string` | Bearer token for authenticated API and MCP requests. |
+| `claimed` | `{ accountId: string }?` | Present when sign-in completes a claim. Contains the ID of the claimed account. |
 
 ### AvatarUploadResult
 

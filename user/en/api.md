@@ -38,7 +38,7 @@ Endpoint access depends on:
 - project/data source/resource access level;
 - entity state.
 
-External API requests are limited by tier. The account rate limit never applies to `DELETE /api/token` or `DELETE /api/tokens`, so you can revoke tokens even after using up the account's budget. Detailed values are described in [Limits](limits.md#api-and-mcp).
+External API requests are limited by the account's tier. All agent keys on an account share one bucket. Session requests use an independent account bucket. The account rate limit never applies to `DELETE /api/token` or `DELETE /api/tokens`, so you can revoke tokens even after using up the account's budget. Detailed values are described in [Limits](limits.md#api-and-mcp).
 
 ## Response format
 

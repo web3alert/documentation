@@ -2,6 +2,8 @@
 
 Web3alert 目录提供来自 EVM 和 Substrate 链的已解码链上事件，涵盖以太坊（Ethereum）、Polkadot 和 Kusama 等链。智能体可以通过 [14 个 MCP 工具](mcp-server.md#agent-endpoint) 查找并订阅触发器，然后通过 Webhook 或收件箱接收符合条件的 JSON 事件。
 
+在 Free 套餐中，智能体订阅只能向公开的 HTTPS Webhook 投递事件。如果没有公开的 HTTPS 端点，需要使用 Advanced 或 Pro 套餐才能使用收件箱。
+
 ## 1. 获取智能体密钥
 
 ### 在应用中创建密钥
@@ -123,7 +125,7 @@ claude mcp add --transport http web3alert-agent https://web3alert.io/mcp/agent \
 1. 签名前调用 `get_account({})`，查看欧元余额，并在设有月度上限时确认本次购买在密钥的剩余额度内。新账户的余额为 0 欧元，Advanced 一个月为 15 欧元。在此零余额示例中，使用 `manage` 权限调用 `get_topup_requirements({"amountEur":15})`。充值范围为 5–500 欧元。Web3alert 使用欧洲央行的美元参考汇率，按 1 USDC 等于 1 USD 换算，不加价。
 2. 通过 HTTPS 向 `https://web3alert.io/api/billing/wallet/x402-topup` 发送相同的请求体，省略付款签名，以获取新报价。 两次 POST 均须发送 `Authorization: Bearer <agent-key>` 和 `Content-Type: application/json`。仅在第二次 POST 中发送 `PAYMENT-SIGNATURE`。 签名前请核对付款 URL 必须正是该地址，网络为 Base（`eip155:8453`），资产为 USDC（`0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913`），且付款的 `payTo` 与新报价中的地址一致。核对预期的 USDC 金额。金额以字符串表示，以六位小数的最小单位计。例如 `"1000000"` 等于 1 USDC。任一项不符就停止。
 
-   请将 x402 客户端的单笔支付上限设为至少等于报价中的 USDC 金额。`@x402/core` 2.30.0 对 USDC 的默认单笔支付上限为 1 美元。若报价不超过 20 USDC，可在注册 EVM 支付方案之前调用 `x402Client.fromConfig({ schemes: [], spendControls: { maxAmountPerPayment: 20 } })`。付款方无需持有 ETH 来支付 gas，因为智能体签署 EIP-3009 授权后，由支付服务方提交转账并支付 gas 费。使用自己的 x402 v2 客户端和钱包签署该报价。仅向该 URL 发送报价的请求体、Bearer 凭据及 `PAYMENT-SIGNATURE` 中的签名。已签名的 `POST` 不得跟随重定向。
+   可以按 `get_topup_requirements` 的建议使用 `@x402/fetch`，也可以直接使用 `@x402/core` 搭配 `@x402/evm`。无论使用哪种方式，都请确保客户端的单笔支付上限至少等于报价中的 USDC 金额。`@x402/core` 2.30.0 对 USDC 的默认单笔支付上限为 1 美元。若报价不超过 20 USDC，可在注册 EVM 支付方案之前调用 `x402Client.fromConfig({ schemes: [], spendControls: { maxAmountPerPayment: 20 } })`。付款方无需持有 ETH 来支付 gas，因为智能体签署 EIP-3009 授权后，由支付服务方提交转账并支付 gas 费。使用自己的 x402 v2 客户端和钱包签署该报价。仅向该 URL 发送报价的请求体、Bearer 凭据及 `PAYMENT-SIGNATURE` 中的签名。已签名的 `POST` 不得跟随重定向。
 3. 如果已签名的 `POST` 返回 `202`、`5xx` 或超时，付款结果仍未确认。 逐次延长重试间隔。 即使报价已过期，也可在同一工作区用相同的请求体和签名重试有限次数。 如果重试返回带有 `PAYMENT-REQUIRED` 且没有 `PAYMENT-RESPONSE` 的新 `402` 报价，第一笔付款的结果仍未确认。请停止重试，不要签署新报价。 付款被拒时，解码后的 `PAYMENT-RESPONSE` 包含 `success: false`。 如果结果仍未确认，请停止并保留已有的标识符，例如 `topupId`，以便运营人员对账。在结果确认之前，切勿为同一目的签署另一笔付款。等[充值](api-billing.md#post-api-billing-wallet-x402-topup)结算并计入余额后再购买套餐。
 4. 为本次购买生成新的 `requestId`，例如 UUID，然后替换 `buy_plan({"planId":"advanced","durationMonths":1,"requestId":"<new-uuid>"})` 中的 `<new-uuid>`。请使用 `spend` 权限并确认欧元余额充足。可购买 1、3、6 或 12 个月的 Advanced 或 Pro，不会自动续订。仅在重试本次购买时沿用该 ID 和原参数。已有启用自动续订的有效套餐时返回 `key_not_allowed`。待处理的结账或有效的更高套餐也可能阻止购买，工具会返回 `api_error` 和 API 的消息。请让账户持有人先处理现有套餐或结账。`buy_plan` 的响应会立即返回所购套餐的 `tier`。MCP 会缓存该账户的 `/me` 响应，因此 `get_account` 最多可能继续显示原套餐 30 秒。
 
@@ -188,7 +190,7 @@ Free 账户在所有工作区中，最多可保留 **5 个由该账户创建且�
 
 在 Free 套餐中，仅向内置 Webhook 投递的订阅的默认突发上限为 12 条，持续速率为每秒 1 条，队列上限为 15 条。此类订阅不占用工作区的投递额度。
 
-Free 套餐每分钟允许 60 次外部 API 请求。订阅测试和告警历史在 Advanced 和 Pro 套餐中可用。两项功能均按工作区首位所有者的套餐检查，找不到所有者时按第 6 步所述规则处理。完整数值见[限制](limits.md)。
+在 Free 套餐中，同一账户的所有智能体密钥共用每分钟 60 次外部 API 请求的额度。订阅测试和告警历史在 Advanced 和 Pro 套餐中可用。两项功能均按工作区首位所有者的套餐检查，找不到所有者时按第 6 步所述规则处理。完整数值见[限制](limits.md)。
 
 MCP 服务器默认允许每个账户每分钟调用工具 120 次。每个服务进程中的三个端点共享此额度。`get_account` 返回账户套餐以及与 `GET /api/me` 相同的[套餐限制](api-account.md#me-limits)。API 未提供套餐限制时，工具返回的 `limits` 为 `null`。
 

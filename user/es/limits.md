@@ -146,7 +146,7 @@ MCP server está disponible para `Free`, `Advanced` y `Pro`.
 
 ### External API Rate
 
-Los límites por tier de la tabla se aplican a las solicitudes externas a la API autenticadas con un token del account. El límite de solicitudes del account nunca se aplica a `DELETE /api/token` ni a `DELETE /api/tokens`, por lo que puedes revocar tokens aunque el account haya agotado su cuota.
+Todas las claves de agente de una cuenta comparten una sola cuota de la API externa, según el plan de esa cuenta. Las solicitudes con tokens de sesión usan una cuota separada por cuenta, independiente de la cuota de agente. Cada cuota se repone al ritmo por minuto indicado abajo y puede acumular hasta un minuto de solicitudes. El límite de solicitudes del account nunca se aplica a `DELETE /api/token` ni a `DELETE /api/tokens`, por lo que puedes revocar tokens aunque el account haya agotado su cuota.
 
 | Tier | External API requests |
 | --- | ---: |
@@ -154,7 +154,7 @@ Los límites por tier de la tabla se aplican a las solicitudes externas a la API
 | Advanced | 300/min |
 | Pro | 900/min |
 
-Las solicitudes del web UI tienen un límite aparte. Las solicitudes de confianza del MCP server a la API están exentas del límite externo. Las llamadas a herramientas MCP tienen su propio límite predeterminado de 120 por minuto y por account, compartido por los tres endpoints MCP en cada proceso del servidor.
+Las sesiones de la interfaz web usan una cuota separada por cuenta. Las solicitudes de confianza del servidor MCP que se autentican con un token de sesión están exentas del límite de la API externa. Las solicitudes que MCP hace con una clave de agente consumen la cuota que comparten las claves de agente de la cuenta. Las llamadas a herramientas MCP tienen su propio límite predeterminado de 120 por minuto y por account, compartido por los tres endpoints MCP en cada proceso del servidor.
 
 ## Pagos de agentes {#agent-payments}
 

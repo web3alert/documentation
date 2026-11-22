@@ -38,7 +38,7 @@ Endpoint access 取决于：
 - project/data source/resource access level；
 - 实体状态。
 
-External API requests 会按 tier 限制。`DELETE /api/token` 和 `DELETE /api/tokens` 均不受 account 请求限额约束，因此即使 account 已用完配额，仍可撤销 token。详细数值见 [Limits](limits.md#api-and-mcp)。
+外部 API 限额取决于账户套餐。同一账户的所有智能体密钥共用一个限流桶。会话请求使用该账户的另一个限流桶，两者的额度独立计算。`DELETE /api/token` 和 `DELETE /api/tokens` 均不受 account 请求限额约束，因此即使 account 已用完配额，仍可撤销 token。详细数值见 [Limits](limits.md#api-and-mcp)。
 
 ## Response format
 

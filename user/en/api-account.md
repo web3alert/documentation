@@ -23,7 +23,9 @@ Payload:
 | `claim` | No | Token from a wallet account's claim link, for Telegram or Google sign-in. |
 | `claimHandoff` | No | Short-lived handoff used by the Telegram callback in place of `claim`. Sending both fields returns HTTP `400`. |
 
-Response: [TokenResponse](types.md#tokenresponse).
+Send claim credentials in the JSON body. Both `POST /api/token` and `POST /api/agent/claim-handoffs` return HTTP `400` if the query string contains `claim`, `claimHandoff`, or `token`.
+
+Response: [TokenResponse](types.md#tokenresponse). When sign-in completes a claim, the response includes `claimed: { accountId }` alongside `token`.
 
 Example request (the missing `Authorization` header is intentional):
 

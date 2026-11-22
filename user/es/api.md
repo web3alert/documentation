@@ -38,7 +38,7 @@ El acceso a endpoint depende de:
 - access level de project/data source/resource;
 - estado de la entidad.
 
-External API requests están limitadas por tier. El límite de solicitudes del account nunca se aplica a `DELETE /api/token` ni a `DELETE /api/tokens`, por lo que puedes revocar tokens aunque el account haya agotado su cuota. Los valores detallados se describen en [Limits](limits.md#api-and-mcp).
+El plan de la cuenta determina el límite de la API externa. Todas las claves de agente de una cuenta comparten una sola cuota. Las solicitudes con tokens de sesión usan una cuota separada por cuenta, independiente de la cuota de agente. El límite de solicitudes del account nunca se aplica a `DELETE /api/token` ni a `DELETE /api/tokens`, por lo que puedes revocar tokens aunque el account haya agotado su cuota. Los valores detallados se describen en [Limits](limits.md#api-and-mcp).
 
 ## Response format
 

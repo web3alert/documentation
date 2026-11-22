@@ -13,6 +13,7 @@
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
 | `token` | `string` | 用于需要身份验证的 API 和 MCP 请求的 Bearer token。 |
+| `claimed` | `{ accountId: string }?` | 登录完成认领时返回，包含被认领账户的 ID。 |
 
 ### AvatarUploadResult
 

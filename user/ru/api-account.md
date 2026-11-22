@@ -23,7 +23,9 @@ Endpoints Account работают с текущим пользователем,
 | `claim` | Нет | Токен из ссылки на получение доступа к аккаунту кошелька, для входа через Telegram или Google. |
 | `claimHandoff` | Нет | Короткоживущий идентификатор, который обработчик входа через Telegram передаёт вместо `claim`. При передаче обоих полей сервер возвращает HTTP `400`. |
 
-Ответ: [TokenResponse](types.md#tokenresponse).
+Передавайте данные для получения доступа в теле JSON. И `POST /api/token`, и `POST /api/agent/claim-handoffs` возвращают HTTP `400`, если в строке запроса есть `claim`, `claimHandoff` или `token`.
+
+Ответ: [TokenResponse](types.md#tokenresponse). Если вход завершает получение доступа к аккаунту, вместе с `token` возвращается `claimed: { accountId }`.
 
 Пример запроса (header `Authorization` намеренно отсутствует):
 

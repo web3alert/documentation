@@ -23,7 +23,9 @@ Payload:
 | `claim` | 否 | 钱包账户认领链接中的令牌，用于 Telegram 或 Google 登录。 |
 | `claimHandoff` | 否 | Telegram 回调使用的短期交接令牌，用于替代 `claim`。同时发送这两个字段会返回 HTTP `400`。 |
 
-响应：[TokenResponse](types.md#tokenresponse)。
+请在 JSON 请求体中发送认领凭据。如果查询字符串包含 `claim`、`claimHandoff` 或 `token`，`POST /api/token` 和 `POST /api/agent/claim-handoffs` 都会返回 HTTP `400`。
+
+响应：[TokenResponse](types.md#tokenresponse)。如果本次登录完成了认领，响应会在 `token` 之外包含 `claimed: { accountId }`。
 
 请求示例（特意不包含 `Authorization` header）：
 

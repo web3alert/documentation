@@ -13,6 +13,7 @@
 | Campo | Tipo | Descripción |
 | --- | --- | --- |
 | `token` | `string` | Bearer token para solicitudes autenticadas a la API y a MCP. |
+| `claimed` | `{ accountId: string }?` | Se incluye cuando el inicio de sesión completa una reclamación. Contiene el ID de la cuenta reclamada. |
 
 ### AvatarUploadResult
 

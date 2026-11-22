@@ -146,7 +146,7 @@ MCP server is available on `Free`, `Advanced`, and `Pro`.
 
 ### External API Rate
 
-The tier rates below apply to external API requests authenticated with an account token. The account rate limit never applies to `DELETE /api/token` or `DELETE /api/tokens`, so you can revoke tokens even after using up the account's budget.
+All agent keys on an account share one external API rate-limit bucket at that account's tier. Session requests use an independent account bucket. Each bucket refills at the per-minute rate below and holds up to one minute of requests. The account rate limit never applies to `DELETE /api/token` or `DELETE /api/tokens`, so you can revoke tokens even after using up the account's budget.
 
 | Tier | External API requests |
 | --- | ---: |
@@ -154,7 +154,7 @@ The tier rates below apply to external API requests authenticated with an accoun
 | Advanced | 300/min |
 | Pro | 900/min |
 
-Web UI requests use a separate rate limit. Trusted requests from the MCP server to the API are exempt from the external API rate limit. MCP tool calls have their own default budget of 120 per minute per account, shared across all three MCP paths on each server process.
+Web UI session requests use a separate account bucket. Trusted MCP requests authenticated with a session token are exempt from the external API rate limit. API requests that MCP makes with an agent key count toward the account's shared agent bucket. MCP tool calls have their own default budget of 120 per minute per account, shared across all three MCP paths on each server process.
 
 ## Agent payments {#agent-payments}
 

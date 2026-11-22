@@ -23,7 +23,9 @@ Payload:
 | `claim` | Não | Token da ligação de reivindicação de uma conta criada com carteira, para iniciar sessão com Telegram ou Google. |
 | `claimHandoff` | Não | Identificador temporário que o callback do Telegram usa em vez de `claim`. Enviar ambos os campos devolve HTTP `400`. |
 
-Resposta: [TokenResponse](types.md#tokenresponse).
+Envie as credenciais de reivindicação no corpo JSON. Tanto `POST /api/token` como `POST /api/agent/claim-handoffs` devolvem HTTP `400` se a query string incluir `claim`, `claimHandoff` ou `token`.
+
+Resposta: [TokenResponse](types.md#tokenresponse). Quando o início de sessão conclui uma reivindicação, a resposta inclui `claimed: { accountId }` além de `token`.
 
 Exemplo de pedido (a ausência do header `Authorization` é intencional):
 

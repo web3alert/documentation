@@ -38,7 +38,7 @@ O acesso ao endpoint depende de:
 - access level de project/data source/resource;
 - estado da entidade.
 
-External API requests são limitadas por tier. O limite de pedidos do account nunca se aplica a `DELETE /api/token` nem a `DELETE /api/tokens`, pelo que pode revogar tokens mesmo quando o account já esgotou a sua quota. Os valores detalhados estão descritos em [Limits](limits.md#api-and-mcp).
+O plano da conta determina o limite da API externa. Todas as chaves de agente de uma conta partilham uma única quota. Os pedidos com tokens de sessão usam uma quota separada por conta, independente da quota de agente. O limite de pedidos do account nunca se aplica a `DELETE /api/token` nem a `DELETE /api/tokens`, pelo que pode revogar tokens mesmo quando o account já esgotou a sua quota. Os valores detalhados estão descritos em [Limits](limits.md#api-and-mcp).
 
 ## Response format
 

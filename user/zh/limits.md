@@ -146,7 +146,7 @@ MCP server 适用于 `Free`、`Advanced` 和 `Pro`。
 
 ### External API Rate
 
-下表按 tier 列出的限额适用于使用 account token 验证身份的外部 API 请求。`DELETE /api/token` 和 `DELETE /api/tokens` 均不受 account 请求限额约束，因此即使 account 已用完配额，仍可撤销 token。
+同一账户的所有智能体密钥共用一个外部 API 限流桶，额度按该账户的套餐计算。会话请求使用该账户的另一个限流桶，两者的额度独立计算。各限流桶按下表的每分钟速率补充额度，最多可累计一分钟的请求额度。`DELETE /api/token` 和 `DELETE /api/tokens` 均不受 account 请求限额约束，因此即使 account 已用完配额，仍可撤销 token。
 
 | Tier | External API requests |
 | --- | ---: |
@@ -154,7 +154,7 @@ MCP server 适用于 `Free`、`Advanced` 和 `Pro`。
 | Advanced | 300/min |
 | Pro | 900/min |
 
-Web UI 请求使用单独的限额。MCP server 向 API 发送的受信任请求不受外部 API 限额约束。MCP 工具调用有自己的默认限额，每个 account 每分钟 120 次。同一 server 进程中的三个 MCP 端点 共享此限额。
+网页界面的会话请求使用单独的账户限流桶。使用会话令牌的受信任 MCP 请求不受外部 API 限额约束。MCP 使用智能体密钥发出的 API 请求计入该账户所有智能体密钥共用的额度。MCP 工具调用有自己的默认限额，每个 account 每分钟 120 次。同一 server 进程中的三个 MCP 端点 共享此限额。
 
 ## 智能体付款 {#agent-payments}
 
