@@ -1,36 +1,47 @@
 # MCP Server
 
-MCP is available on `Free`, `Advanced`, and `Pro`.
+Web3alert serves three Streamable HTTP paths.
 
-- Use `https://web3alert.io/mcp/agent` to subscribe to decoded on-chain events and receive them on a webhook.
-- Use `https://web3alert.io/mcp` for the full set of tools to create and edit Web3alert marketplace projects, triggers, templates, subscriptions, resources, and data sources, and to read diagnostic data.
+| Path | Tool set | Authentication |
+| --- | --- | --- |
+| `/mcp/agent` | [14 tools](#agent-endpoint) for account, billing, subscriptions and delivery | Public discovery. Bearer key for calls. |
+| `/mcp/agent/build` | 19 tools, including the 14 agent tools and [5 build tools](#build-endpoint) | Public discovery. Bearer key for calls. Build tools require Advanced or Pro. |
+| `/mcp` | [Full authoring tool set](#remote-mcp-endpoint) | Bearer key on every request. |
 
 The MCP Registry entry for the agent endpoint, `io.web3alert/agent`, marks the `Authorization` header as optional. See the [public MCP repository](https://github.com/web3alert/mcp) for server details.
 
-## Token
+## Authentication
 
-Without a token, `/mcp/agent` answers only `initialize`, `ping`, notifications, and `tools/list`. Any other request without a token, including a batch (an array of requests), gets HTTP `401` with instructions for providing a token. A batch can contain up to 20 messages. Tool calls (`tools/call`) require `Authorization: Bearer <token>`.
+Both agent paths accept individual `initialize`, `ping`, `tools/list` and notification messages without a token. Tool calls and batches require `Authorization: Bearer <agent-key>`. A batch can contain up to 20 messages. The authoring path requires the header for discovery as well. All paths verify any supplied credential and return HTTP `401` for an invalid one.
 
-The authoring endpoint (`/mcp`) requires `Authorization: Bearer <token>` on every request. Both endpoints accept tokens only in that header. The server verifies any supplied token before responding, including to notifications. Either endpoint returns HTTP `401` on every request that carries an invalid token.
-
-Get a personal access token from [Account parameters](account.md#personal-access-token). The token gives MCP server access to Web3alert API on behalf of the current account. The level of available actions depends on the account tier and the user's roles in workspace.
+Create an agent key on the [Agents page](https://web3alert.io/agents) or [sign up with a wallet](agents.md). A key acts as the account in its bound workspace. Available operations depend on the key's scopes, the applicable plan and the account's workspace permissions.
 
 After revocation, the API rejects the token immediately. While MCP still has a cached verification, an agent tool call that reaches the API returns `access_denied`. `initialize` and `tools/list` requests that carry the revoked token may still succeed for up to 30 seconds on a cached verification. When MCP rechecks the revoked token, it returns HTTP `401`.
 
 | HTTP status | What to do |
 | --- | --- |
-| `401` | A required bearer token is missing, or the supplied token is invalid, unknown, or revoked. Send the header with a valid token. Get a new token if you do not have one or the server no longer recognizes it. |
+| `401` | The bearer credential is missing, invalid, unknown, expired or revoked. Send the header with a valid agent key. |
 | `403` | The client origin was rejected (`forbidden_origin`) or the account failed MCP access checks (`mcp_access_denied`). Check the client's `Origin` header or your account details, respectively. |
 | `429` | The API rate-limited token verification. Wait for the delay in `Retry-After` before retrying. |
-| `503` | Token verification is temporarily unavailable. Wait for the delay in `Retry-After` and retry with the same token. |
+| `503` | Token verification is temporarily unavailable. Wait for the delay in `Retry-After` and retry with the same credential. |
 
-Both endpoints share a default budget of 120 tool calls per minute per account on each server process, across all tokens for that account. If you use up this budget, the tool returns `rate_limited` with `retryAfter` in seconds.
+All three paths share a default budget of 120 tool calls per minute per account on each server process, across all credentials for that account. If you use up this budget, the tool returns `rate_limited` with `retryAfter` in seconds.
+
+Tool errors are returned separately from HTTP authentication errors.
+
+| Tool error | Meaning |
+| --- | --- |
+| `insufficient_scope` | The key lacks a required scope. |
+| `key_not_allowed` | The operation requires an account session. |
+| `spend_cap_exceeded` | The purchase would exceed the key's monthly EUR cap. |
+| `not_in_plan` | The applicable workspace plan excludes inbox or delivery history. |
+| `plan_required` | A build operation requires an Advanced or Pro account. |
 
 ## Upgrading existing clients
 
 The `/mcp` endpoint now accepts the token only in the `Authorization: Bearer <token>` header on every request. Requests that supply the token only in the query string or request body receive HTTP `401`. The server is stateless and creates no sessions.
 
-Update your client to send the header and remove the token from the URL or request body.
+Update your client to send the agent key in the header. Existing session tokens keep working until their owner logs out or revokes them.
 
 In Claude Code, run these commands from the project where you use Web3alert.
 
@@ -42,16 +53,20 @@ In Claude Desktop, Cursor, and VS Code, edit the existing entry's URL and header
 
 ## Agent Endpoint
 
-Agent tools act on the account's current workspace. To change which workspace the next call uses, select it in the Web3alert app.
+Agent tools use the key's bound workspace. Create a key in the other workspace to use it there.
 
 | Tool | What it does |
 | --- | --- |
-| `get_account` | Returns the account ID, name, tier, EUR wallet balance, tier limits, and active and total subscription counts for the current workspace when available. |
+| `get_account` | Returns the account ID, name, tier, EUR wallet balance, tier limits, and active and total subscription counts for the current workspace when available, plus the key's scopes, expiry, monthly cap and spend when using a key. |
+| `get_topup_requirements` | Quotes a €5–€500 USDC top-up. Use an x402 client and your wallet to pay. Requires `manage`. |
+| `buy_plan` | Buys Advanced or Pro from the EUR balance without auto-renewal. Reuse `requestId` on retries. Requires `spend`. |
 | `find_triggers` | Searches the public catalog for triggers from EVM and Substrate chains. It also searches the current workspace's triggers. |
 | `get_trigger` | Shows a trigger's runtime inputs, delivered event fields, and fields you can use in `conditions`. |
 | `list_webhooks` | Lists the `fullname`, name, and URL of each registered workspace webhook. The `signed` field indicates whether a webhook has a signing secret. |
 | `add_webhook` | Registers a webhook with an HTTPS URL without credentials. If the workspace already has a resource with that name when checked, the tool refuses the request with `webhook_exists`. The signing secret appears only in the `add_webhook` reply as `signingSecret`. Rotating it later replaces it for every receiver of that endpoint. |
-| `create_subscription` | Subscribes to one trigger with delivery to one webhook. Supply any required inputs and optional `conditions` to filter events. |
+| `remove_webhook` | Deletes a webhook by fullname in the current workspace. Requires `manage`. Returns `webhook_in_use` if a live subscription in that workspace uses it. |
+| `create_subscription` | Subscribes to one trigger with one delivery destination, either `webhook` or `inbox: true`. Supply required inputs and optional `conditions`. |
+| `read_events` | Reads the paid workspace inbox oldest first. Poll with `nextCursor` as `after`. A `gap` signals retention loss. Requires `read`. |
 | `list_subscriptions` | Lists subscription IDs, titles, states, triggers, webhooks, and creation times. |
 | `set_subscription_state` | Pauses (`off`) or resumes (`on`) a subscription. |
 | `remove_subscription` | Deletes a subscription. Webhook retries stop within about 10 seconds. An attempt already due in that window can still be sent. |
@@ -63,12 +78,12 @@ The `nextAttemptAt` timestamp stays fixed even after the retry runs or is cancel
 
 At the tier's subscription limit, `create_subscription` can fail with `subscription_limit_reached`. A successful create or resume (`set_subscription_state` with `on`) can return `state: "blocked"` and `blockedReason: "subscription_limit_reached"`. Check that the returned `state` is `on` before assuming delivery is running.
 
-Through this endpoint, agents cannot create, edit, or delete triggers, projects, templates, or data sources. They also cannot change billing, plans, or payments, manage tokens, delete accounts or workspaces, switch workspaces, set subscriptions to `blocked`, or manage resources other than webhooks.
+Use the [build endpoint](#build-endpoint) to create a private trigger from an on-chain event.
 
 ### Claude Code
 
 ```bash
-printf 'Web3alert token: ' && read -rs WEB3ALERT_TOKEN && echo && [ -n "$WEB3ALERT_TOKEN" ] && claude mcp add --scope user --transport http web3alert-agent https://web3alert.io/mcp/agent --header "Authorization: Bearer $WEB3ALERT_TOKEN"
+printf 'Web3alert agent key: ' && read -rs WEB3ALERT_KEY && echo && [ -n "$WEB3ALERT_KEY" ] && claude mcp add --scope user --transport http web3alert-agent https://web3alert.io/mcp/agent --header "Authorization: Bearer $WEB3ALERT_KEY"
 ```
 
 ### Claude Desktop and Cursor
@@ -88,7 +103,7 @@ In Claude Desktop, add the entry under `mcpServers` in `claude_desktop_config.js
         "Authorization:${AUTH_HEADER}"
       ],
       "env": {
-        "AUTH_HEADER": "Bearer YOUR_PERSONAL_ACCESS_TOKEN"
+        "AUTH_HEADER": "Bearer YOUR_AGENT_KEY"
       }
     }
   }
@@ -97,7 +112,7 @@ In Claude Desktop, add the entry under `mcpServers` in `claude_desktop_config.js
 
 ### VS Code
 
-For an editor-managed connection, add the entry under `servers` in `.vscode/mcp.json` and make `WEB3ALERT_TOKEN` available in the VS Code process environment.
+For an editor-managed connection, add the entry under `servers` in `.vscode/mcp.json` and make `WEB3ALERT_KEY` available in the VS Code process environment.
 
 ```json
 {
@@ -106,19 +121,35 @@ For an editor-managed connection, add the entry under `servers` in `.vscode/mcp.
       "type": "http",
       "url": "https://web3alert.io/mcp/agent",
       "headers": {
-        "Authorization": "Bearer ${env:WEB3ALERT_TOKEN}"
+        "Authorization": "Bearer ${env:WEB3ALERT_KEY}"
       }
     }
   }
 }
 ```
 
+## Build Endpoint
+
+Use `https://web3alert.io/mcp/agent/build` with the same client settings and bearer header. The tool list contains all 14 tools above plus these 5. Free accounts can discover the build tools and receive `plan_required` on calls to them.
+
+| Tool | Scope | What it does |
+| --- | --- | --- |
+| `find_contract` | `read` | Finds exact event signatures from a contract ABI, Solana IDL or Substrate metadata. EVM results include functions and a recent log count when available. |
+| `plan_trigger` | `manage` | Generates a draft for an event without custom code. Returns its `draftId`, preview fullname, inputs, filterable fields, output schema and expiry. |
+| `test_trigger` | `read` | Tests a draft on a recent sample or replays a supplied block or slot. |
+| `activate_trigger` | `manage` | Saves a draft whose latest test matched to the workspace's private agent project. Reuse `requestId` on retries. The returned trigger fullname is ready for subscriptions. |
+| `remove_my_trigger` | `manage` | Removes a trigger from that project. Returns `trigger_in_use` if a live subscription in the trigger's workspace uses it. |
+
+Direct removal of a trigger or webhook checks live (`on`) subscriptions in that trigger's or webhook's workspace. Pause or remove those subscriptions before retrying. Removing a project, workspace or account blocks its affected subscriptions. A live subscription in another workspace to a public trigger does not prevent direct removal.
+
 ## Remote MCP Endpoint
 
-To add this endpoint to Claude Code, run the command in Bash or Zsh and enter your token at the hidden prompt.
+Use `https://web3alert.io/mcp` for the full authoring tool set for projects, triggers, templates, subscriptions, resources, data sources and diagnostics. Send an authenticated `tools/list` request for the complete list.
+
+To add this endpoint to Claude Code, run the command in Bash or Zsh and enter your agent key at the hidden prompt.
 
 ```bash
-printf 'Web3alert token: ' && read -rs WEB3ALERT_TOKEN && echo && [ -n "$WEB3ALERT_TOKEN" ] && claude mcp add --scope user --transport http web3alert https://web3alert.io/mcp --header "Authorization: Bearer $WEB3ALERT_TOKEN"
+printf 'Web3alert agent key: ' && read -rs WEB3ALERT_KEY && echo && [ -n "$WEB3ALERT_KEY" ] && claude mcp add --scope user --transport http web3alert https://web3alert.io/mcp --header "Authorization: Bearer $WEB3ALERT_KEY"
 ```
 
 Use the same Claude Desktop or Cursor configuration file. For [VS Code](#vs-code), use the same `servers` example with the URL `https://web3alert.io/mcp`.
@@ -136,7 +167,7 @@ Use the same Claude Desktop or Cursor configuration file. For [VS Code](#vs-code
         "Authorization:${AUTH_HEADER}"
       ],
       "env": {
-        "AUTH_HEADER": "Bearer YOUR_PERSONAL_ACCESS_TOKEN"
+        "AUTH_HEADER": "Bearer YOUR_AGENT_KEY"
       }
     }
   }

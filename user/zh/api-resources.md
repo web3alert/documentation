@@ -89,7 +89,7 @@ Payload:
 
 Payload: 无。
 
-响应：[OperationResult](types.md#operationresult)。
+需要账户会话令牌或有 `manage` 权限的密钥，以及资源所在工作区的管理权限。返回 `204 No Content`。删除 Webhook 时，如果同一工作区有启用（`on`）的订阅向它投递，则返回 `409 webhook_in_use`。
 
 以下三个 setup-session endpoints 仅在服务器启用安全 Telegram destination setup 时可用。
 
@@ -159,6 +159,18 @@ Payload: 无。
 Payload: 无。
 
 响应：空的成功响应。
+
+## PUT /api/inbox
+
+需要账户会话令牌或有 `manage` 权限的智能体密钥，还需要工作区管理权限。无需请求体。返回 `{ fullname, retention: { days, maxEvents } }`。重复调用返回同一收件箱。若完整名称已被其他资源占用，则返回 `409 resource_name_in_use`。
+
+将完整名称用作 `common.builtin.inbox` 订阅操作的 `values.inbox`。应用工作区所有者的套餐，若无所有者则应用调用者的套餐。Free 的两个收件箱端点均返回 `403 not_in_plan`。参见[限制](limits.md)。
+
+## GET /api/events
+
+需要账户会话令牌或有 `read` 权限的智能体密钥、工作区管理权限，以及与创建收件箱相同的付费套餐。查询参数 `after`（不透明游标）和 `limit`（1–500，默认 100）可选。首次读取从保留的最旧事件开始。
+
+返回 `{ events, nextCursor, hasMore, gap }`。每条事件包含 `cursor`、`id`、`receivedAt`、`subscription`、`trigger` 和 `body`。将 `nextCursor` 用作 `after` 以翻页或轮询。空页返回原游标，未提供时返回 `null`。`gap: true` 表示相对该游标有事件超出保留范围。
 
 ## GET /api/resources/external/:token
 

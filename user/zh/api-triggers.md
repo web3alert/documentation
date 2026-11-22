@@ -91,6 +91,8 @@ Payload:
 
 删除 trigger。
 
+直接删除需要工作区所有者权限，密钥还需要 `manage`。若有同一工作区的启用（`on`）订阅使用该触发器，则返回 `409 trigger_in_use`。删除成功时会阻止依赖订阅继续投递，包括其他工作区的订阅。
+
 Arguments:
 
 | Argument | Location | Description |
@@ -119,6 +121,8 @@ Payload:
 ## POST /api/triggers/remove
 
 对多个 triggers 执行 bulk remove。
+
+系统会检查每个触发器所在工作区的启用（`on`）订阅。任一目标正在使用时返回 `409 trigger_in_use`。删除项目、工作区或账户会阻止受影响的订阅继续投递。
 
 Arguments: 无。
 
@@ -322,6 +326,30 @@ Arguments: 无。
 Payload: trigger/source-specific search object.
 
 响应：[LatestBlockResult](types.md#latestblockresult)。
+
+## 智能体构建触发器
+
+五个构建端点均接受当前工作区的账户会话令牌或智能体密钥。调用账户需要 Advanced 或 Pro，否则返回 `403 plan_required`。查找和测试需要工作区查看权限。规划、激活和删除需要工作区编辑权限。
+
+## POST /api/agent/build/contracts
+
+密钥需要 `read` 权限。发送 `chain` 和 `address`（EVM）、`program`（Solana）或 `pallet`（Substrate）中的一个。返回 `{ chain, source, events, functions? }` 和准确的事件签名。EVM 会在可用时返回各事件的近期日志计数。目标未知时返回 `404 not_found`，链数据暂时不可用时返回 `503 retryable`。
+
+## POST /api/agent/build/drafts
+
+密钥需要 `manage` 权限。发送相同的链和目标，并在 `event` 中提供名称或准确签名，可选 `title` 和 `description`。返回 `{ draftId, fullnamePreview, inputs, filterable, outputSchema, expiresAt }`。草稿有效期为七天。目标或事件未知时返回 `404 not_found`，链数据暂时不可用时返回 `503 retryable`。
+
+## POST /api/agent/build/drafts/:draftId/test
+
+密钥需要 `read` 权限。可选 `block`（EVM 或 Substrate）或 `slot`（Solana）。均省略时会在近期的有限范围内搜索。返回 `{ result, block?, slot?, output? }`，其中结果为 `matched`、`no_match`、`invalid` 或 `retryable`。草稿不可用时返回 `404 not_found`，若过期但仍存储，则返回 `410 draft_expired`。
+
+## POST /api/agent/build/drafts/:draftId/activate
+
+密钥需要 `manage` 权限。发送 `{ requestId }`，重试时沿用。返回工作区智能体私有项目的 `{ trigger, project }`。若最近测试结果并非 `matched`，则返回 `409 not_tested`。超出套餐上限时返回 `403 private_project_limit` 或 `403 trigger_limit`。草稿可用性错误与测试相同。
+
+## DELETE /api/agent/build/triggers/:fullname
+
+密钥需要 `manage` 权限。删除工作区智能体私有项目的触发器。成功时返回 `204 No Content`，触发器不在该项目内时返回 `404 not_found`，同一工作区有启用（`on`）的订阅使用它时返回 `409 trigger_in_use`。
 
 ## Trigger Spec
 

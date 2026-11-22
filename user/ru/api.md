@@ -19,13 +19,15 @@ https://web3alert.io
 
 ## Auth
 
-Для пользовательских запросов используется personal access token:
+Большинство эндпоинтов принимает токен сессии или ключ агента как Bearer-учётные данные. Создайте ключ на [странице Agents](https://web3alert.io/agents) или [войдите с кошельком Ethereum](agents.md).
 
 ```http
-Authorization: Bearer YOUR_PERSONAL_ACCESS_TOKEN
+Authorization: Bearer YOUR_AGENT_KEY
 ```
 
-Токен можно получить в [Account parameters](account.md#personal-access-token).
+Ключ действует от имени аккаунта в одном рабочем пространстве. Право `read` даёт доступ на чтение, `manage` позволяет создавать подписки или запрашивать котировки, а `spend` — покупать тарифы и дополнения проектов с баланса в EUR. Для управления ключами, отзыва токенов и смены пространства нужна сессия. См. список эндпоинтов ниже и [документ OpenAPI](api-openapi.md) для агентов.
+
+Запрос с ключом может вернуть HTTP `403` с кодом `insufficient_scope`, если не хватает права, `key_not_allowed`, если операция требует сессии, или `spend_cap_exceeded`, если покупка превысит месячный лимит ключа.
 
 Доступ к endpoint зависит от:
 
@@ -74,6 +76,10 @@ X-RateLimit-Window: 60000
 | `DELETE` | `/api/token` | Отозвать токен, использованный в запросе. |
 | `DELETE` | `/api/tokens` | Отозвать все токены аутентифицированного account. |
 | `GET` | `/api/me` | Получить текущий account, identity, tier и memberships. |
+| `POST` | `/api/keys` | Создать ключ в текущем пространстве. Только сессия. |
+| `GET` | `/api/keys` | Получить ключи аккаунта во всех пространствах. Только сессия. |
+| `PATCH` | `/api/keys/:id` | Изменить имя или месячный лимит ключа. Только сессия. |
+| `DELETE` | `/api/keys/:id` | Отозвать ключ. Только сессия. |
 | `DELETE` | `/api/me` | Удалить текущий account. |
 | `PUT` | `/api/me/meta` | Обновить метаданные account. |
 | `POST` | `/api/me/avatar` | Загрузить аватар текущего account. |
@@ -81,6 +87,17 @@ X-RateLimit-Window: 60000
 | `PUT` | `/api/me/workspace` | Сменить текущий workspace account. |
 | `GET` | `/api/account/settings` | Получить account settings. |
 | `PUT` | `/api/account/settings` | Сохранить account settings. |
+
+## Вход с кошельком и получение доступа
+
+Подробнее в [API аккаунта](api-account.md).
+
+| Метод | Эндпоинт | Назначение |
+| --- | --- | --- |
+| `POST` | `/api/agent/siwe/nonce` | Запросить одноразовый nonce SIWE. Публичный. |
+| `POST` | `/api/agent/siwe/verify` | Проверить подписанное сообщение SIWE и выдать ключ. Публичный. |
+| `POST` | `/api/agent/claim-link` | Создать или заменить ссылку для получения доступа. Ключ агента с `manage`. |
+| `GET` | `/api/agent/claims/:token` | Посмотреть данные для получения доступа. Публичный для владельца ссылки. |
 
 ## Ссылки
 
@@ -163,6 +180,18 @@ X-RateLimit-Window: 60000
 | `GET` | `/api/template-helpers` | Получить публичные метаданные helper-функций Handlebars для шаблонов triggers и actions. |
 | `POST` | `/api/triggers/find-latest-block` | Найти или подготовить test input/block для trigger. |
 
+## Сборка триггеров для агентов
+
+Подробнее в [API триггеров](api-triggers.md).
+
+| Метод | Эндпоинт | Назначение |
+| --- | --- | --- |
+| `POST` | `/api/agent/build/contracts` | Найти сигнатуры событий. Сессия или ключ с `read`. |
+| `POST` | `/api/agent/build/drafts` | Создать черновик триггера. Сессия или ключ с `manage`. |
+| `POST` | `/api/agent/build/drafts/:draftId/test` | Проверить черновик. Сессия или ключ с `read`. |
+| `POST` | `/api/agent/build/drafts/:draftId/activate` | Активировать черновик после успешного теста. Сессия или ключ с `manage`. |
+| `DELETE` | `/api/agent/build/triggers/:fullname` | Удалить приватный триггер агента. Сессия или ключ с `manage`. |
+
 ## Trigger Import
 
 Подробно: [Trigger Import API](api-trigger-import.md).
@@ -219,6 +248,8 @@ X-RateLimit-Window: 60000
 | `GET` | `/api/resources/:fullname` | Получить resource. |
 | `PUT` | `/api/resources/:fullname` | Создать или обновить resource. |
 | `POST` | `/api/resources/:fullname/signing-secret` | Создать или заменить секрет подписи вебхука. |
+| `PUT` | `/api/inbox` | Создать или вернуть inbox рабочего пространства. Сессия или ключ с `manage`. |
+| `GET` | `/api/events` | Прочитать сохранённые входящие события. Сессия или ключ с `read`. |
 | `DELETE` | `/api/resources/:fullname` | Удалить resource. |
 | `POST` | `/api/resources/:fullname/setup-sessions` | Создать Telegram destination setup session. |
 | `GET` | `/api/resources/:fullname/setup-sessions/:id` | Получить статус setup session. |
@@ -255,6 +286,7 @@ X-RateLimit-Window: 60000
 | `GET` | `/api/billing/overview` | Получить обзор биллинга account. |
 | `GET` | `/api/billing/wallet/overview` | Получить обзор баланса и кошелька. |
 | `POST` | `/api/billing/wallet/crypto-topup` | Создать пополнение баланса криптовалютой. |
+| `POST` | `/api/billing/wallet/x402-topup` | Пополнить баланс в EUR через x402 в USDC в сети Base. Сессия или ключ с `manage`. |
 | `POST` | `/api/billing/wallet/topup/refresh` | Обновить статус пополнения. |
 | `POST` | `/api/billing/account-plan/balance-purchase` | Купить или улучшить тариф за баланс. |
 | `POST` | `/api/billing/account-plan/checkout` | Создать checkout тарифа account. |

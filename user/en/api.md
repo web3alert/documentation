@@ -19,13 +19,15 @@ endpoints are not part of this public API reference.
 
 ## Auth
 
-User requests use personal access token:
+Most endpoints accept an account session or an agent key as a bearer credential. Create an agent key on the [Agents page](https://web3alert.io/agents) or [sign in with an Ethereum wallet](agents.md).
 
 ```http
-Authorization: Bearer YOUR_PERSONAL_ACCESS_TOKEN
+Authorization: Bearer YOUR_AGENT_KEY
 ```
 
-Token can be obtained in [Account parameters](account.md#personal-access-token).
+Each key acts as its account in one workspace. Agent keys include `read` for reads, add `manage` for mutations such as creating a subscription or quoting a top-up, and add `spend` for account plan or project add-on purchases from the EUR balance. Session-only actions include key management, token revocation and workspace switching. For individual routes, see the details below and the agent-facing [OpenAPI document](api-openapi.md).
+
+An agent-key request can return HTTP `403` with `insufficient_scope`, `key_not_allowed` for a session-only operation, or `spend_cap_exceeded` for a purchase over the key's monthly cap.
 
 Endpoint access depends on:
 
@@ -74,6 +76,10 @@ Details: [Account API](api-account.md).
 | `DELETE` | `/api/token` | Revoke the token used for the request. |
 | `DELETE` | `/api/tokens` | Revoke all tokens for the authenticated account. |
 | `GET` | `/api/me` | Get current account, identity, tier, and memberships. |
+| `POST` | `/api/keys` | Create a key in the current workspace. Session only. |
+| `GET` | `/api/keys` | List keys across the account's workspaces. Session only. |
+| `PATCH` | `/api/keys/:id` | Update a key's name or monthly cap. Session only. |
+| `DELETE` | `/api/keys/:id` | Revoke a key. Session only. |
 | `DELETE` | `/api/me` | Delete current account. |
 | `PUT` | `/api/me/meta` | Update account metadata. |
 | `POST` | `/api/me/avatar` | Upload current account avatar. |
@@ -81,6 +87,17 @@ Details: [Account API](api-account.md).
 | `PUT` | `/api/me/workspace` | Change current workspace account. |
 | `GET` | `/api/account/settings` | Get account settings. |
 | `PUT` | `/api/account/settings` | Save account settings. |
+
+## Wallet sign-in and claims
+
+Details in the [Account API](api-account.md).
+
+| Method | Endpoint | Purpose |
+| --- | --- | --- |
+| `POST` | `/api/agent/siwe/nonce` | Request a single-use SIWE nonce. Public. |
+| `POST` | `/api/agent/siwe/verify` | Verify a signed SIWE message and issue a key. Public. |
+| `POST` | `/api/agent/claim-link` | Create or replace a claim link. Agent key with `manage`. |
+| `GET` | `/api/agent/claims/:token` | Read claim details. Public to the holder of the link. |
 
 ## Links
 
@@ -163,6 +180,18 @@ Details: [Triggers API](api-triggers.md).
 | `GET` | `/api/template-helpers` | List public Handlebars helper metadata for trigger and action templates. |
 | `POST` | `/api/triggers/find-latest-block` | Find or prepare test input/block for trigger. |
 
+## Agent trigger building
+
+Details in the [Triggers API](api-triggers.md).
+
+| Method | Endpoint | Purpose |
+| --- | --- | --- |
+| `POST` | `/api/agent/build/contracts` | Find event signatures. Session or agent key with `read`. |
+| `POST` | `/api/agent/build/drafts` | Generate a trigger draft. Session or agent key with `manage`. |
+| `POST` | `/api/agent/build/drafts/:draftId/test` | Test a draft. Session or agent key with `read`. |
+| `POST` | `/api/agent/build/drafts/:draftId/activate` | Activate a matched draft. Session or agent key with `manage`. |
+| `DELETE` | `/api/agent/build/triggers/:fullname` | Remove a private agent trigger. Session or agent key with `manage`. |
+
 ## Trigger Import
 
 Details: [Trigger Import API](api-trigger-import.md).
@@ -219,6 +248,8 @@ Details: [Resources API](api-resources.md).
 | `GET` | `/api/resources/:fullname` | Get resource. |
 | `PUT` | `/api/resources/:fullname` | Create or update resource. |
 | `POST` | `/api/resources/:fullname/signing-secret` | Generate or rotate a webhook signing secret. |
+| `PUT` | `/api/inbox` | Create or return the workspace inbox. Session or agent key with `manage`. |
+| `GET` | `/api/events` | Read retained inbox events. Session or agent key with `read`. |
 | `DELETE` | `/api/resources/:fullname` | Delete resource. |
 | `POST` | `/api/resources/:fullname/setup-sessions` | Start a Telegram destination setup session. |
 | `GET` | `/api/resources/:fullname/setup-sessions/:id` | Get setup-session status. |
@@ -255,6 +286,7 @@ Details: [Billing API](api-billing.md).
 | `GET` | `/api/billing/overview` | Get the current account billing overview. |
 | `GET` | `/api/billing/wallet/overview` | Get the balance and wallet overview. |
 | `POST` | `/api/billing/wallet/crypto-topup` | Create a crypto balance top-up. |
+| `POST` | `/api/billing/wallet/x402-topup` | Top up the EUR balance with USDC on Base over x402. Session or agent key with `manage`. |
 | `POST` | `/api/billing/wallet/topup/refresh` | Refresh top-up state. |
 | `POST` | `/api/billing/account-plan/balance-purchase` | Purchase or upgrade an account plan from balance. |
 | `POST` | `/api/billing/account-plan/checkout` | Create an account-plan checkout. |

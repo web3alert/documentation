@@ -90,7 +90,7 @@ Argumentos:
 
 Payload: ninguno.
 
-Respuesta: [OperationResult](types.md#operationresult).
+Requiere una sesión o clave con `manage` y control del espacio del recurso. Devuelve `204 No Content`. Al eliminar un webhook, devuelve `409 webhook_in_use` si una suscripción activa (`on`) del mismo espacio le envía eventos.
 
 Los tres endpoints de setup session siguientes solo están disponibles cuando el
 setup seguro del destino de Telegram está habilitado en el servidor.
@@ -168,6 +168,18 @@ Argumentos:
 Payload: ninguno.
 
 Respuesta: respuesta de éxito vacía.
+
+## PUT /api/inbox
+
+Requiere una sesión o clave de agente con `manage`, además de control del espacio. No requiere cuerpo. Devuelve `{ fullname, retention: { days, maxEvents } }`. Los reintentos devuelven la misma bandeja. Si otro recurso ocupa el fullname, devuelve `409 resource_name_in_use`.
+
+Usa el fullname como `values.inbox` en la acción de suscripción `common.builtin.inbox`. Se aplica el plan del propietario del espacio o el del solicitante si no hay propietario. Ambas rutas devuelven `403 not_in_plan` en Free. Consulta [Límites](limits.md).
+
+## GET /api/events
+
+Requiere una sesión o clave de agente con `read`, control del espacio y el mismo plan de pago que para crear la bandeja. Parámetros opcionales: `after` (cursor opaco) y `limit` (1–500, 100 por defecto). La primera lectura empieza en el evento conservado más antiguo.
+
+Devuelve `{ events, nextCursor, hasMore, gap }`. Cada evento contiene `cursor`, `id`, `receivedAt`, `subscription`, `trigger` y `body`. Pasa `nextCursor` como `after` al leer o consultar de nuevo. Una página vacía devuelve el cursor enviado o `null` si se omitió. `gap: true` indica una pérdida por retención respecto al cursor.
 
 ## GET /api/resources/external/:token
 

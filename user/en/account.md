@@ -14,7 +14,7 @@ Account includes:
 
 - personal avatar and account title;
 - user id;
-- personal access token;
+- browser session and agent keys;
 - billing profile;
 - internal balance;
 - account tier;
@@ -38,7 +38,7 @@ The menu contains:
 - `Account parameters`;
 - `Log out`.
 
-`Log out` ends the current session. A confirmation is shown before signing out.
+`Log out` ends the current session and revokes this browser's session token. A confirmation is shown before signing out.
 
 ## Account Parameters
 
@@ -92,15 +92,13 @@ Read-only id of the current user.
 
 It is used for diagnostics, support, and precise account identification when a display name is not enough.
 
-### Personal Access Token
+## Agents {#agents}
 
-Personal access token for the current session.
+Open the [Agents page](https://web3alert.io/agents) to create, review and revoke agent keys. Select a workspace before creating a key. Its scopes, optional monthly spend cap and optional expiry apply to that workspace. Copy the key secret when it is shown. You can edit the name and cap or revoke the key from the page.
 
-This token gives the user access to Web3alert [API](api.md) and [MCP servers](mcp-server.md). The available API/MCP capabilities depend on the current account tier.
+The page shows the workspace, scopes, spend, expiry and who connected the agent. Wallet sign-ups show the wallet address. Keys created in the app show that you created them. See the [agent quickstart](agents.md) to connect a key to MCP.
 
-Treat the token as a secret: do not share it in public chats, screenshots, or documentation.
-
-The token belongs to the account, not to a workspace.
+The Account page keeps the browser session token hidden. Use the Agents page for credentials for API and MCP clients.
 
 ## Billing
 

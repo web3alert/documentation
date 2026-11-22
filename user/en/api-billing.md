@@ -20,6 +20,14 @@ the API sets its `externalReference` query parameter to the exact reference of
 the created top-up, replacing any previous value. Preserve that reference
 across the provider redirect.
 
+## POST /api/billing/wallet/x402-topup
+
+Requires an account session or an agent key with `manage`. Send `{ amountEur }` from €5 to €500 with up to two decimals. Pay in USDC on Base at the ECB USD reference rate, using 1 USDC = 1 USD with no markup.
+
+A request without `PAYMENT-SIGNATURE` returns `402` with an x402 v2 quote in the body and base64-encoded in `PAYMENT-REQUIRED`. Sign with your wallet, preserving `accepts[0].extra.quoteId`, then send the same body with the base64-encoded `PAYMENT-SIGNATURE`.
+
+A settled payment returns `200` with `PAYMENT-RESPONSE` and `{ topupId, amountEur, usdcAmount, transaction, network, balanceEur }`. For `202` with `{ status: "pending", topupId }`, retry the same signature. Replaying a settled payment returns the original result. A refused payment returns `402` with a failure in `PAYMENT-RESPONSE`. Service failures return `502 facilitator_unavailable`, `503 x402_unavailable` or `503 rate_unavailable`.
+
 ## POST /api/billing/wallet/topup/refresh
 
 <!-- api-contract: target=exact-topupId-or-externalReference; recent-topup-fallback=forbidden; result-correlation=fail-closed-on-missing-or-ambiguous -->
@@ -30,6 +38,8 @@ must not request a refresh when the identifier is missing, repeated, or
 conflicts with another identifier.
 
 ## POST /api/billing/account-plan/balance-purchase
+
+Agent keys require `spend` and must use `autoRenew: false`. A purchase over the key's monthly cap returns `403 spend_cap_exceeded`.
 
 <!-- api-contract: requestId=optional-backward-compatible-8-128-rfc3986-unreserved; requestId-omitted=not-retry-safe-across-http-attempts; autoRenew-default=false; same-intent=same-requestId-and-payload; exact-replay=original-subscriptionId-and-invoiceId-without-second-debit; conflicting-payload=rejected; new-intent=new-requestId -->
 Purchases or upgrades an account plan using the wallet balance.
@@ -76,6 +86,8 @@ Creates a checkout for an account plan.
 Creates a direct crypto checkout for an account plan.
 
 ## POST /api/billing/project-addon/balance-purchase
+
+Agent keys require `spend` and must use `autoRenew: false`. A purchase over the key's monthly cap returns `403 spend_cap_exceeded`.
 
 <!-- api-contract: requestId=optional-backward-compatible-8-128-rfc3986-unreserved; requestId-omitted=not-retry-safe-across-http-attempts; autoRenew-default=false; same-intent=same-requestId-and-full-payload; exact-replay=original-subscriptionId-and-invoiceId-without-second-debit; conflicting-projectFullname-addonCode-durationMonths-autoRenew=rejected; new-intent=new-requestId -->
 Purchases a project free-access add-on using the wallet balance.

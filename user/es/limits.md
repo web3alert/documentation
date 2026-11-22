@@ -154,7 +154,13 @@ Los límites por tier de la tabla se aplican a las solicitudes externas a la API
 | Advanced | 300/min |
 | Pro | 900/min |
 
-Las solicitudes del web UI tienen un límite aparte. Las solicitudes de confianza del MCP server a la API están exentas del límite externo. Las llamadas a herramientas MCP tienen su propio límite predeterminado de 120 por minuto y por account, compartido por ambos endpoints MCP en cada proceso del servidor.
+Las solicitudes del web UI tienen un límite aparte. Las solicitudes de confianza del MCP server a la API están exentas del límite externo. Las llamadas a herramientas MCP tienen su propio límite predeterminado de 120 por minuto y por account, compartido por los tres endpoints MCP en cada proceso del servidor.
+
+## Pagos de agentes {#agent-payments}
+
+Las recargas por x402 con USDC en Base van de 5 € a 500 €, con hasta dos decimales en EUR.
+
+Cada clave de agente puede tener un límite mensual de gasto de 0 € a 10.000 €, con hasta dos decimales. Déjalo sin configurar para permitir gasto sin límite. Se aplica a las compras con saldo completadas con esa clave en el mes natural en UTC. Un reintento con el mismo `requestId` cuenta una vez. Las renovaciones automáticas quedan fuera del cálculo.
 
 ## Triggers
 
@@ -372,6 +378,16 @@ Las suscripciones que solo entregan a webhooks integrados quedan exentas de este
 | Pro | 100 | 20 / second |
 
 Workspace-level limit protege el flujo general de alerts dentro del workspace.
+
+### Retención de la bandeja de entrada
+
+| Plan | Retención | Máximo de eventos |
+| --- | --- | ---: |
+| Free | No disponible | — |
+| Advanced | 7 días | 25.000 |
+| Pro | 30 días | 100.000 |
+
+La bandeja conserva los eventos más recientes dentro de ambos límites. Usa el plan del propietario del espacio de trabajo o el del solicitante si no hay propietario.
 
 ## Project Transfer
 

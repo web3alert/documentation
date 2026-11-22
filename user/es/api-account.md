@@ -2,7 +2,7 @@
 
 Account endpoints trabajan con el usuario actual, sus metadata, avatar y workspace seleccionado.
 
-Todos los endpoints de Account, excepto `POST /api/token`, requieren `Authorization: Bearer <token>`.
+Envía una credencial Bearer en las solicitudes autenticadas. Gestionar claves o cambiar la sesión requiere un token de sesión de cuenta. Las rutas públicas de inicio de sesión y reclamación se indican a continuación.
 
 ## POST /api/token
 
@@ -20,6 +20,7 @@ Payload:
 | --- | --- | --- |
 | `app` | Sí | Nombre de auth app/provider. |
 | `credentials` | Sí | Objeto credentials específico del provider. |
+| `claim` | No | Token del enlace de reclamación de una cuenta creada con cartera, para iniciar sesión con Telegram o Google. |
 
 Respuesta: [TokenResponse](types.md#tokenresponse).
 
@@ -47,15 +48,19 @@ Ejemplo de respuesta:
 
 Las credenciales del provider y el token devuelto son secretos. Envíalos solo mediante HTTPS; no los registres, publiques ni incluyas en commits.
 
+Con `claim`, un inicio de sesión correcto vincula el acceso a la cuenta de la cartera, consume el enlace y emite un token de sesión para esa cuenta. `409 login_already_linked` significa que el acceso pertenece a otra cuenta y el enlace sigue válido. Una reclamación inválida devuelve `404 claim_not_found` sin crear una cuenta.
+
 ## DELETE /api/token
 
 Revoca el token usado para autenticar esta solicitud.
+
+Requiere un token de sesión de cuenta. Al cerrar sesión, la aplicación llama a esta operación para el navegador actual.
 
 Envía la solicitud sin argumentos path/query y sin cuerpo. Los parámetros adicionales no permiten seleccionar otro token ni otro account.
 
 ```http
 DELETE /api/token
-Authorization: Bearer YOUR_PERSONAL_ACCESS_TOKEN
+Authorization: Bearer YOUR_SESSION_TOKEN
 ```
 
 Si la solicitud tiene éxito, el servidor devuelve `204 No Content` con el cuerpo vacío. Este endpoint está disponible incluso si el account ha alcanzado su límite de solicitudes a la API.
@@ -64,11 +69,13 @@ Si la solicitud tiene éxito, el servidor devuelve `204 No Content` con el cuerp
 
 Revoca todos los tokens del account autenticado, incluido el token usado para esta solicitud.
 
+Requiere un token de sesión de cuenta. Las claves de agente se revocan individualmente mediante `DELETE /api/keys/:id`.
+
 Envía la solicitud sin argumentos path/query y sin cuerpo. Los parámetros adicionales no permiten seleccionar otro token ni otro account.
 
 ```http
 DELETE /api/tokens
-Authorization: Bearer YOUR_PERSONAL_ACCESS_TOKEN
+Authorization: Bearer YOUR_SESSION_TOKEN
 ```
 
 Si la solicitud tiene éxito, el servidor devuelve `204 No Content` con el cuerpo vacío. Este endpoint está disponible incluso si el account ha alcanzado su límite de solicitudes a la API.
@@ -76,6 +83,8 @@ Si la solicitud tiene éxito, el servidor devuelve `204 No Content` con el cuerp
 ## GET /api/me
 
 Devuelve el account actual, identity, tier, memberships y workspace seleccionado.
+
+Una solicitud con clave exige `read` y añade `key` con `id`, `name`, `scopes`, `monthlyCapEur`, `spentThisMonthEur` y `expiresAt`.
 
 Argumentos: ninguno.
 
@@ -94,6 +103,44 @@ La respuesta también incluye `limits` para el plan de la cuenta autenticada.
 | `limits.alertHistory` | `object \| null` | Límites del historial de alertas. `null` significa que el plan no incluye historial. |
 | `limits.alertHistory.retentionDays` | `number` | Retención del historial de alertas en días. |
 | `limits.alertHistory.maxRecords` | `number \| null` | Número máximo de registros conservados. `null` significa que no hay límite de registros. |
+
+## POST /api/keys
+
+Requiere un token de sesión. Crea una clave vinculada al espacio de trabajo actual. Envía `{ name, scopes, monthlyCapEur?, expiresInDays? }`. El nombre admite 1–64 caracteres. Incluye `read` y, si procede, `manage` y `spend`. Puedes fijar un límite de 0 a 10.000 € con hasta dos decimales y un vencimiento de 30, 90 o 365 días. Omite esos campos o usa `null` para dejarlos sin límite.
+
+Devuelve `201` con `{ key, secret }`. Copia `secret`, que solo se muestra en esa respuesta.
+
+## GET /api/keys
+
+Requiere un token de sesión. Devuelve `{ keys }` de todos los espacios de la cuenta, de las más recientes a las más antiguas, incluidas las revocadas. Cada clave incluye espacio, permisos, límite, gasto del mes, vencimiento, estado y `connectedBy`.
+
+## PATCH /api/keys/:id
+
+Requiere un token de sesión. Envía `{ name?, monthlyCapEur? }` para editar una clave de la cuenta. Usa `null` para quitar el límite. Devuelve `{ key }` o `404` si la clave no está disponible para la cuenta.
+
+## DELETE /api/keys/:id
+
+Requiere un token de sesión. Revoca una clave de la cuenta. Si se revoca o ya está revocada, devuelve `204 No Content`. Si la clave no está disponible para la cuenta, devuelve `404`.
+
+## POST /api/agent/siwe/nonce
+
+Público. No requiere cuerpo. Devuelve `{ nonce, issuedAt, expiresAt }`. El nonce caduca en 10 minutos y se usa una sola vez.
+
+## POST /api/agent/siwe/verify
+
+Público. Envía `{ message, signature }` firmado con una cuenta externa (EOA) de Ethereum. Usa un mensaje EIP-4361 versión `1`, el nonce, el dominio `web3alert.io`, una URI de ese origen y un `issuedAt` dentro de los cinco minutos del reloj del servidor. Se acepta cualquier ID de cadena.
+
+Devuelve `{ account: { id, created }, key, secret, claimUrl }`. El primer inicio crea una cuenta Free y su espacio de trabajo. Cada inicio correcto emite una clave con todos los permisos, sin límite ni vencimiento. `claimUrl` vale `null` tras vincular Telegram o Google. Usa `secret` como credencial Bearer.
+
+Una verificación fallida devuelve `401 invalid_siwe`. Se admiten 10 cuentas nuevas por IP en una hora móvil y 200 en total en un día móvil. Al alcanzar el límite, devuelve `429 signup_limited` con `Retry-After`. Consulta el [ejemplo SIWE](agents.md).
+
+## POST /api/agent/claim-link
+
+Requiere una clave de agente con `manage`. No requiere cuerpo. Devuelve `{ claimUrl, expiresAt }`. El enlace nuevo sustituye al anterior y vence en siete días. Un token de sesión recibe `403 agent_key_required`. Si Telegram o Google ya está vinculado, devuelve `409 already_claimed`.
+
+## GET /api/agent/claims/:token
+
+Público para quien tenga el enlace. Devuelve `{ wallet, account: { name }, createdAt, expiresAt }`. Un enlace desconocido, caducado, sustituido o usado devuelve `404 claim_not_found`. Completa la reclamación con el campo opcional `claim` de `POST /api/token`.
 
 ## DELETE /api/me
 

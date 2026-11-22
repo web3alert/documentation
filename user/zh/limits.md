@@ -154,7 +154,13 @@ MCP server 适用于 `Free`、`Advanced` 和 `Pro`。
 | Advanced | 300/min |
 | Pro | 900/min |
 
-Web UI 请求使用单独的限额。MCP server 向 API 发送的受信任请求不受外部 API 限额约束。MCP 工具调用有自己的默认限额，每个 account 每分钟 120 次。同一 server 进程中的两个 MCP endpoints 共享此限额。
+Web UI 请求使用单独的限额。MCP server 向 API 发送的受信任请求不受外部 API 限额约束。MCP 工具调用有自己的默认限额，每个 account 每分钟 120 次。同一 server 进程中的三个 MCP 端点 共享此限额。
+
+## 智能体付款 {#agent-payments}
+
+通过 x402 在 Base 网络用 USDC 充值，金额为 5–500 欧元，最多保留两位小数。
+
+每个智能体密钥可设置 0–10,000 欧元的每月支出上限，最多保留两位小数。留空即不设上限。上限适用于 UTC 当前自然月内用该密钥成功完成的余额购买。使用同一个 `requestId` 重试只计一次。自动续订不计入上限。
 
 ## Triggers
 
@@ -372,6 +378,16 @@ Alert delivery 通过 rate limits 限制，防止单个 account/workspace 使 de
 | Pro | 100 | 20 / second |
 
 Workspace-level limit 保护 workspace 内部的整体 alerts 流量。
+
+### 收件箱保留规则
+
+| 套餐 | 保留时长 | 最多事件数 |
+| --- | --- | ---: |
+| Free | 不可用 | — |
+| Advanced | 7 天 | 25,000 |
+| Pro | 30 天 | 100,000 |
+
+收件箱在两项限制内保留最新事件。保留规则遵循工作区所有者的套餐，若无所有者则使用调用者的套餐。
 
 ## Project Transfer
 

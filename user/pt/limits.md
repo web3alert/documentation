@@ -154,7 +154,13 @@ Os limites por tier na tabela aplicam-se aos pedidos externos à API autenticado
 | Advanced | 300/min |
 | Pro | 900/min |
 
-Os pedidos do web UI têm um limite próprio. Os pedidos de confiança do MCP server à API estão isentos do limite externo. As chamadas a ferramentas MCP têm um limite próprio de 120 por minuto e por account por predefinição, partilhado pelos dois endpoints MCP em cada processo do servidor.
+Os pedidos do web UI têm um limite próprio. Os pedidos de confiança do MCP server à API estão isentos do limite externo. As chamadas a ferramentas MCP têm um limite próprio de 120 por minuto e por account por predefinição, partilhado pelos três endpoints MCP em cada processo do servidor.
+
+## Pagamentos de agentes {#agent-payments}
+
+Os carregamentos por x402 com USDC na Base vão de 5 € a 500 €, com até duas casas decimais em EUR.
+
+Cada chave de agente pode ter um limite mensal de gastos de 0 € a 10 000 €, com até duas casas decimais. Deixe-o por definir para não aplicar um limite. Aplica-se às compras com saldo concluídas com essa chave no mês civil em UTC. Um novo pedido com o mesmo `requestId` conta uma vez. As renovações automáticas ficam fora do cálculo.
 
 ## Triggers
 
@@ -372,6 +378,16 @@ As subscrições que entregam apenas a webhooks integrados estão isentas deste 
 | Pro | 100 | 20 / second |
 
 Workspace-level limit protege o fluxo geral de alerts dentro do workspace.
+
+### Retenção da caixa de entrada
+
+| Plano | Retenção | Máximo de eventos |
+| --- | --- | ---: |
+| Free | Indisponível | — |
+| Advanced | 7 dias | 25 000 |
+| Pro | 30 dias | 100 000 |
+
+A caixa de entrada guarda os eventos mais recentes dentro dos dois limites. Usa o plano do proprietário do espaço de trabalho, ou o de quem faz o pedido se não houver proprietário.
 
 ## Project Transfer
 

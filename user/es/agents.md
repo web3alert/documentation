@@ -1,33 +1,78 @@
 # Para agentes
 
-Encuentra en el catálogo de Web3alert eventos on-chain decodificados de redes EVM y Substrate, como Ethereum, Polkadot y Kusama. Tu agente puede usar las [10 herramientas MCP](mcp-server.md#endpoint-para-agentes) para buscar un disparador, suscribirse y recibir los eventos coincidentes como JSON en su webhook.
+Encuentra en el catálogo de Web3alert eventos on-chain decodificados de redes EVM y Substrate, como Ethereum, Polkadot y Kusama. Tu agente puede usar las [14 herramientas MCP](mcp-server.md#endpoint-para-agentes) para buscar un disparador, suscribirse y recibir los eventos coincidentes como JSON.
 
-## Próximamente
+## 1. Obtén una clave de agente
 
-- Inicio de sesión con wallet para que los agentes puedan abrir sus propias cuentas.
-- Recargas en USDC mediante x402.
-- Una bandeja de entrada para recuperar los eventos perdidos.
+### Crea una clave en la aplicación
 
-## 1. Obtén un token
+Inicia sesión en [Web3alert](https://web3alert.io), selecciona un espacio de trabajo del que seas propietario o administrador y crea una clave en la [página Agents](https://web3alert.io/agents). La clave queda vinculada a ese espacio. Copia el secreto cuando aparezca. Solo se muestra una vez.
 
-Una persona inicia sesión en [Web3alert](https://web3alert.io) y copia el token de acceso personal de los [parámetros de la cuenta](account.md#personal-access-token). Los agentes aún no pueden crear sus propias cuentas. Selecciona en la aplicación un espacio de trabajo del que seas propietario o administrador. Para añadir un webhook, crear una suscripción y consultar el historial de entregas, necesitas el rol `owner` o `admin`.
+Todas las claves incluyen `read`. Añade `manage` para registrar webhooks, crear suscripciones o solicitar una cotización de recarga. Añade `spend` para comprar planes con el saldo en EUR. Puedes establecer un [límite mensual de gasto](limits.md#agent-payments) y un vencimiento de 30, 90 o 365 días. Ambos son opcionales.
+
+Los tokens de sesión existentes funcionan hasta que su titular cierra la sesión o los revoca. Usa claves de agente para las conexiones nuevas.
+
+### Regístrate con una cartera de Ethereum
+
+Un agente con una cuenta de propiedad externa (EOA) de Ethereum puede crear su propia cuenta Free. Solicita primero un nonce de un solo uso. Las dos solicitudes SIWE son públicas.
+
+```http
+POST /api/agent/siwe/nonce
+Host: web3alert.io
+```
+
+```json
+{
+  "nonce": "exampleNonce123456",
+  "issuedAt": "<ISO-8601 timestamp>",
+  "expiresAt": "<ISO-8601 timestamp>"
+}
+```
+
+Construye el mensaje EIP-4361 con el nonce y el `issuedAt` recibidos, sustituye la dirección y firma el mensaje exacto con tu cartera. El nonce dura 10 minutos. El servidor comprueba que `issuedAt` esté dentro de los 5 minutos de su reloj.
+
+```http
+POST /api/agent/siwe/verify
+Host: web3alert.io
+Content-Type: application/json
+
+{
+  "message": "web3alert.io wants you to sign in with your Ethereum account:\n<your Ethereum address>\n\n\nURI: https://web3alert.io\nVersion: 1\nChain ID: 1\nNonce: <nonce>\nIssued At: <issuedAt>",
+  "signature": "<wallet signature>"
+}
+```
+
+Ejemplo de respuesta `200` con el objeto `key` abreviado.
+
+```json
+{
+  "account": { "id": "<account-id>", "created": true },
+  "key": { "id": "<key-id>", "scopes": ["read", "manage", "spend"] },
+  "secret": "w3a_<key-secret>",
+  "claimUrl": "https://web3alert.io/claim/<claim-token>"
+}
+```
+
+Cada inicio de sesión emite una clave nueva para el espacio inicial con los tres permisos, sin límite ni vencimiento. Usa `secret` como credencial Bearer. Los siguientes inicios de sesión reutilizan la cuenta. `claimUrl` vale `null` al vincular un acceso de Telegram o Google.
+
+Comparte el enlace de reclamación en privado con la persona que se hará cargo de la cuenta. La página muestra la cartera, la fecha de creación de la cuenta y el vencimiento del enlace, y ofrece iniciar sesión con Telegram o Google. Después, la página Agents permite ver y controlar las claves y consultar el plan, el saldo y el gasto. Si el acceso ya pertenece a otra cuenta de Web3alert, usa uno distinto. El enlace más reciente dura siete días. Puedes sustituirlo con el [endpoint del enlace de reclamación](api-account.md#post-api-agent-claim-link).
 
 ## 2. Conecta tu cliente MCP
 
-Usa Streamable HTTP en `https://web3alert.io/mcp/agent`. Puedes consultar la lista de herramientas sin un token, y para llamar a las herramientas necesitas `Authorization: Bearer <token>`.
+Usa Streamable HTTP en `https://web3alert.io/mcp/agent`. Puedes descubrir las herramientas sin un token. Envía `Authorization: Bearer <agent-key>` al llamar a una herramienta.
 
 ### Claude Code
 
-Asigna tu token a `WEB3ALERT_TOKEN` en la terminal y ejecuta este comando.
+Asigna tu clave de agente a `WEB3ALERT_KEY` en la terminal y ejecuta este comando.
 
 ```bash
 claude mcp add --transport http web3alert-agent https://web3alert.io/mcp/agent \
-  --header "Authorization: Bearer $WEB3ALERT_TOKEN"
+  --header "Authorization: Bearer $WEB3ALERT_KEY"
 ```
 
 ### Claude Desktop y Cursor
 
-Añade la entrada en `mcpServers` en el archivo `claude_desktop_config.json` de Claude Desktop (Settings → Developer → Edit Config) o en tu archivo personal `~/.cursor/mcp.json` de Cursor. El ejemplo usa el puente `mcp-remote` mediante `npx`. Sustituye el valor de ejemplo del token.
+Añade la entrada en `mcpServers` en el archivo `claude_desktop_config.json` de Claude Desktop (Settings → Developer → Edit Config) o en tu archivo personal `~/.cursor/mcp.json` de Cursor. El ejemplo usa el puente `mcp-remote` mediante `npx`. Sustituye el valor de ejemplo de la clave.
 
 ```json
 {
@@ -42,7 +87,7 @@ Añade la entrada en `mcpServers` en el archivo `claude_desktop_config.json` de 
         "Authorization:${AUTH_HEADER}"
       ],
       "env": {
-        "AUTH_HEADER": "Bearer YOUR_PERSONAL_ACCESS_TOKEN"
+        "AUTH_HEADER": "Bearer YOUR_AGENT_KEY"
       }
     }
   }
@@ -51,7 +96,7 @@ Añade la entrada en `mcpServers` en el archivo `claude_desktop_config.json` de 
 
 ### VS Code
 
-Para una conexión gestionada por el editor, añade la entrada en `servers` en `.vscode/mcp.json` y haz que `WEB3ALERT_TOKEN` esté disponible en el entorno del proceso de VS Code.
+Para una conexión gestionada por el editor, añade la entrada en `servers` en `.vscode/mcp.json` y haz que `WEB3ALERT_KEY` esté disponible en el entorno del proceso de VS Code.
 
 ```json
 {
@@ -60,16 +105,24 @@ Para una conexión gestionada por el editor, añade la entrada en `servers` en `
       "type": "http",
       "url": "https://web3alert.io/mcp/agent",
       "headers": {
-        "Authorization": "Bearer ${env:WEB3ALERT_TOKEN}"
+        "Authorization": "Bearer ${env:WEB3ALERT_KEY}"
       }
     }
   }
 }
 ```
 
-## 3. Crea tu primera suscripción
+## 3. Recarga el saldo y compra un plan
 
-Tu agente necesita un endpoint HTTPS público para recibir eventos. Los agentes sin uno tendrán que esperar a que se habilite la bandeja de entrada para recibirlos.
+1. Llama a `get_topup_requirements({"amountEur":5})` con `manage`. Puedes recargar entre 5 y 500 € en USDC en Base. Web3alert usa el tipo de referencia del BCE para el USD, valora 1 USDC en 1 USD y no aplica recargo.
+2. Paga con tu propio cliente x402 v2 y tu cartera. Envía el `body` devuelto por `POST` a la `url` devuelta, con la credencial Bearer y el pago firmado en `PAYMENT-SIGNATURE`. Espera a que la [recarga](api-billing.md#post-api-billing-wallet-x402-topup) se liquide y se abone al saldo en EUR.
+3. Llama a `buy_plan({"planId":"advanced","durationMonths":1,"requestId":"first-plan-001"})` con `spend` y saldo suficiente. Puedes comprar Advanced o Pro por 1, 3, 6 o 12 meses sin renovación automática. Si reintentas la compra, reutiliza el `requestId` y los mismos parámetros.
+
+## 4. Crea tu primera suscripción
+
+Elige un webhook HTTPS público o, en Advanced y Pro, la bandeja de entrada del espacio de trabajo. Para añadir un webhook, crear una suscripción o consultar la bandeja o el historial de entregas, necesitas el rol `owner` o `admin`.
+
+### Entrega por webhook
 
 En esta sesión de ejemplo, sustituye los valores entre ángulos por los resultados de las llamadas anteriores. Cambia la URL de ejemplo por una URL HTTPS de un webhook que controles y que no incluya nombre de usuario ni contraseña. Elige un disparador de eventos y proporciona los `inputs` obligatorios que indique `get_trigger`. El ejemplo supone que el disparador no requiere ninguno.
 
@@ -84,19 +137,38 @@ En esta sesión de ejemplo, sustituye los valores entre ángulos por los resulta
 
 Comprueba que el `state` devuelto para la suscripción sea `on`. A partir de ese momento pueden llegar eventos coincidentes. Usa un nombre de webhook nuevo o busca uno registrado con `list_webhooks`.
 
-## Cuerpo del webhook
+### Cuerpo del webhook
 
 Tu webhook recibe un cuerpo JSON con un ID de evento. Los webhooks nuevos reciben entregas firmadas y Web3alert reintenta automáticamente los fallos que admiten reintentos. Consulta [Webhooks](webhooks.md) para ver el formato del cuerpo, verificar firmas, gestionar reintentos y evitar duplicados.
+
+### Entrega en la bandeja de entrada
+
+Localiza el trigger, consulta sus entradas con `get_trigger` y llama a `create_subscription({"trigger":"<trigger-fullname>","inbox":true,"state":"on"})`. Incluye los `inputs` obligatorios. La herramienta acepta un destino por llamada y crea o reutiliza la bandeja del espacio de trabajo.
+
+Llama a `read_events({})` para empezar por el evento conservado más antiguo. Guarda `nextCursor` cuando contenga un valor y envíalo como `after` en la siguiente llamada. Sigue leyendo mientras `hasMore` sea verdadero y reutiliza el cursor al consultar periódicamente. `gap: true` indica que algunos eventos ya no se conservan. Usa el `id` para deduplicar.
+
+La retención depende del plan del propietario del espacio de trabajo o del solicitante si el espacio no tiene propietario. Advanced conserva hasta **7 días o 25.000 eventos** y Pro hasta **30 días o 100.000 eventos**. Free devuelve `not_in_plan`.
+
+## 5. Crea un trigger
+
+En Advanced o Pro, conecta el cliente a `https://web3alert.io/mcp/agent/build` con la misma cabecera Bearer. El servidor genera el trigger a partir de un ABI de EVM, un IDL de Solana o metadatos de Substrate, sin que tengas que escribir código.
+
+1. Usa `find_contract` con una fuente de cadena integrada y la dirección del contrato, el programa de Solana o el pallet de Substrate para obtener la firma exacta del evento.
+2. Envía el origen y el evento a `plan_trigger`. Guarda el `draftId`. El borrador caduca a los siete días.
+3. Ejecuta `test_trigger` con el borrador. Deja que el servidor busque una muestra reciente o indica un bloque o slot. Continúa cuando el último resultado sea `matched`.
+4. Ejecuta `activate_trigger` con el `draftId` y un `requestId` propio. Reutiliza este último en los reintentos. El trigger se guarda en el proyecto privado del agente del espacio de trabajo. Pasa el fullname devuelto a `create_subscription`.
+
+`find_contract` y `test_trigger` usan `read`. La planificación y la activación usan `manage`. Consulta la [referencia de herramientas de creación](mcp-server.md#build-endpoint).
 
 ## Límites
 
 El plan Free limita la cuenta a **5 suscripciones activas que haya creado a proyectos que no sean Free**, sumadas entre todos los espacios de trabajo. Las suscripciones a proyectos Free quedan fuera del límite.
 
-El endpoint para agentes crea suscripciones que solo entregan alertas a webhooks. En Free, cada una admite por defecto una ráfaga de 12 alertas, una tasa sostenida de 1 alerta por segundo y un límite de cola de 15. Estas suscripciones no consumen la cuota de entrega del espacio de trabajo.
+En Free, una suscripción que solo entrega a webhooks integrados admite por defecto una ráfaga de 12 alertas, una tasa sostenida de 1 alerta por segundo y un límite de cola de 15. Estas suscripciones no consumen la cuota de entrega del espacio de trabajo.
 
 Free permite 60 solicitudes por minuto a la API externa. Las pruebas de suscripción y el historial de alertas están disponibles en Advanced y Pro. Para ambos, la API comprueba el plan del primer propietario del espacio de trabajo y aplica la alternativa descrita en el paso 6. Consulta las tablas completas en [Límites](limits.md).
 
-El servidor MCP permite por defecto 120 llamadas a herramientas por cuenta y por minuto. Ambos endpoints comparten este límite en cada proceso del servidor. `get_account` devuelve el plan de la cuenta y los mismos [límites del plan](api-account.md#me-limits) que `GET /api/me`. El valor de `limits` en la herramienta es `null` si la API no proporciona los límites del plan. MCP puede usar la respuesta de `/me` en caché durante un máximo de 30 segundos, por lo que un cambio de plan puede tardar ese tiempo en aparecer en `get_account`.
+El servidor MCP permite por defecto 120 llamadas a herramientas por cuenta y por minuto. Los tres endpoints comparten este límite en cada proceso del servidor. `get_account` devuelve el plan de la cuenta y los mismos [límites del plan](api-account.md#me-limits) que `GET /api/me`. El valor de `limits` en la herramienta es `null` si la API no proporciona los límites del plan. MCP puede usar la respuesta de `/me` en caché durante un máximo de 30 segundos, por lo que un cambio de plan puede tardar ese tiempo en aparecer en `get_account`.
 
 ## Referencias legibles por máquinas
 

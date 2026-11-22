@@ -91,6 +91,8 @@ Response: [TriggerPatchResult](types.md#triggerpatchresult).
 
 Deletes trigger.
 
+Direct removal requires workspace owner permissions and `manage` for agent keys. A live (`on`) subscription in the trigger's workspace causes `409 trigger_in_use`. Successful removal blocks dependent subscriptions, including those in other workspaces.
+
 Arguments:
 
 | Argument | Location | Description |
@@ -119,6 +121,8 @@ Response: [TriggerBulkPatchResult](types.md#triggerbulkpatchresult).
 ## POST /api/triggers/remove
 
 Bulk remove for several triggers.
+
+Each trigger is checked for live (`on`) subscriptions in its own workspace. If a target is in use, the request returns `409 trigger_in_use`. Removing a project, workspace or account blocks affected subscriptions.
 
 Arguments: none.
 
@@ -323,6 +327,30 @@ Arguments: none.
 Payload: trigger/source-specific search object.
 
 Response: [LatestBlockResult](types.md#latestblockresult).
+
+## Agent trigger building
+
+For all five build routes, use an account session or an agent key in the current workspace. The caller needs Advanced or Pro (otherwise `403 plan_required`). Contract discovery and testing require workspace view access. Planning, activation and removal require workspace edit access.
+
+## POST /api/agent/build/contracts
+
+Agent keys require `read`. Send `chain` and one of `address` (EVM), `program` (Solana) or `pallet` (Substrate). Returns `{ chain, source, events, functions? }` with exact event signatures. EVM includes a recent log count per event when available. An unknown target returns `404 not_found`. A temporary chain data failure returns `503 retryable`.
+
+## POST /api/agent/build/drafts
+
+Agent keys require `manage`. Send the same chain and target plus an `event` name or exact signature, with optional `title` and `description`. Returns `{ draftId, fullnamePreview, inputs, filterable, outputSchema, expiresAt }`. The generated draft lasts seven days. An unknown target or event returns `404 not_found`. A temporary chain data failure returns `503 retryable`.
+
+## POST /api/agent/build/drafts/:draftId/test
+
+Agent keys require `read`. Optionally send `block` (EVM or Substrate) or `slot` (Solana). Omit both for a bounded recent search. Returns `{ result, block?, slot?, output? }`, where `result` is `matched`, `no_match`, `invalid` or `retryable`. An unavailable draft returns `404 not_found` or `410 draft_expired` if it is still stored past expiry.
+
+## POST /api/agent/build/drafts/:draftId/activate
+
+Agent keys require `manage`. Send `{ requestId }` and reuse it on retries. Returns `{ trigger, project }` for the workspace's private agent project. The latest test must return `matched` or activation returns `409 not_tested`. Tier caps return `403 private_project_limit` or `403 trigger_limit`. Draft availability errors are the same as for testing.
+
+## DELETE /api/agent/build/triggers/:fullname
+
+Agent keys require `manage`. Removes a trigger in the workspace's private agent project. Returns `204 No Content`, `404 not_found` outside that project, or `409 trigger_in_use` when a live (`on`) subscription in the trigger's workspace uses it.
 
 ## Trigger Spec
 

@@ -19,13 +19,15 @@ Os endpoints entre serviços não fazem parte desta referência pública.
 
 ## Auth
 
-Pedidos de utilizador usam personal access token:
+A maioria dos endpoints aceita uma sessão de conta ou chave de agente como credencial Bearer. Crie uma chave na [página Agents](https://web3alert.io/agents) ou [inicie sessão com uma carteira Ethereum](agents.md).
 
 ```http
-Authorization: Bearer YOUR_PERSONAL_ACCESS_TOKEN
+Authorization: Bearer YOUR_AGENT_KEY
 ```
 
-Token pode ser obtido em [Account parameters](account.md#personal-access-token).
+A chave atua em nome da conta num espaço de trabalho. O âmbito `read` permite ler, `manage` permite operações como criar subscrições ou cotar carregamentos, e `spend` permite comprar planos e extras de projetos com o saldo em EUR. Gerir chaves, revogar tokens e mudar de espaço requerem uma sessão. Consulte os endpoints abaixo e o [documento OpenAPI](api-openapi.md) para agentes.
+
+Um pedido com chave pode devolver HTTP `403` com `insufficient_scope` se faltar uma permissão, `key_not_allowed` se a operação exigir uma sessão ou `spend_cap_exceeded` se a compra exceder o limite mensal da chave.
 
 O acesso ao endpoint depende de:
 
@@ -74,6 +76,10 @@ Detalhes: [Account API](api-account.md).
 | `DELETE` | `/api/token` | Revogar o token usado no pedido. |
 | `DELETE` | `/api/tokens` | Revogar todos os tokens do account autenticado. |
 | `GET` | `/api/me` | Obter account atual, identity, tier e memberships. |
+| `POST` | `/api/keys` | Cria uma chave no espaço atual. Apenas sessão. |
+| `GET` | `/api/keys` | Lista as chaves de todos os espaços da conta. Apenas sessão. |
+| `PATCH` | `/api/keys/:id` | Altera o nome ou limite mensal da chave. Apenas sessão. |
+| `DELETE` | `/api/keys/:id` | Revoga uma chave. Apenas sessão. |
 | `DELETE` | `/api/me` | Eliminar account atual. |
 | `PUT` | `/api/me/meta` | Atualizar account metadata. |
 | `POST` | `/api/me/avatar` | Enviar avatar do account atual. |
@@ -81,6 +87,17 @@ Detalhes: [Account API](api-account.md).
 | `PUT` | `/api/me/workspace` | Alterar workspace account atual. |
 | `GET` | `/api/account/settings` | Obter account settings. |
 | `PUT` | `/api/account/settings` | Guardar account settings. |
+
+## Início de sessão com carteira e reivindicações
+
+Consulte a [API de Account](api-account.md).
+
+| Método | Endpoint | Finalidade |
+| --- | --- | --- |
+| `POST` | `/api/agent/siwe/nonce` | Pede um nonce SIWE de utilização única. Público. |
+| `POST` | `/api/agent/siwe/verify` | Verifica uma mensagem SIWE assinada e emite uma chave. Público. |
+| `POST` | `/api/agent/claim-link` | Cria ou substitui uma ligação de reivindicação. Chave de agente com `manage`. |
+| `GET` | `/api/agent/claims/:token` | Lê os dados da reivindicação. Público para quem tem a ligação. |
 
 ## Ligações
 
@@ -163,6 +180,18 @@ Detalhes: [Triggers API](api-triggers.md).
 | `GET` | `/api/template-helpers` | Listar metadados públicos dos helpers Handlebars para templates de triggers e actions. |
 | `POST` | `/api/triggers/find-latest-block` | Encontrar ou preparar test input/block para trigger. |
 
+## Criação de triggers para agentes
+
+Consulte a [API de Triggers](api-triggers.md).
+
+| Método | Endpoint | Finalidade |
+| --- | --- | --- |
+| `POST` | `/api/agent/build/contracts` | Procura assinaturas de eventos. Sessão ou chave com `read`. |
+| `POST` | `/api/agent/build/drafts` | Gera um rascunho de trigger. Sessão ou chave com `manage`. |
+| `POST` | `/api/agent/build/drafts/:draftId/test` | Testa um rascunho. Sessão ou chave com `read`. |
+| `POST` | `/api/agent/build/drafts/:draftId/activate` | Ativa um rascunho cujo teste encontrou uma correspondência. Sessão ou chave com `manage`. |
+| `DELETE` | `/api/agent/build/triggers/:fullname` | Remove um trigger privado de agente. Sessão ou chave com `manage`. |
+
 ## Trigger Import
 
 Detalhes: [Trigger Import API](api-trigger-import.md).
@@ -219,6 +248,8 @@ Detalhes: [Resources API](api-resources.md).
 | `GET` | `/api/resources/:fullname` | Obter resource. |
 | `PUT` | `/api/resources/:fullname` | Criar ou atualizar resource. |
 | `POST` | `/api/resources/:fullname/signing-secret` | Gerar ou substituir um segredo de assinatura de webhook. |
+| `PUT` | `/api/inbox` | Cria ou devolve a caixa de entrada do espaço. Sessão ou chave com `manage`. |
+| `GET` | `/api/events` | Lê os eventos retidos. Sessão ou chave com `read`. |
 | `DELETE` | `/api/resources/:fullname` | Eliminar resource. |
 | `POST` | `/api/resources/:fullname/setup-sessions` | Iniciar uma setup session de destino Telegram. |
 | `GET` | `/api/resources/:fullname/setup-sessions/:id` | Obter o estado da setup session. |
@@ -255,6 +286,7 @@ Detalhes: [API de faturação](api-billing.md).
 | `GET` | `/api/billing/overview` | Obter a visão geral da faturação da conta. |
 | `GET` | `/api/billing/wallet/overview` | Obter a visão geral do saldo e da carteira. |
 | `POST` | `/api/billing/wallet/crypto-topup` | Criar um carregamento de saldo com criptomoeda. |
+| `POST` | `/api/billing/wallet/x402-topup` | Carrega o saldo em EUR com USDC na Base através de x402. Sessão ou chave com `manage`. |
 | `POST` | `/api/billing/wallet/topup/refresh` | Atualizar o estado de um carregamento. |
 | `POST` | `/api/billing/account-plan/balance-purchase` | Comprar ou atualizar um plano com saldo. |
 | `POST` | `/api/billing/account-plan/checkout` | Criar um checkout para um plano de conta. |

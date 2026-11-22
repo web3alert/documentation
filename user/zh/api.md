@@ -19,13 +19,15 @@ https://web3alert.io
 
 ## Auth
 
-用户请求使用 personal access token：
+大多数端点接受账户会话令牌或智能体密钥作为 Bearer 凭据。可以在 [Agents 页面](https://web3alert.io/agents)创建密钥，也可以[用以太坊钱包登录](agents.md)。
 
 ```http
-Authorization: Bearer YOUR_PERSONAL_ACCESS_TOKEN
+Authorization: Bearer YOUR_AGENT_KEY
 ```
 
-Token 可以在 [Account parameters](account.md#personal-access-token) 中获取。
+每个密钥代表账户在一个工作区执行操作。`read` 可读取数据，`manage` 可创建订阅或请求充值报价等，`spend` 可用欧元余额购买套餐或项目附加项。管理密钥、撤销令牌和切换工作区需要账户会话。具体端点见下文及面向智能体的 [OpenAPI 文档](api-openapi.md)。
+
+使用密钥的请求可能返回 HTTP `403`。权限不足时返回 `insufficient_scope`，操作要求账户会话时返回 `key_not_allowed`，购买将超出月度上限时返回 `spend_cap_exceeded`。
 
 Endpoint access 取决于：
 
@@ -74,6 +76,10 @@ X-RateLimit-Window: 60000
 | `DELETE` | `/api/token` | 撤销请求使用的 token。 |
 | `DELETE` | `/api/tokens` | 撤销已通过身份验证的 account 的所有 tokens。 |
 | `GET` | `/api/me` | 获取当前 account、identity、tier 和 memberships。 |
+| `POST` | `/api/keys` | 在当前工作区创建密钥。仅限会话令牌。 |
+| `GET` | `/api/keys` | 列出账户在所有工作区的密钥。仅限会话令牌。 |
+| `PATCH` | `/api/keys/:id` | 修改密钥名称或月度上限。仅限会话令牌。 |
+| `DELETE` | `/api/keys/:id` | 撤销密钥。仅限会话令牌。 |
 | `DELETE` | `/api/me` | 删除当前 account。 |
 | `PUT` | `/api/me/meta` | 更新 account metadata。 |
 | `POST` | `/api/me/avatar` | 上传当前 account avatar。 |
@@ -81,6 +87,17 @@ X-RateLimit-Window: 60000
 | `PUT` | `/api/me/workspace` | 切换当前 workspace account。 |
 | `GET` | `/api/account/settings` | 获取 account settings。 |
 | `PUT` | `/api/account/settings` | 保存 account settings。 |
+
+## 钱包登录与认领
+
+详见[账户 API](api-account.md)。
+
+| 方法 | 端点 | 用途 |
+| --- | --- | --- |
+| `POST` | `/api/agent/siwe/nonce` | 获取一次性 SIWE nonce。公开。 |
+| `POST` | `/api/agent/siwe/verify` | 验证已签名的 SIWE 消息并签发密钥。公开。 |
+| `POST` | `/api/agent/claim-link` | 创建或替换认领链接。需要有 `manage` 权限的智能体密钥。 |
+| `GET` | `/api/agent/claims/:token` | 查看认领详情。持有链接即可访问。 |
 
 ## 链接
 
@@ -163,6 +180,18 @@ X-RateLimit-Window: 60000
 | `GET` | `/api/template-helpers` | 获取用于 trigger 和 action 模板的公开 Handlebars helper 元数据。 |
 | `POST` | `/api/triggers/find-latest-block` | 为 trigger 查找或准备 test input/block。 |
 
+## 智能体构建触发器
+
+详见[触发器 API](api-triggers.md)。
+
+| 方法 | 端点 | 用途 |
+| --- | --- | --- |
+| `POST` | `/api/agent/build/contracts` | 查找事件签名。需要会话令牌或有 `read` 权限的密钥。 |
+| `POST` | `/api/agent/build/drafts` | 生成触发器草稿。需要会话令牌或有 `manage` 权限的密钥。 |
+| `POST` | `/api/agent/build/drafts/:draftId/test` | 测试草稿。需要会话令牌或有 `read` 权限的密钥。 |
+| `POST` | `/api/agent/build/drafts/:draftId/activate` | 激活测试匹配的草稿。需要会话令牌或有 `manage` 权限的密钥。 |
+| `DELETE` | `/api/agent/build/triggers/:fullname` | 删除私有智能体触发器。需要会话令牌或有 `manage` 权限的密钥。 |
+
 ## Trigger Import
 
 详情：[Trigger Import API](api-trigger-import.md)。
@@ -219,6 +248,8 @@ X-RateLimit-Window: 60000
 | `GET` | `/api/resources/:fullname` | 获取 resource。 |
 | `PUT` | `/api/resources/:fullname` | 创建或更新 resource。 |
 | `POST` | `/api/resources/:fullname/signing-secret` | 生成或轮换 Webhook 签名密钥。 |
+| `PUT` | `/api/inbox` | 创建或返回工作区收件箱。需要会话令牌或有 `manage` 权限的密钥。 |
+| `GET` | `/api/events` | 读取保留的收件箱事件。需要会话令牌或有 `read` 权限的密钥。 |
 | `DELETE` | `/api/resources/:fullname` | 删除 resource。 |
 | `POST` | `/api/resources/:fullname/setup-sessions` | 启动 Telegram destination setup session。 |
 | `GET` | `/api/resources/:fullname/setup-sessions/:id` | 获取 setup session 状态。 |
@@ -254,6 +285,7 @@ X-RateLimit-Window: 60000
 | `GET` | `/api/billing/overview` | 获取当前账号的计费概览。 |
 | `GET` | `/api/billing/wallet/overview` | 获取余额和钱包概览。 |
 | `POST` | `/api/billing/wallet/crypto-topup` | 创建加密货币余额充值。 |
+| `POST` | `/api/billing/wallet/x402-topup` | 通过 x402 在 Base 网络用 USDC 充值欧元余额。需要会话令牌或有 `manage` 权限的密钥。 |
 | `POST` | `/api/billing/wallet/topup/refresh` | 刷新充值状态。 |
 | `POST` | `/api/billing/account-plan/balance-purchase` | 使用余额购买或升级账号套餐。 |
 | `POST` | `/api/billing/account-plan/checkout` | 创建账号套餐 checkout。 |

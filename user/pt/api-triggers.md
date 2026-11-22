@@ -91,6 +91,8 @@ Resposta: [TriggerPatchResult](types.md#triggerpatchresult).
 
 Elimina trigger.
 
+A remoção direta exige permissões de proprietário do espaço e `manage` para chaves. Uma subscrição ativa (`on`) no espaço do trigger que o utilize causa `409 trigger_in_use`. Uma remoção bem-sucedida bloqueia as subscrições dependentes, incluindo noutros espaços.
+
 Arguments:
 
 | Argument | Location | Description |
@@ -119,6 +121,8 @@ Resposta: [TriggerBulkPatchResult](types.md#triggerbulkpatchresult).
 ## POST /api/triggers/remove
 
 Bulk remove para vários triggers.
+
+São verificadas as subscrições ativas (`on`) no espaço de cada trigger. Se um alvo estiver em uso, devolve `409 trigger_in_use`. Remover um projeto, espaço de trabalho ou conta bloqueia as subscrições afetadas.
 
 Arguments: nenhum.
 
@@ -323,6 +327,30 @@ Arguments: nenhum.
 Payload: trigger/source-specific search object.
 
 Resposta: [LatestBlockResult](types.md#latestblockresult).
+
+## Criação de triggers para agentes
+
+Os cinco caminhos aceitam uma sessão de conta ou chave de agente no espaço atual. A conta precisa de Advanced ou Pro (caso contrário, `403 plan_required`). A pesquisa e os testes requerem acesso de leitura ao espaço. O planeamento, a ativação e a remoção requerem acesso de edição.
+
+## POST /api/agent/build/contracts
+
+As chaves requerem `read`. Envie `chain` e um de `address` (EVM), `program` (Solana) ou `pallet` (Substrate). Devolve `{ chain, source, events, functions? }` com assinaturas exatas. EVM inclui a contagem recente de logs por evento, quando disponível. Um alvo desconhecido devolve `404 not_found`. Uma falha temporária dos dados da cadeia devolve `503 retryable`.
+
+## POST /api/agent/build/drafts
+
+As chaves requerem `manage`. Envie a mesma cadeia e alvo, um nome ou assinatura exata em `event`, e opcionalmente `title` e `description`. Devolve `{ draftId, fullnamePreview, inputs, filterable, outputSchema, expiresAt }`. O rascunho dura sete dias. Um alvo ou evento desconhecido devolve `404 not_found`. Uma falha temporária dos dados da cadeia devolve `503 retryable`.
+
+## POST /api/agent/build/drafts/:draftId/test
+
+As chaves requerem `read`. Envie opcionalmente `block` (EVM ou Substrate) ou `slot` (Solana). Omita ambos para pesquisar num intervalo recente limitado. Devolve `{ result, block?, slot?, output? }` com `matched`, `no_match`, `invalid` ou `retryable`. Um rascunho indisponível devolve `404 not_found`, ou `410 draft_expired` se ainda estiver guardado após expirar.
+
+## POST /api/agent/build/drafts/:draftId/activate
+
+As chaves requerem `manage`. Envie `{ requestId }` e reutilize-o ao repetir. Devolve `{ trigger, project }` para o projeto privado de agente do espaço. Se o último teste não devolver `matched`, responde `409 not_tested`. Os limites devolvem `403 private_project_limit` ou `403 trigger_limit`. Os erros de disponibilidade são os mesmos do teste.
+
+## DELETE /api/agent/build/triggers/:fullname
+
+As chaves requerem `manage`. Remove um trigger do projeto privado de agente. Devolve `204 No Content`, `404 not_found` fora desse projeto ou `409 trigger_in_use` se uma subscrição ativa (`on`) do espaço do trigger o usar.
 
 ## Trigger Spec
 

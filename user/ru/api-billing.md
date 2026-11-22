@@ -20,6 +20,14 @@
 точным идентификатором созданного пополнения, заменяя прежнее значение.
 Сохраните этот идентификатор при возврате от платежного провайдера.
 
+## POST /api/billing/wallet/x402-topup
+
+Требуется сессия аккаунта или ключ агента с `manage`. Передайте `{ amountEur }` от 5 до 500 € с точностью до двух знаков. Оплата в USDC в сети Base по справочному курсу ЕЦБ для USD, где 1 USDC = 1 USD без наценки.
+
+Запрос без `PAYMENT-SIGNATURE` возвращает `402` с котировкой x402 v2 в теле и в заголовке `PAYMENT-REQUIRED` в base64. Подпишите кошельком, сохранив `accepts[0].extra.quoteId`, и отправьте то же тело с заголовком `PAYMENT-SIGNATURE` в base64.
+
+Завершённый платёж возвращает `200` с `PAYMENT-RESPONSE` и `{ topupId, amountEur, usdcAmount, transaction, network, balanceEur }`. При `202` с `{ status: "pending", topupId }` повторите запрос с той же подписью. Повтор завершённого платежа возвращает исходный результат. Отказ возвращает `402` с причиной в `PAYMENT-RESPONSE`. Сбои сервиса дают `502 facilitator_unavailable`, `503 x402_unavailable` или `503 rate_unavailable`.
+
 ## POST /api/billing/wallet/topup/refresh
 
 <!-- api-contract: target=exact-topupId-or-externalReference; recent-topup-fallback=forbidden; result-correlation=fail-closed-on-missing-or-ambiguous -->
@@ -30,6 +38,8 @@
 конфликтует с другим идентификатором.
 
 ## POST /api/billing/account-plan/balance-purchase
+
+Для ключей нужно право `spend` и значение `autoRenew: false`. Если покупка превысит месячный лимит ключа, сервер вернёт `403 spend_cap_exceeded`.
 
 <!-- api-contract: requestId=optional-backward-compatible-8-128-rfc3986-unreserved; requestId-omitted=not-retry-safe-across-http-attempts; autoRenew-default=false; same-intent=same-requestId-and-payload; exact-replay=original-subscriptionId-and-invoiceId-without-second-debit; conflicting-payload=rejected; new-intent=new-requestId -->
 Покупает или улучшает тариф account за баланс кошелька.
@@ -77,6 +87,8 @@
 Создает прямой crypto checkout для тарифа account.
 
 ## POST /api/billing/project-addon/balance-purchase
+
+Для ключей нужно право `spend` и значение `autoRenew: false`. Если покупка превысит месячный лимит ключа, сервер вернёт `403 spend_cap_exceeded`.
 
 <!-- api-contract: requestId=optional-backward-compatible-8-128-rfc3986-unreserved; requestId-omitted=not-retry-safe-across-http-attempts; autoRenew-default=false; same-intent=same-requestId-and-full-payload; exact-replay=original-subscriptionId-and-invoiceId-without-second-debit; conflicting-projectFullname-addonCode-durationMonths-autoRenew=rejected; new-intent=new-requestId -->
 Покупает add-on бесплатного доступа к project за баланс кошелька.

@@ -14,7 +14,7 @@ Account 包含：
 
 - 个人 avatar 和 account title；
 - user id；
-- personal access token；
+- 浏览器会话和智能体密钥；
 - billing profile；
 - internal balance；
 - account tier；
@@ -38,7 +38,7 @@ Workspace 及其设置在 [Workspaces](workspaces.md) 中有更详细的说明�
 - `Account parameters`；
 - `Log out`。
 
-`Log out` 会结束当前会话。退出前会显示确认。
+`Log out` 会结束当前会话并撤销此浏览器的会话令牌。退出前会显示确认。
 
 ## Account Parameters
 
@@ -92,15 +92,13 @@ Title 可以通过名称旁边的编辑按钮修改。编辑时：
 
 当 display name 不足以精确识别 account 时，它用于诊断、支持和准确识别 account。
 
-### Personal Access Token
+## Agents {#agents}
 
-当前会话的个人 access token。
+打开 [Agents 页面](https://web3alert.io/agents)即可创建、查看和撤销智能体密钥。创建前先选择工作区。密钥权限、每月支出上限和有效期均适用于该工作区。请在显示密钥时复制。你可在此页面修改密钥名称和上限，或撤销密钥。
 
-用户可以通过这个 token 访问 Web3alert [API](api.md) 和 [MCP servers](mcp-server.md)。可用的 API/MCP 能力取决于当前 account tier。
+页面显示工作区、权限、支出、有效期和连接者。通过钱包注册时会显示钱包地址。通过应用创建的密钥会标记为由你创建。参阅[智能体快速入门](agents.md)，了解如何用密钥连接 MCP。
 
-Token 应被视为秘密：不要把它发送到公开聊天、screenshots 或文档中。
-
-Token 属于 account，而不是 workspace。
+Account 页面会隐藏浏览器会话令牌。请在 Agents 页面获取 API 和 MCP 客户端使用的凭据。
 
 ## Billing
 

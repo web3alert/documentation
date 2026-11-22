@@ -14,7 +14,7 @@ Account inclui:
 
 - avatar pessoal e account title;
 - user id;
-- personal access token;
+- sessão do navegador e chaves de agente;
 - billing profile;
 - internal balance;
 - account tier;
@@ -38,7 +38,7 @@ Neste menu estão disponíveis:
 - `Account parameters`;
 - `Log out`.
 
-`Log out` termina a sessão atual. Antes de sair, é mostrada uma confirmação.
+`Log out` termina a sessão atual e revoga o token de sessão deste navegador. Antes de sair, é mostrada uma confirmação.
 
 ## Account Parameters
 
@@ -92,15 +92,13 @@ Id read-only do utilizador atual.
 
 É usado para diagnóstico, suporte e identificação precisa do account quando o display name não é suficiente.
 
-### Personal Access Token
+## Agents {#agents}
 
-Access token pessoal da sessão atual.
+Abra a [página Agents](https://web3alert.io/agents) para criar, consultar e revogar chaves de agente. Selecione um espaço de trabalho antes de criar a chave. As permissões, o limite mensal de gastos e a validade aplicam-se a esse espaço. Copie o segredo quando aparecer. Na página pode editar o nome e o limite ou revogar a chave.
 
-Com este token, o utilizador obtém acesso à [API](api.md) do Web3alert e aos [MCP servers](mcp-server.md). As capacidades disponíveis de API/MCP dependem do tier atual do account.
+A página mostra o espaço de trabalho, as permissões, os gastos, a validade e quem ligou o agente. Nos registos com carteira, mostra o endereço. Nas chaves criadas na aplicação, indica que foi o utilizador a criá-las. Consulte o [guia para agentes](agents.md) para ligar uma chave ao MCP.
 
-O token deve ser tratado como segredo: não deve ser enviado em chats públicos, screenshots ou documentação.
-
-O token pertence ao account, não ao workspace.
+A página Account mantém o token de sessão do navegador oculto. Use a página Agents para obter credenciais para clientes de API e MCP.
 
 ## Billing
 

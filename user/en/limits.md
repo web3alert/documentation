@@ -154,7 +154,13 @@ The tier rates below apply to external API requests authenticated with an accoun
 | Advanced | 300/min |
 | Pro | 900/min |
 
-Web UI requests use a separate rate limit. Trusted requests from the MCP server to the API are exempt from the external API rate limit. MCP tool calls have their own default budget of 120 per minute per account, shared across both MCP endpoints on each server process.
+Web UI requests use a separate rate limit. Trusted requests from the MCP server to the API are exempt from the external API rate limit. MCP tool calls have their own default budget of 120 per minute per account, shared across all three MCP paths on each server process.
+
+## Agent payments {#agent-payments}
+
+USDC top-ups on Base over x402 range from €5 to €500, with up to two decimal places in EUR.
+
+Each agent key can have a monthly spend cap from €0 to €10,000, with up to two decimal places. Leave it unset for no cap. The cap applies to successful balance purchases made with that key in the current UTC calendar month. A retried purchase with the same `requestId` counts once. Automatic renewals do not count.
 
 ## Triggers
 
@@ -372,6 +378,16 @@ Subscriptions that deliver only to built-in webhooks skip this workspace rate li
 | Pro | 100 | 20 / second |
 
 Workspace-level limit protects the overall alert flow inside a workspace.
+
+### Inbox retention
+
+| Plan | Retention | Maximum events |
+| --- | --- | ---: |
+| Free | Unavailable | — |
+| Advanced | 7 days | 25,000 |
+| Pro | 30 days | 100,000 |
+
+The workspace inbox keeps the newest events within both limits. It uses the workspace owner's plan, or the caller's plan when there is no owner.
 
 ## Project Transfer
 

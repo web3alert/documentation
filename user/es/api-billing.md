@@ -20,6 +20,14 @@ Crea una recarga de saldo con criptomonedas. Si se proporciona `returnUrl` o
 la referencia exacta de la recarga creada y sustituye cualquier valor anterior.
 Conserva esa referencia durante la redirección del proveedor.
 
+## POST /api/billing/wallet/x402-topup
+
+Requiere una sesión o clave de agente con `manage`. Envía `{ amountEur }` de 5 a 500 €, con hasta dos decimales. Paga en USDC en Base al tipo de referencia del BCE para el USD, usando 1 USDC = 1 USD sin recargo.
+
+Una solicitud sin `PAYMENT-SIGNATURE` devuelve `402` con la cotización x402 v2 en el cuerpo y codificada en base64 en `PAYMENT-REQUIRED`. Firma con tu cartera conservando `accepts[0].extra.quoteId` y envía el mismo cuerpo con `PAYMENT-SIGNATURE` en base64.
+
+Un pago liquidado devuelve `200` con `PAYMENT-RESPONSE` y `{ topupId, amountEur, usdcAmount, transaction, network, balanceEur }`. Si recibes `202` con `{ status: "pending", topupId }`, reintenta con la misma firma. Repetir un pago liquidado devuelve el resultado original. Si se rechaza el pago, devuelve `402` con el fallo en `PAYMENT-RESPONSE`. Los fallos de servicio devuelven `502 facilitator_unavailable`, `503 x402_unavailable` o `503 rate_unavailable`.
+
 ## POST /api/billing/wallet/topup/refresh
 
 <!-- api-contract: target=exact-topupId-or-externalReference; recent-topup-fallback=forbidden; result-correlation=fail-closed-on-missing-or-ambiguous -->
@@ -30,6 +38,8 @@ reciente. Una página de retorno no debe solicitar la actualización si falta el
 identificador, está repetido o entra en conflicto con otro identificador.
 
 ## POST /api/billing/account-plan/balance-purchase
+
+Las claves de agente requieren `spend` y deben usar `autoRenew: false`. Si la compra supera el límite mensual, devuelve `403 spend_cap_exceeded`.
 
 <!-- api-contract: requestId=optional-backward-compatible-8-128-rfc3986-unreserved; requestId-omitted=not-retry-safe-across-http-attempts; autoRenew-default=false; same-intent=same-requestId-and-payload; exact-replay=original-subscriptionId-and-invoiceId-without-second-debit; conflicting-payload=rejected; new-intent=new-requestId -->
 Compra o mejora un plan de cuenta usando el saldo del monedero.
@@ -76,6 +86,8 @@ Crea un checkout para un plan de cuenta.
 Crea un checkout directo con criptomonedas para un plan de cuenta.
 
 ## POST /api/billing/project-addon/balance-purchase
+
+Las claves de agente requieren `spend` y deben usar `autoRenew: false`. Si la compra supera el límite mensual, devuelve `403 spend_cap_exceeded`.
 
 <!-- api-contract: requestId=optional-backward-compatible-8-128-rfc3986-unreserved; requestId-omitted=not-retry-safe-across-http-attempts; autoRenew-default=false; same-intent=same-requestId-and-full-payload; exact-replay=original-subscriptionId-and-invoiceId-without-second-debit; conflicting-projectFullname-addonCode-durationMonths-autoRenew=rejected; new-intent=new-requestId -->
 Compra con saldo un add-on de acceso gratuito para un proyecto.

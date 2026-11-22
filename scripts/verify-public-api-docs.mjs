@@ -49,6 +49,14 @@ const publicCanonicalRoutes = [
   'POST /api/token',
   'DELETE /api/token',
   'DELETE /api/tokens',
+  'POST /api/keys',
+  'GET /api/keys',
+  'PATCH /api/keys/:id',
+  'DELETE /api/keys/:id',
+  'POST /api/agent/siwe/nonce',
+  'POST /api/agent/siwe/verify',
+  'POST /api/agent/claim-link',
+  'GET /api/agent/claims/:token',
   'GET /api/me',
   'DELETE /api/me',
   'PUT /api/me/meta',
@@ -119,6 +127,11 @@ const publicCanonicalRoutes = [
   'GET /api/triggers/substrate/source',
   'GET /api/triggers/substrate/pallets',
   'GET /api/triggers/substrate/pallet',
+  'POST /api/agent/build/contracts',
+  'POST /api/agent/build/drafts',
+  'POST /api/agent/build/drafts/:draftId/test',
+  'POST /api/agent/build/drafts/:draftId/activate',
+  'DELETE /api/agent/build/triggers/:fullname',
   'GET /api/subscriptions',
   'POST /api/subscriptions',
   'GET /api/subscriptions/:id',
@@ -138,6 +151,8 @@ const publicCanonicalRoutes = [
   'DELETE /api/resources/:fullname/setup-sessions/:id',
   'GET /api/resources/external/:token',
   'POST /api/resources/external/:token',
+  'PUT /api/inbox',
+  'GET /api/events',
   'GET /api/addresses',
   'POST /api/addresses',
   'PUT /api/addresses/:id',
@@ -172,6 +187,7 @@ const publicCanonicalRoutes = [
   'GET /api/billing/overview',
   'GET /api/billing/wallet/overview',
   'POST /api/billing/wallet/crypto-topup',
+  'POST /api/billing/wallet/x402-topup',
   'POST /api/billing/wallet/topup/refresh',
   'POST /api/billing/account-plan/balance-purchase',
   'POST /api/billing/account-plan/checkout',
@@ -473,13 +489,16 @@ function validateTokenContract(section, requirementTokens, contractMarker) {
   } else {
     const [payload] = payloadTables;
     const payloadFields = payload.rows.map(tableField);
-    if (payload.header.length != 3 || !exactValues(payloadFields, ['app', 'credentials'])) {
-      errors.push('token payload table must contain exactly app and credentials');
+    if (payload.header.length != 3 || !exactValues(payloadFields, ['app', 'credentials', 'claim'])) {
+      errors.push('token payload table must contain exactly app, credentials and claim');
     }
     for (const field of ['app', 'credentials']) {
       if (payload.rows.find(row => tableField(row) == field)?.[1] != requirementTokens.required) {
         errors.push(`token payload ${field} field must be required`);
       }
+    }
+    if (payload.rows.find(row => tableField(row) == 'claim')?.[1] != requirementTokens.optional) {
+      errors.push('token payload claim field must be optional');
     }
   }
 
@@ -2597,8 +2616,8 @@ for (const [name, section] of [
 if (expectedApiFiles.length != 16) {
   issues.push(`API file manifest must contain 16 files, found ${expectedApiFiles.length}`);
 }
-if (publicCanonicalRoutes.length != 142) {
-  issues.push(`public canonical manifest must contain 142 routes, found ${publicCanonicalRoutes.length}`);
+if (publicCanonicalRoutes.length != 158) {
+  issues.push(`public canonical manifest must contain 158 routes, found ${publicCanonicalRoutes.length}`);
 }
 if (new Set(publicCanonicalRoutes).size != publicCanonicalRoutes.length) {
   issues.push(`public canonical manifest contains duplicates: ${duplicates(publicCanonicalRoutes).join(', ')}`);
@@ -2606,8 +2625,8 @@ if (new Set(publicCanonicalRoutes).size != publicCanonicalRoutes.length) {
 if (excludedCanonicalRoutes.size != 8) {
   issues.push(`canonical exclusion manifest must contain 8 routes, found ${excludedCanonicalRoutes.size}`);
 }
-if (expectedPublicRoutes.length != 142) {
-  issues.push(`public route manifest must contain 142 routes, found ${expectedPublicRoutes.length}`);
+if (expectedPublicRoutes.length != 158) {
+  issues.push(`public route manifest must contain 158 routes, found ${expectedPublicRoutes.length}`);
 }
 for (const [excludedRoute, reason] of excludedCanonicalRoutes) {
   if (publicCanonicalRoutes.includes(excludedRoute)) {
