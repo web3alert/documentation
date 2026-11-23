@@ -31,7 +31,7 @@ Tool errors are returned separately from HTTP authentication errors.
 
 | Tool error | Meaning |
 | --- | --- |
-| `insufficient_scope` | The key lacks a required scope. |
+| `insufficient_scope` | The key lacks a required scope. See the [message for missing `code`](api.md#auth). |
 | `key_not_allowed` | The operation requires an account session. This also applies to buying a plan with a key while an auto-renewing plan is active. |
 | `spend_cap_exceeded` | The purchase would exceed the key's monthly EUR cap. |
 | `not_in_plan` | The applicable workspace plan excludes inbox or delivery history. |
@@ -142,7 +142,7 @@ For an editor-managed connection, add the entry under `servers` in `.vscode/mcp.
 
 ## Build Endpoint
 
-Use `https://web3alert.io/mcp/agent/build` with the same client settings and bearer header. The tool list contains all 14 tools above plus these 5. Free accounts can discover the build tools and receive `plan_required` on calls to them.
+Use `https://web3alert.io/mcp/agent/build` with the same client settings and bearer header. The tool list contains all 14 tools above plus these 5. Free accounts can discover the build tools and receive `plan_required` on calls to them. The build tools work without `code`.
 
 `find_contract` and `plan_trigger` use Web3alert’s built-in chain sources. Pass a short name such as `ethereum`, `base`, `arbitrum-one`, `polkadot` or `solana`, or use `common.<chain>` or `common.source.<chain>`. When short names are available for the target type, the `not_found` tool error for an unknown chain appends `Supported:` followed by those names.
 
@@ -187,3 +187,16 @@ Use the same Claude Desktop or Cursor configuration file. For [VS Code](#vs-code
   }
 }
 ```
+
+### Agent key permissions {#authoring-permissions}
+
+With an agent key, the following `/mcp` tools require `code` alongside their [usual scopes](api-triggers.md#agent-key-permissions).
+
+- `manage` + `code` — `web3alert_upsert_trigger`, `web3alert_patch_trigger`, `web3alert_patch_triggers`
+- `manage` + `code` — `web3alert_test_trigger`, `web3alert_test_trigger_block`, `web3alert_test_trigger_provider`
+- `read` + `code` — `web3alert_preview_trigger`
+
+Saving with `save=true` also requires `manage` and `code` for the following import tools. `saveDrafts=true` has the same effect when `save` is omitted.
+
+- Solana — `web3alert_import_solana_program`, `web3alert_import_solana_trigger`, `web3alert_import_solana_entries`
+- Substrate — `web3alert_import_substrate_trigger`, `web3alert_import_substrate_entries`, `web3alert_import_substrate_pallets`

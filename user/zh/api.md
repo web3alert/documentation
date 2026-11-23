@@ -27,9 +27,15 @@ Authorization: Bearer YOUR_AGENT_KEY
 
 每个密钥沿用账户在所属工作区的角色。`read` 可读取数据，`manage` 可创建订阅或请求充值报价等，`spend` 可用欧元余额购买套餐或项目附加项。管理密钥、撤销令牌、切换工作区、创建或更新工作区、购买礼品券，以及创建、接受、拒绝或取消项目转移请求，均需要账户会话。具体端点见下文及面向智能体的 [OpenAPI 文档](api-openapi.md)。
 
+只有[这八个触发器端点](api-triggers.md#agent-key-permissions)要求 `code` 权限。自定义数据源、资源、项目、模板和订阅均无需 `code`。
+
 没有 `manage` 权限的密钥不会收到外部资源写入令牌。账单响应会对所有智能体密钥隐藏未使用的优惠券和礼品券代码。
 
 使用密钥的请求可能返回 HTTP `403`。权限不足时返回 `insufficient_scope`，操作要求账户会话时返回 `key_not_allowed`，购买将超出月度上限时返回 `spend_cap_exceeded`。
+
+请求需要 `code` 而密钥缺少该权限时，API 返回 `403 insufficient_scope`，`error.message` 如下。
+
+> This key may not write or run its own code; create a key with the "code" permission on the Agents page.
 
 Endpoint access 取决于：
 

@@ -2,6 +2,21 @@
 
 Trigger endpoints gestionan trigger definitions, drafts, bulk operations y test helpers.
 
+## Permisos de claves de agente {#agent-key-permissions}
+
+Las claves de agente necesitan `code` en todas las solicitudes a las rutas que se indican a continuación, incluidas las ediciones que solo cambian metadatos, las ejecuciones de prueba (`dryRun`), las repeticiones de triggers guardados y las pruebas de proveedores que no usan JavaScript.
+
+| Ruta | Permisos obligatorios |
+| --- | --- |
+| [`PUT /api/triggers/:fullname`](#put-api-triggers-fullname) | `manage`, `code` |
+| [`PUT /api/triggers/:fullname/draft`](#put-api-triggers-fullname-draft) | `manage`, `code` |
+| [`PATCH /api/triggers/:fullname`](#patch-api-triggers-fullname) | `manage`, `code` |
+| [`POST /api/triggers/patch`](#post-api-triggers-patch) | `manage`, `code` |
+| [`POST /api/triggers/test`](#post-api-triggers-test) | `manage`, `code` |
+| [`POST /api/triggers/test-block`](#post-api-triggers-test-block) | `manage`, `code` |
+| [`POST /api/triggers/providers/test`](#post-api-triggers-providers-test) | `manage`, `code` |
+| [`POST /api/triggers/preview`](#post-api-triggers-preview) | `read`, `code` |
+
 ## GET /api/triggers
 
 Devuelve triggers con optional filters.
@@ -330,7 +345,7 @@ Respuesta: [LatestBlockResult](types.md#latestblockresult).
 
 ## Creación de triggers para agentes
 
-Las cinco rutas admiten una sesión de cuenta o una clave de agente en el espacio actual. La cuenta debe tener Advanced o Pro (en caso contrario, `403 plan_required`). La búsqueda y las pruebas requieren acceso de lectura al espacio. La planificación, activación y eliminación requieren acceso de edición.
+Las cinco rutas admiten una sesión de cuenta o una clave de agente en el espacio actual. La cuenta debe tener Advanced o Pro (en caso contrario, `403 plan_required`). La búsqueda y las pruebas requieren acceso de lectura al espacio. La planificación, activación y eliminación requieren acceso de edición. Estas rutas funcionan sin `code`.
 
 Si la creación de triggers está desactivada, las rutas devuelven HTTP `400` con `builder is disabled` en `error.message`.
 

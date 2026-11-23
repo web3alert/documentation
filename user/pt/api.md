@@ -27,9 +27,15 @@ Authorization: Bearer YOUR_AGENT_KEY
 
 A chave atua com a função da conta num espaço de trabalho. O âmbito `read` permite ler, `manage` permite operações como criar subscrições ou cotar carregamentos, e `spend` permite comprar planos e extras de projetos com o saldo em EUR. Gerir chaves, revogar tokens, mudar de espaço, criar ou atualizar espaços, comprar cupões de oferta e criar, aceitar, rejeitar ou cancelar pedidos de transferência de projetos requerem uma sessão. Consulte os endpoints e o [documento OpenAPI](api-openapi.md) para agentes.
 
+A permissão opcional `code` só é obrigatória [nestes oito endpoints de triggers](api-triggers.md#agent-key-permissions). As fontes personalizadas, os recursos, os projetos, os modelos e as subscrições não precisam de `code`.
+
 As chaves sem `manage` não recebem tokens de escrita de recursos externos. As respostas de faturação ocultam os códigos de cupões não utilizados, incluindo os de oferta, a todas as chaves de agente.
 
 Um pedido com chave pode devolver HTTP `403` com `insufficient_scope` se faltar uma permissão, `key_not_allowed` se a operação exigir uma sessão ou `spend_cap_exceeded` se a compra exceder o limite mensal da chave.
+
+Se o pedido exigir `code` e a chave não tiver essa permissão, a API devolve `403 insufficient_scope` com este `error.message`.
+
+> This key may not write or run its own code; create a key with the "code" permission on the Agents page.
 
 O acesso ao endpoint depende de:
 

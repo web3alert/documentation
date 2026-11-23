@@ -12,6 +12,8 @@ Sign in to [Web3alert](https://web3alert.io), select a workspace you belong to, 
 
 Every key includes `read`. Add `manage` to register webhooks, create subscriptions or request a top-up quote. Add `spend` to buy plans from the EUR balance. You can set a [monthly spend cap](limits.md#agent-payments) and an expiry of 30, 90 or 365 days, or leave either unset.
 
+Select **Write and run its own JavaScript** to grant `code` for [authoring and testing triggers](mcp-server.md#authoring-permissions). The checkbox is unchecked by default. Permissions are fixed when you create the key.
+
 Existing session tokens work until the server revokes them. Use agent keys for new connections.
 
 ### Sign up with an Ethereum wallet
@@ -49,13 +51,13 @@ Example `200` response, with the `key` view abbreviated.
 ```json
 {
   "account": { "id": "<account-id>", "created": true },
-  "key": { "id": "<key-id>", "scopes": ["read", "manage", "spend"] },
+  "key": { "id": "<key-id>", "scopes": ["read", "manage", "spend", "code"] },
   "secret": "w3a_<key-secret>",
   "claimUrl": "https://web3alert.io/claim/<claim-token>"
 }
 ```
 
-Each successful sign-in issues a fresh key for the initial workspace, with all three scopes and no cap or expiry. Use `secret` as the bearer credential. Wallet verification returns a claim link when it creates the account or when there is no active link. If a link is already active, `claimUrl` is `null`. After a person claims the account with Telegram or Google, wallet sign-in returns `403 account_claimed`. Ask that person for an agent key.
+Each successful sign-in issues a fresh key for the initial workspace, with all four scopes and no cap or expiry. Use `secret` as the bearer credential. Wallet verification returns a claim link when it creates the account or when there is no active link. If a link is already active, `claimUrl` is `null`. After a person claims the account with Telegram or Google, wallet sign-in returns `403 account_claimed`. Ask that person for an agent key.
 
 Share the claim link privately with the person taking control of the account. The page shows the wallet, account creation date and link expiry, and offers Telegram or Google sign-in. After signing in, the person lands on the Agents page, where they can see and control the keys and access the account's plan, balance and spend. A login already linked to another Web3alert account requires a different login. The newest link is valid for seven days. Use [`POST /api/agent/claim-link`](api-account.md#post-api-agent-claim-link) to replace it. If Telegram opens its in-app browser on a phone, the person can complete the claim there. After signing in, they reach the Agents page in that browser.
 

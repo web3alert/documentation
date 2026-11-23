@@ -98,7 +98,7 @@ Em `Account parameters` → `Information` → `Sessions`, escolha `Revoke all to
 
 ## Agents {#agents}
 
-Abra a [página Agents](https://web3alert.io/agents) para criar, consultar e revogar chaves de agente. Selecione um espaço de trabalho antes de criar a chave. As permissões, o limite mensal de gastos e a validade aplicam-se a esse espaço. Copie o segredo quando aparecer. Na página pode editar o nome e o limite ou revogar a chave.
+Abra a [página Agents](https://web3alert.io/agents) para criar, consultar e revogar chaves de agente. Selecione um espaço de trabalho antes de criar a chave. As [permissões](agents.md#crie-uma-chave-na-aplicacao) (incluindo `code`), o limite mensal de gastos e a validade aplicam-se a esse espaço. Copie o segredo quando aparecer. Na página pode editar o nome e o limite ou revogar a chave.
 
 A página mostra o espaço de trabalho, as permissões, os gastos, a validade e quem ligou o agente. Nos registos com carteira, mostra o endereço. Nas chaves criadas na aplicação, indica que foi o utilizador a criá-las. Consulte o [guia para agentes](agents.md) para ligar uma chave ao MCP.
 

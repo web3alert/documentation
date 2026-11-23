@@ -12,6 +12,8 @@ Inicie sessão no [Web3alert](https://web3alert.io), selecione um espaço de tra
 
 Todas as chaves incluem `read`. Adicione `manage` para registar webhooks, criar subscrições ou pedir uma cotação de carregamento. Adicione `spend` para comprar planos com o saldo em EUR. Pode definir um [limite mensal de gastos](limits.md#agent-payments) e uma validade de 30, 90 ou 365 dias. Ambos são opcionais.
 
+Selecione **Write and run its own JavaScript** para atribuir `code` e [criar, editar ou testar triggers com MCP](mcp-server.md#authoring-permissions). A caixa está desmarcada por predefinição. As permissões ficam definidas na criação da chave e não podem ser alteradas depois.
+
 Os tokens de sessão existentes funcionam até serem revogados pelo servidor. Use chaves de agente para novas ligações.
 
 ### Registe-se com uma carteira Ethereum
@@ -49,13 +51,13 @@ Exemplo de resposta `200` com o objeto `key` abreviado.
 ```json
 {
   "account": { "id": "<account-id>", "created": true },
-  "key": { "id": "<key-id>", "scopes": ["read", "manage", "spend"] },
+  "key": { "id": "<key-id>", "scopes": ["read", "manage", "spend", "code"] },
   "secret": "w3a_<key-secret>",
   "claimUrl": "https://web3alert.io/claim/<claim-token>"
 }
 ```
 
-Cada início de sessão bem-sucedido emite uma chave para o espaço inicial com as três permissões, sem limite nem validade. Use `secret` como credencial Bearer. A verificação devolve uma ligação de reivindicação quando cria a conta ou se não houver uma ligação ativa. Caso já haja uma, `claimUrl` fica a `null`. Quando uma pessoa reivindica a conta com Telegram ou Google, o início de sessão com carteira devolve `403 account_claimed`. Peça a essa pessoa uma chave de agente.
+Cada início de sessão bem-sucedido emite uma chave para o espaço inicial com as quatro permissões, sem limite nem validade. Use `secret` como credencial Bearer. A verificação devolve uma ligação de reivindicação quando cria a conta ou se não houver uma ligação ativa. Caso já haja uma, `claimUrl` fica a `null`. Quando uma pessoa reivindica a conta com Telegram ou Google, o início de sessão com carteira devolve `403 account_claimed`. Peça a essa pessoa uma chave de agente.
 
 Partilhe a ligação de reivindicação em privado com a pessoa que vai assumir a conta. A página mostra a carteira, a data de criação da conta e a validade da ligação, e permite iniciar sessão com Telegram ou Google. Em seguida, a página Agents permite ver e controlar as chaves e consultar o plano, o saldo e os gastos. Se o início de sessão já estiver associado a outra conta Web3alert, use um diferente. A ligação mais recente é válida durante sete dias. Pode substituí-la pelo endpoint [`POST /api/agent/claim-link`](api-account.md#post-api-agent-claim-link). Se o Telegram abrir o seu navegador integrado num telemóvel, a pessoa pode concluir a reivindicação nesse navegador. Após iniciar sessão, chega à página Agents no mesmo navegador.
 

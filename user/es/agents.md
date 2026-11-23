@@ -12,6 +12,8 @@ Inicia sesión en [Web3alert](https://web3alert.io), selecciona un espacio de tr
 
 Todas las claves incluyen `read`. Añade `manage` para registrar webhooks, crear suscripciones o solicitar una cotización de recarga. Añade `spend` para comprar planes con el saldo en EUR. Puedes establecer un [límite mensual de gasto](limits.md#agent-payments) y un vencimiento de 30, 90 o 365 días. Ambos son opcionales.
 
+Marca **Write and run its own JavaScript** para conceder `code` y [crear, editar o probar triggers con MCP](mcp-server.md#authoring-permissions). La casilla está desmarcada por defecto. Los permisos quedan fijados al crear la clave.
+
 Los tokens de sesión existentes funcionan hasta que el servidor los revoca. Usa claves de agente para las conexiones nuevas.
 
 ### Regístrate con una cartera de Ethereum
@@ -49,13 +51,13 @@ Ejemplo de respuesta `200` con el objeto `key` abreviado.
 ```json
 {
   "account": { "id": "<account-id>", "created": true },
-  "key": { "id": "<key-id>", "scopes": ["read", "manage", "spend"] },
+  "key": { "id": "<key-id>", "scopes": ["read", "manage", "spend", "code"] },
   "secret": "w3a_<key-secret>",
   "claimUrl": "https://web3alert.io/claim/<claim-token>"
 }
 ```
 
-Cada inicio de sesión correcto emite una clave nueva para el espacio inicial con los tres permisos, sin límite ni vencimiento. Usa `secret` como credencial Bearer. La verificación devuelve un enlace de reclamación al crear la cuenta o si no hay un enlace activo. Si ya hay uno, `claimUrl` vale `null`. Cuando una persona reclama la cuenta con Telegram o Google, el inicio de sesión con cartera devuelve `403 account_claimed`. Pídele una clave de agente.
+Cada inicio de sesión correcto emite una clave nueva para el espacio inicial con los cuatro permisos, sin límite ni vencimiento. Usa `secret` como credencial Bearer. La verificación devuelve un enlace de reclamación al crear la cuenta o si no hay un enlace activo. Si ya hay uno, `claimUrl` vale `null`. Cuando una persona reclama la cuenta con Telegram o Google, el inicio de sesión con cartera devuelve `403 account_claimed`. Pídele una clave de agente.
 
 Comparte el enlace de reclamación en privado con la persona que se hará cargo de la cuenta. La página muestra la cartera, la fecha de creación de la cuenta y el vencimiento del enlace, y ofrece iniciar sesión con Telegram o Google. Después, la página Agents permite ver y controlar las claves y consultar el plan, el saldo y el gasto. Si el acceso ya pertenece a otra cuenta de Web3alert, usa uno distinto. El enlace más reciente dura siete días. Puedes sustituirlo con el endpoint [`POST /api/agent/claim-link`](api-account.md#post-api-agent-claim-link). Si Telegram abre su navegador integrado en el teléfono, la persona puede completar la reclamación allí. Tras iniciar sesión, llega a la página Agents en ese mismo navegador.
 

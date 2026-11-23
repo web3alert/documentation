@@ -2,6 +2,8 @@
 
 Trigger import endpoints 帮助根据外部描述生成 trigger drafts：EVM ABI、Substrate metadata/pallets、Solana IDL 和 source metadata。
 
+智能体密钥无需 `code` 即可调用 `/api/triggers/import/*`。
+
 ## POST /api/triggers/import/evm
 
 加载并规范化 EVM ABI entries。
@@ -20,7 +22,7 @@ Payload: EVM ABI import input。通常包含 ABI JSON 或 ABI entries。
 响应：[EvmAbiImportResult](types.md#evmabiimportresult)。
 
 此 endpoint 只返回 ABI import entries，不会保存 triggers。请另行使用
-`PUT /api/triggers/:fullname` 保存选中的 drafts。
+[`PUT /api/triggers/:fullname`](api-triggers.md#agent-key-permissions) 保存选中的 drafts。
 
 ## POST /api/triggers/import/evm/abi
 

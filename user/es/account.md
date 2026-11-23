@@ -98,7 +98,7 @@ En `Account parameters` → `Information` → `Sessions`, elige `Revoke all toke
 
 ## Agents {#agents}
 
-Abre la [página Agents](https://web3alert.io/agents) para crear, consultar y revocar claves de agente. Selecciona un espacio de trabajo antes de crear la clave. Sus permisos, límite mensual de gasto y vencimiento se aplican a ese espacio. Copia el secreto cuando aparezca. En la página puedes editar el nombre y el límite o revocar la clave.
+Abre la [página Agents](https://web3alert.io/agents) para crear, consultar y revocar claves de agente. Selecciona un espacio de trabajo antes de crear la clave. Sus [permisos](agents.md#crea-una-clave-en-la-aplicacion) (incluido `code`), límite mensual de gasto y vencimiento se aplican a ese espacio. Copia el secreto cuando aparezca. En la página puedes editar el nombre y el límite o revocar la clave.
 
 La página muestra el espacio de trabajo, los permisos, el gasto, el vencimiento y quién conectó al agente. Para los registros con cartera, muestra la dirección. Para las claves creadas en la aplicación, indica que las creaste tú. Consulta la [guía para agentes](agents.md) para conectar una clave a MCP.
 

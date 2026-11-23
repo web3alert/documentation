@@ -12,6 +12,8 @@ Web3alert 目录提供来自 EVM 和 Substrate 链的已解码链上事件，涵
 
 每个密钥都包含 `read` 权限。添加 `manage` 可注册 Webhook、创建订阅或请求充值报价。添加 `spend` 可使用欧元余额购买套餐。你可以设置[每月支出上限](limits.md#agent-payments)，也可以设置 30、90 或 365 天的有效期，两项均可留空。
 
+勾选 **Write and run its own JavaScript** 可授予 `code` 权限，用于[通过 MCP 创建、修改或测试触发器](mcp-server.md#authoring-permissions)。该选项默认不勾选。权限在创建密钥时确定，之后无法更改。
+
 现有会话令牌可用到服务器撤销它们为止。新连接请使用智能体密钥。
 
 ### 使用以太坊钱包注册
@@ -49,13 +51,13 @@ Content-Type: application/json
 ```json
 {
   "account": { "id": "<account-id>", "created": true },
-  "key": { "id": "<key-id>", "scopes": ["read", "manage", "spend"] },
+  "key": { "id": "<key-id>", "scopes": ["read", "manage", "spend", "code"] },
   "secret": "w3a_<key-secret>",
   "claimUrl": "https://web3alert.io/claim/<claim-token>"
 }
 ```
 
-每次登录成功都会为初始工作区签发新密钥，包含三种权限，无支出上限和过期时间。使用 `secret` 作为 Bearer 凭据。验证只在创建账户或没有有效链接时返回认领链接。若已有有效链接，`claimUrl` 为 `null`。账户由用户通过 Telegram 或 Google 认领后，钱包登录会返回 `403 account_claimed`。请向该用户索取智能体密钥。
+每次登录成功都会为初始工作区签发新密钥，包含四种权限，无支出上限和过期时间。使用 `secret` 作为 Bearer 凭据。验证只在创建账户或没有有效链接时返回认领链接。若已有有效链接，`claimUrl` 为 `null`。账户由用户通过 Telegram 或 Google 认领后，钱包登录会返回 `403 account_claimed`。请向该用户索取智能体密钥。
 
 请私下将认领链接交给要接管账户的人。页面会显示钱包、账户创建日期和链接到期时间，并提供 Telegram 和 Google 登录选项。登录后会转到 Agents 页面，可查看和管理密钥，以及查看套餐、余额和支出。如果所选登录方式已关联到另一个 Web3alert 账户，请使用其他账号。最新链接在七天内有效。可用[`POST /api/agent/claim-link`](api-account.md#post-api-agent-claim-link)替换该链接。如果 Telegram 在手机上打开应用内浏览器，用户可以在那里完成认领。登录成功后，用户会在同一浏览器中进入 Agents 页面。
 

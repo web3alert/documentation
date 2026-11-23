@@ -98,7 +98,7 @@ In `Account parameters` → `Information` → `Sessions`, choose `Revoke all tok
 
 ## Agents {#agents}
 
-Open the [Agents page](https://web3alert.io/agents) to create, review and revoke agent keys. Select a workspace before creating a key. Its scopes, optional monthly spend cap and optional expiry apply to that workspace. Copy the key secret when it is shown. You can edit the name and cap or revoke the key from the page.
+Open the [Agents page](https://web3alert.io/agents) to create, review and revoke agent keys. Select a workspace before creating a key. Its [scopes](agents.md#create-a-key-in-the-app) (including `code`), optional monthly spend cap and optional expiry apply to that workspace. Copy the key secret when it is shown. You can edit the name and cap or revoke the key from the page.
 
 The page shows the workspace, scopes, spend, expiry and who connected the agent. Wallet sign-ups show the wallet address. Keys created in the app show that you created them. See the [agent quickstart](agents.md) to connect a key to MCP.
 

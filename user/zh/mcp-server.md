@@ -31,7 +31,7 @@ Token 撤销后，API 会立即拒绝该 token。MCP 仍有验证缓存时，到
 
 | 工具错误 | 含义 |
 | --- | --- |
-| `insufficient_scope` | 密钥缺少所需权限。 |
+| `insufficient_scope` | 密钥缺少所需权限。 参阅[缺少 `code` 时的错误消息](api.md#auth)。 |
 | `key_not_allowed` | 操作需要账户会话。已有自动续订的有效套餐时，使用密钥买套餐也会遇到此错误。 |
 | `spend_cap_exceeded` | 购买将超过该密钥的欧元月度支出上限。 |
 | `not_in_plan` | 适用的工作区套餐不包含收件箱或投递历史。 |
@@ -142,7 +142,7 @@ printf 'Web3alert 智能体密钥： ' && read -rs WEB3ALERT_KEY && echo && [ -n
 
 ## 构建端点 {#build-endpoint}
 
-使用相同的客户端设置和 Bearer 请求头连接 `https://web3alert.io/mcp/agent/build`。工具列表包括上述 14 个工具和以下 5 个工具。Free 账户可以发现这些工具，调用时会收到 `plan_required`。
+使用相同的客户端设置和 Bearer 请求头连接 `https://web3alert.io/mcp/agent/build`。工具列表包括上述 14 个工具和以下 5 个工具。Free 账户可以发现这些工具，调用时会收到 `plan_required`。构建工具无需 `code`。
 
 `find_contract` 和 `plan_trigger` 仅使用 Web3alert 的内置链源。可以传入简称，例如 `ethereum`、`base`、`arbitrum-one`、`polkadot` 或 `solana`，也可以使用 `common.<chain>` 或 `common.source.<chain>`。若无法识别链，且该目标类型有可用的简称，`not_found` 工具错误会在 `Supported:` 后列出这些简称。
 
@@ -187,3 +187,16 @@ printf 'Web3alert 智能体密钥： ' && read -rs WEB3ALERT_KEY && echo && [ -n
   }
 }
 ```
+
+### 智能体密钥权限 {#authoring-permissions}
+
+智能体密钥调用以下 `/mcp` 工具时，除了[常规权限](api-triggers.md#agent-key-permissions)，还需要 `code`。
+
+- `manage` + `code` — `web3alert_upsert_trigger`, `web3alert_patch_trigger`, `web3alert_patch_triggers`
+- `manage` + `code` — `web3alert_test_trigger`, `web3alert_test_trigger_block`, `web3alert_test_trigger_provider`
+- `read` + `code` — `web3alert_preview_trigger`
+
+以下导入工具使用 `save=true` 保存时也需要 `manage` 和 `code`。省略 `save` 时，`saveDrafts=true` 的效果相同。
+
+- Solana — `web3alert_import_solana_program`, `web3alert_import_solana_trigger`, `web3alert_import_solana_entries`
+- Substrate — `web3alert_import_substrate_trigger`, `web3alert_import_substrate_entries`, `web3alert_import_substrate_pallets`

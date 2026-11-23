@@ -27,9 +27,15 @@ Authorization: Bearer YOUR_AGENT_KEY
 
 Each key acts with its account's role in one workspace. Agent keys include `read` for reads, add `manage` for mutations such as creating a subscription or quoting a top-up, and add `spend` for account plan or project add-on purchases from the EUR balance. Session-only actions include key management, token revocation, workspace switching, creating or updating a workspace, buying gift coupons, and creating, accepting, rejecting or canceling project transfer requests. See the individual routes and the agent-facing [OpenAPI document](api-openapi.md).
 
+The optional `code` scope is required only on [these eight trigger routes](api-triggers.md#agent-key-permissions). Custom sources, resources, projects, templates and subscriptions have no `code` requirement.
+
 Keys without `manage` receive no external resource write tokens. Billing responses omit unused coupon and gift codes for all agent keys.
 
 An agent-key request can return HTTP `403` with `insufficient_scope`, `key_not_allowed` for a session-only operation, or `spend_cap_exceeded` for a purchase over the key's monthly cap.
+
+When a request needs `code` and the key lacks it, the API returns `403 insufficient_scope` with this `error.message`.
+
+> This key may not write or run its own code; create a key with the "code" permission on the Agents page.
 
 Endpoint access depends on:
 

@@ -113,7 +113,7 @@ The response also includes `limits` for the authenticated account's tier.
 
 Any member of the current workspace can create a key. The key acts with the account's role in that workspace.
 
-Requires an account session token. Creates a key bound to the current workspace. Send `{ name, scopes, monthlyCapEur?, expiresInDays? }`. The name is 1–64 characters. Include `read` and optionally `manage` and `spend`. A cap can be €0–€10,000 with up to two decimal places, and expiry can be 30, 90 or 365 days. Omit either optional field or pass `null` for no limit of that kind.
+Requires an account session token. Creates a key bound to the current workspace. Send `{ name, scopes, monthlyCapEur?, expiresInDays? }`. The name is 1–64 characters. Include `read` and optionally `manage`, `spend` and `code`. A cap can be €0–€10,000 with up to two decimal places, and expiry can be 30, 90 or 365 days. Omit either optional field or pass `null` for no limit of that kind.
 
 Returns `201` with `{ key, secret }`. Copy `secret` now. The response is the only time it is shown.
 
@@ -139,7 +139,7 @@ The nonce and verify endpoints share a per-IP edge limit of 1 request per second
 
 Public. Send `{ message, signature }` signed by an Ethereum externally owned account (EOA). Use an EIP-4361 version `1` message with the returned nonce, the `web3alert.io` sign-in domain, a URI on that origin and an `issuedAt` within five minutes of the server clock. Any chain ID is accepted.
 
-Returns `{ account: { id, created }, key, secret, claimUrl }`. A first sign-in creates a Free account and workspace. Each success issues a fresh key with all scopes and no cap or expiry. Use `secret` as the bearer credential. Wallet verification issues a claim link when it creates the account or when there is no active link. With an active link, `claimUrl` is `null`. Use `POST /api/agent/claim-link` to replace it.
+Returns `{ account: { id, created }, key, secret, claimUrl }`. A first sign-in creates a Free account and workspace. Each success issues a fresh key with [all four scopes, including `code`](agents.md#sign-up-with-an-ethereum-wallet) and no cap or expiry. Use `secret` as the bearer credential. Wallet verification issues a claim link when it creates the account or when there is no active link. With an active link, `claimUrl` is `null`. Use `POST /api/agent/claim-link` to replace it.
 
 After a person claims the account with Telegram or Google, wallet sign-in returns `403 account_claimed` and issues no key or link. Ask that person for an agent key.
 

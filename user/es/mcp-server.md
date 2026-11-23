@@ -31,7 +31,7 @@ Los errores de las herramientas son independientes de los errores de autenticaci
 
 | Error | Significado |
 | --- | --- |
-| `insufficient_scope` | La clave carece de un permiso obligatorio. |
+| `insufficient_scope` | La clave carece de un permiso obligatorio. Consulta el [mensaje que se devuelve cuando falta `code`](api.md#auth). |
 | `key_not_allowed` | La operación requiere una sesión de la cuenta. También se aplica al comprar un plan con una clave mientras hay un plan activo con renovación automática. |
 | `spend_cap_exceeded` | La compra superaría el límite mensual en EUR de la clave. |
 | `not_in_plan` | El plan del espacio de trabajo no incluye la bandeja de entrada o el historial de entregas. |
@@ -142,7 +142,7 @@ Para una conexión gestionada por el editor, añade la entrada en `servers` en `
 
 ## Endpoint de creación {#build-endpoint}
 
-Usa `https://web3alert.io/mcp/agent/build` con la misma configuración y cabecera Bearer. La lista incluye las 14 herramientas anteriores y estas 5. Las cuentas Free pueden descubrirlas y reciben `plan_required` al llamarlas.
+Usa `https://web3alert.io/mcp/agent/build` con la misma configuración y cabecera Bearer. La lista incluye las 14 herramientas anteriores y estas 5. Las cuentas Free pueden descubrirlas y reciben `plan_required` al llamarlas. Las herramientas de creación funcionan sin `code`.
 
 `find_contract` y `plan_trigger` usan las fuentes de cadena integradas de Web3alert. Pasa un nombre corto como `ethereum`, `base`, `arbitrum-one`, `polkadot` o `solana`, o usa `common.<chain>` o `common.source.<chain>`. Si la cadena es desconocida y hay nombres cortos disponibles para el tipo de destino, el error `not_found` los añade después de `Supported:`.
 
@@ -187,3 +187,16 @@ Usa el mismo archivo de configuración de Claude Desktop o Cursor. Para [VS Code
   }
 }
 ```
+
+### Permisos de claves de agente {#authoring-permissions}
+
+Con una clave de agente, las siguientes herramientas de `/mcp` requieren `code` además de sus [permisos habituales](api-triggers.md#agent-key-permissions).
+
+- `manage` + `code` — `web3alert_upsert_trigger`, `web3alert_patch_trigger`, `web3alert_patch_triggers`
+- `manage` + `code` — `web3alert_test_trigger`, `web3alert_test_trigger_block`, `web3alert_test_trigger_provider`
+- `read` + `code` — `web3alert_preview_trigger`
+
+Para guardar con `save=true`, las siguientes herramientas de importación también requieren `manage` y `code`. Si omites `save`, `saveDrafts=true` tiene el mismo efecto.
+
+- Solana — `web3alert_import_solana_program`, `web3alert_import_solana_trigger`, `web3alert_import_solana_entries`
+- Substrate — `web3alert_import_substrate_trigger`, `web3alert_import_substrate_entries`, `web3alert_import_substrate_pallets`

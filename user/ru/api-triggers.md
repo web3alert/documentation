@@ -2,6 +2,21 @@
 
 Endpoints Triggers управляют trigger definitions, drafts, bulk operations и test helpers.
 
+## Права ключей агентов {#agent-key-permissions}
+
+Право `code` требуется для каждого запроса к эндпоинтам ниже, в том числе при изменении только метаданных, пробных запусках (`dryRun`), повторном запуске сохранённых триггеров и проверке провайдеров без JavaScript.
+
+| Эндпоинт | Обязательные права |
+| --- | --- |
+| [`PUT /api/triggers/:fullname`](#put-api-triggers-fullname) | `manage`, `code` |
+| [`PUT /api/triggers/:fullname/draft`](#put-api-triggers-fullname-draft) | `manage`, `code` |
+| [`PATCH /api/triggers/:fullname`](#patch-api-triggers-fullname) | `manage`, `code` |
+| [`POST /api/triggers/patch`](#post-api-triggers-patch) | `manage`, `code` |
+| [`POST /api/triggers/test`](#post-api-triggers-test) | `manage`, `code` |
+| [`POST /api/triggers/test-block`](#post-api-triggers-test-block) | `manage`, `code` |
+| [`POST /api/triggers/providers/test`](#post-api-triggers-providers-test) | `manage`, `code` |
+| [`POST /api/triggers/preview`](#post-api-triggers-preview) | `read`, `code` |
+
 ## GET /api/triggers
 
 Возвращает triggers с опциональными filters.
@@ -330,7 +345,7 @@ transforms над переданным input, затем валидирует п
 
 ## Сборка триггеров для агентов
 
-Для всех пяти эндпоинтов используйте сессию аккаунта или ключ агента в текущем пространстве. Аккаунту нужен Advanced или Pro, иначе сервер вернёт `403 plan_required`. Поиск и тестирование требуют права просмотра пространства. Планирование, активация и удаление требуют права редактирования.
+Для всех пяти эндпоинтов используйте сессию аккаунта или ключ агента в текущем пространстве. Аккаунту нужен Advanced или Pro, иначе сервер вернёт `403 plan_required`. Поиск и тестирование требуют права просмотра пространства. Планирование, активация и удаление требуют права редактирования. Эти эндпоинты работают без права `code`.
 
 Если сборка отключена, эндпоинты возвращают HTTP `400` со значением `builder is disabled` в `error.message`.
 

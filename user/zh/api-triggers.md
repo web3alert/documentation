@@ -2,6 +2,21 @@
 
 Trigger endpoints 用于管理 trigger definitions、drafts、bulk operations 和 test helpers。
 
+## 智能体密钥权限 {#agent-key-permissions}
+
+智能体密钥每次调用下列端点都需要 `code`，包括仅修改元数据、试运行（`dryRun`）、重放已保存的触发器，以及测试无需 JavaScript 的提供程序。
+
+| 端点 | 所需权限 |
+| --- | --- |
+| [`PUT /api/triggers/:fullname`](#put-api-triggers-fullname) | `manage`, `code` |
+| [`PUT /api/triggers/:fullname/draft`](#put-api-triggers-fullname-draft) | `manage`, `code` |
+| [`PATCH /api/triggers/:fullname`](#patch-api-triggers-fullname) | `manage`, `code` |
+| [`POST /api/triggers/patch`](#post-api-triggers-patch) | `manage`, `code` |
+| [`POST /api/triggers/test`](#post-api-triggers-test) | `manage`, `code` |
+| [`POST /api/triggers/test-block`](#post-api-triggers-test-block) | `manage`, `code` |
+| [`POST /api/triggers/providers/test`](#post-api-triggers-providers-test) | `manage`, `code` |
+| [`POST /api/triggers/preview`](#post-api-triggers-preview) | `read`, `code` |
+
 ## GET /api/triggers
 
 返回带 optional filters 的 triggers。
@@ -329,7 +344,7 @@ Payload: trigger/source-specific search object.
 
 ## 智能体构建触发器
 
-五个构建端点均接受当前工作区的账户会话令牌或智能体密钥。调用账户需要 Advanced 或 Pro，否则返回 `403 plan_required`。查找和测试需要工作区查看权限。规划、激活和删除需要工作区编辑权限。
+五个构建端点均接受当前工作区的账户会话令牌或智能体密钥。调用账户需要 Advanced 或 Pro，否则返回 `403 plan_required`。查找和测试需要工作区查看权限。规划、激活和删除需要工作区编辑权限。这些端点无需 `code`。
 
 关闭构建功能时，这些端点返回 HTTP `400`，`error.message` 为 `builder is disabled`。
 

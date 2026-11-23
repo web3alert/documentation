@@ -31,7 +31,7 @@ Web3alert предоставляет три пути по протоколу Str
 
 | Ошибка | Причина |
 | --- | --- |
-| `insufficient_scope` | У ключа нет нужного права. |
+| `insufficient_scope` | У ключа нет нужного права. См. [сообщение об отсутствии права `code`](api.md#auth). |
 | `key_not_allowed` | Операция требует сессии аккаунта. Это также относится к покупке ключом, пока действует тариф с автопродлением. |
 | `spend_cap_exceeded` | Покупка превысит месячный лимит ключа в EUR. |
 | `not_in_plan` | Тариф рабочего пространства не включает входящие события или историю доставки. |
@@ -142,7 +142,7 @@ printf 'Ключ агента Web3alert: ' && read -rs WEB3ALERT_KEY && echo && 
 
 ## Эндпоинт сборки {#build-endpoint}
 
-Используйте `https://web3alert.io/mcp/agent/build` с теми же настройками и заголовком Bearer. Список включает 14 инструментов выше и эти 5. Аккаунты Free видят их в списке и получают `plan_required` при вызове.
+Используйте `https://web3alert.io/mcp/agent/build` с теми же настройками и заголовком Bearer. Список включает 14 инструментов выше и эти 5. Аккаунты Free видят их в списке и получают `plan_required` при вызове. Инструменты сборки работают без права `code`.
 
 `find_contract` и `plan_trigger` используют встроенные источники сетей Web3alert. Передайте короткое имя, например `ethereum`, `base`, `arbitrum-one`, `polkadot` или `solana`, либо имя в формате `common.<chain>` или `common.source.<chain>`. Если сеть неизвестна и для указанного типа цели доступны короткие имена, сообщение об ошибке `not_found` перечисляет их после `Supported:`.
 
@@ -187,3 +187,16 @@ printf 'Ключ агента Web3alert: ' && read -rs WEB3ALERT_KEY && echo && 
   }
 }
 ```
+
+### Права ключей агентов {#authoring-permissions}
+
+Для следующих инструментов `/mcp` ключу агента требуется `code` в дополнение к [обычным правам](api-triggers.md#agent-key-permissions).
+
+- `manage` + `code` — `web3alert_upsert_trigger`, `web3alert_patch_trigger`, `web3alert_patch_triggers`
+- `manage` + `code` — `web3alert_test_trigger`, `web3alert_test_trigger_block`, `web3alert_test_trigger_provider`
+- `read` + `code` — `web3alert_preview_trigger`
+
+При сохранении с `save=true` следующим инструментам импорта также нужны `manage` и `code`. Если опустить `save`, то `saveDrafts=true` действует так же.
+
+- Solana — `web3alert_import_solana_program`, `web3alert_import_solana_trigger`, `web3alert_import_solana_entries`
+- Substrate — `web3alert_import_substrate_trigger`, `web3alert_import_substrate_entries`, `web3alert_import_substrate_pallets`

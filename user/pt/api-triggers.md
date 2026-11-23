@@ -2,6 +2,21 @@
 
 Trigger endpoints gerem trigger definitions, drafts, bulk operations e test helpers.
 
+## Permissões das chaves de agente {#agent-key-permissions}
+
+As chaves de agente precisam de `code` em todos os pedidos aos endpoints abaixo, incluindo alterações apenas aos metadados, simulações (`dryRun`), novas execuções de triggers guardados e testes de fornecedores que não usam JavaScript.
+
+| Endpoint | Permissões obrigatórias |
+| --- | --- |
+| [`PUT /api/triggers/:fullname`](#put-api-triggers-fullname) | `manage`, `code` |
+| [`PUT /api/triggers/:fullname/draft`](#put-api-triggers-fullname-draft) | `manage`, `code` |
+| [`PATCH /api/triggers/:fullname`](#patch-api-triggers-fullname) | `manage`, `code` |
+| [`POST /api/triggers/patch`](#post-api-triggers-patch) | `manage`, `code` |
+| [`POST /api/triggers/test`](#post-api-triggers-test) | `manage`, `code` |
+| [`POST /api/triggers/test-block`](#post-api-triggers-test-block) | `manage`, `code` |
+| [`POST /api/triggers/providers/test`](#post-api-triggers-providers-test) | `manage`, `code` |
+| [`POST /api/triggers/preview`](#post-api-triggers-preview) | `read`, `code` |
+
 ## GET /api/triggers
 
 Devolve triggers com optional filters.
@@ -330,7 +345,7 @@ Resposta: [LatestBlockResult](types.md#latestblockresult).
 
 ## Criação de triggers para agentes
 
-Os cinco caminhos aceitam uma sessão de conta ou chave de agente no espaço atual. A conta precisa de Advanced ou Pro (caso contrário, `403 plan_required`). A pesquisa e os testes requerem acesso de leitura ao espaço. O planeamento, a ativação e a remoção requerem acesso de edição.
+Os cinco caminhos aceitam uma sessão de conta ou chave de agente no espaço atual. A conta precisa de Advanced ou Pro (caso contrário, `403 plan_required`). A pesquisa e os testes requerem acesso de leitura ao espaço. O planeamento, a ativação e a remoção requerem acesso de edição. Estes endpoints funcionam sem `code`.
 
 Se a criação de triggers estiver desativada, as rotas devolvem HTTP `400` com `builder is disabled` em `error.message`.
 

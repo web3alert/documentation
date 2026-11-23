@@ -113,7 +113,7 @@ La respuesta también incluye `limits` para el plan de la cuenta autenticada.
 
 Cualquier miembro del espacio actual puede crear una clave. La clave actúa con el rol de la cuenta en ese espacio.
 
-Requiere un token de sesión. Crea una clave vinculada al espacio de trabajo actual. Envía `{ name, scopes, monthlyCapEur?, expiresInDays? }`. El nombre admite 1–64 caracteres. Incluye `read` y, si procede, `manage` y `spend`. Puedes fijar un límite de 0 a 10.000 € con hasta dos decimales y un vencimiento de 30, 90 o 365 días. Omite esos campos o usa `null` para dejarlos sin límite.
+Requiere un token de sesión. Crea una clave vinculada al espacio de trabajo actual. Envía `{ name, scopes, monthlyCapEur?, expiresInDays? }`. El nombre admite 1–64 caracteres. Incluye `read` y, si procede, `manage`, `spend` y `code`. Puedes fijar un límite de 0 a 10.000 € con hasta dos decimales y un vencimiento de 30, 90 o 365 días. Omite esos campos o usa `null` para dejarlos sin límite.
 
 Devuelve `201` con `{ key, secret }`. Copia `secret`, que solo se muestra en esa respuesta.
 
@@ -139,7 +139,7 @@ Los endpoints de nonce y verificación comparten un límite por IP en el períme
 
 Público. Envía `{ message, signature }` firmado con una cuenta externa (EOA) de Ethereum. Usa un mensaje EIP-4361 versión `1`, el nonce, el dominio `web3alert.io`, una URI de ese origen y un `issuedAt` dentro de los cinco minutos del reloj del servidor. Se acepta cualquier ID de cadena.
 
-Devuelve `{ account: { id, created }, key, secret, claimUrl }`. El primer inicio crea una cuenta Free y su espacio de trabajo. Cada inicio correcto emite una clave con todos los permisos, sin límite ni vencimiento. Usa `secret` como credencial Bearer. La verificación emite un enlace cuando crea la cuenta o cuando no hay un enlace activo. Si ya existe uno, `claimUrl` vale `null`. Usa `POST /api/agent/claim-link` para sustituirlo.
+Devuelve `{ account: { id, created }, key, secret, claimUrl }`. El primer inicio crea una cuenta Free y su espacio de trabajo. Cada inicio correcto emite una clave con [los cuatro permisos, incluido `code`](agents.md#registrate-con-una-cartera-de-ethereum), sin límite ni vencimiento. Usa `secret` como credencial Bearer. La verificación emite un enlace cuando crea la cuenta o cuando no hay un enlace activo. Si ya existe uno, `claimUrl` vale `null`. Usa `POST /api/agent/claim-link` para sustituirlo.
 
 Cuando una persona reclama la cuenta con Telegram o Google, el inicio de sesión con cartera devuelve `403 account_claimed` y no emite clave ni enlace. Pídele una clave de agente.
 

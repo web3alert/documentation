@@ -2,6 +2,21 @@
 
 Trigger endpoints manage trigger definitions, drafts, bulk operations, and test helpers.
 
+## Agent key permissions {#agent-key-permissions}
+
+Agent keys need `code` on every request to the routes below, including metadata-only edits, dry runs, saved-trigger replays and tests of providers that use no JavaScript.
+
+| Route | Required scopes |
+| --- | --- |
+| [`PUT /api/triggers/:fullname`](#put-api-triggers-fullname) | `manage`, `code` |
+| [`PUT /api/triggers/:fullname/draft`](#put-api-triggers-fullname-draft) | `manage`, `code` |
+| [`PATCH /api/triggers/:fullname`](#patch-api-triggers-fullname) | `manage`, `code` |
+| [`POST /api/triggers/patch`](#post-api-triggers-patch) | `manage`, `code` |
+| [`POST /api/triggers/test`](#post-api-triggers-test) | `manage`, `code` |
+| [`POST /api/triggers/test-block`](#post-api-triggers-test-block) | `manage`, `code` |
+| [`POST /api/triggers/providers/test`](#post-api-triggers-providers-test) | `manage`, `code` |
+| [`POST /api/triggers/preview`](#post-api-triggers-preview) | `read`, `code` |
+
 ## GET /api/triggers
 
 Returns triggers with optional filters.
@@ -330,7 +345,7 @@ Response: [LatestBlockResult](types.md#latestblockresult).
 
 ## Agent trigger building
 
-For all five build routes, use an account session or an agent key in the current workspace. The caller needs Advanced or Pro (otherwise `403 plan_required`). Contract discovery and testing require workspace view access. Planning, activation and removal require workspace edit access.
+For all five build routes, use an account session or an agent key in the current workspace. The caller needs Advanced or Pro (otherwise `403 plan_required`). Contract discovery and testing require workspace view access. Planning, activation and removal require workspace edit access. These routes work without `code`.
 
 If building is switched off, the routes return HTTP `400` with `error.message` set to `builder is disabled`.
 

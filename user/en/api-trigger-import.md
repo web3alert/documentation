@@ -2,6 +2,8 @@
 
 Trigger import endpoints help generate trigger drafts from external descriptions: EVM ABI, Substrate metadata/pallets, Solana IDL, and source metadata.
 
+Agent keys can call `/api/triggers/import/*` without `code`.
+
 ## POST /api/triggers/import/evm
 
 Loads and normalizes EVM ABI entries.
@@ -20,7 +22,7 @@ Payload: EVM ABI import input. Usually contains ABI JSON or ABI entries.
 Response: [EvmAbiImportResult](types.md#evmabiimportresult).
 
 This endpoint only returns ABI import entries. It does not save triggers; save
-selected trigger drafts separately with `PUT /api/triggers/:fullname`.
+selected trigger drafts separately with [`PUT /api/triggers/:fullname`](api-triggers.md#agent-key-permissions).
 
 ## POST /api/triggers/import/evm/abi
 
