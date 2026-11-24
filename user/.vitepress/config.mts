@@ -474,7 +474,7 @@ export default defineConfig({
     ['link', { rel: 'apple-touch-icon', sizes: '180x180', href: '/icons/apple-touch-icon.png' }],
     ['link', { rel: 'mask-icon', href: '/icons/safari-pinned-tab.svg', color: '#5bbad5' }],
     ['link', { rel: 'manifest', href: '/site.webmanifest' }],
-    ['meta', { name: 'theme-color', content: '#fdfdfd' }],
+    ['meta', { name: 'theme-color', content: '#F8F8F8' }],
   ],
   cleanUrls: true,
   lastUpdated: true,
